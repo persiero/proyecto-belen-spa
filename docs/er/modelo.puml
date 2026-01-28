@@ -1,0 +1,304 @@
+@startuml
+!theme plain
+
+' ===========================
+' CLUSTER: CORE
+' ===========================
+rectangle "CORE" {
+
+  entity roles {
+    id
+  }
+
+  entity usuarios {
+    id
+    id_rol
+  }
+}
+
+' ===========================
+' CLUSTER: CLIENTES
+' ===========================
+rectangle "CLIENTES" {
+
+  entity clientes {
+    id
+    id_origen_cliente
+  }
+
+  entity origen_cliente {
+    id
+  }
+}
+
+' ===========================
+' CLUSTER: TURNOS
+' ===========================
+rectangle "TURNOS" {
+
+  entity estilistas {
+    id
+  }
+
+  entity categorias_servicio {
+    id
+  }
+
+  entity servicios {
+    id
+    id_categoria_servicio
+    id_afectacion_igv
+    id_unidad_sunat
+  }
+
+  entity turnos {
+    id
+    id_cliente
+    id_estilista
+  }
+
+  entity turno_servicio {
+    id
+    id_turno
+    id_servicio
+  }
+}
+
+' ===========================
+' RELACIONES ENTRE MODULOS (parte 1)
+' ===========================
+
+roles "1" ||--o{ usuarios : id_rol
+
+origen_cliente "1" ||--o{ clientes : id_origen_cliente
+
+clientes "1" ||--o{ turnos : id_cliente
+estilistas "1" ||--o{ turnos : id_estilista
+
+categorias_servicio "1" ||--o{ servicios : id_categoria_servicio
+servicios "1" ||--o{ turno_servicio : id_servicio
+turnos "1" ||--o{ turno_servicio : id_turno
+
+
+
+' ===========================
+' CLUSTER: INVENTARIO
+' ===========================
+rectangle "INVENTARIO" {
+
+  entity productos {
+    id
+    id_afectacion_igv
+    id_unidad_sunat
+  }
+
+  entity movimientos_inventario {
+    id
+    id_producto
+    id_usuario
+  }
+
+  entity afectaciones_igv {
+    id
+  }
+
+  entity unidades_sunat {
+    id
+  }
+}
+
+' ===========================
+' RELACIONES INVENTARIO
+' ===========================
+
+afectaciones_igv "1" ||--o{ productos : id_afectacion_igv
+unidades_sunat "1" ||--o{ productos : id_unidad_sunat
+
+productos "1" ||--o{ movimientos_inventario : id_producto
+usuarios "1" ||--o{ movimientos_inventario : id_usuario
+
+
+' ===========================
+' CLUSTER: VENTAS (POS)
+' ===========================
+rectangle "VENTAS (POS)" {
+
+  entity ventas {
+    id
+    id_cliente
+    id_turno
+    id_caja
+  }
+
+  entity detalles_venta {
+    id
+    id_venta
+    id_servicio
+    id_producto
+    id_estilista
+  }
+
+  entity pagos {
+    id
+    id_venta
+    id_metodo_pago
+  }
+
+  entity metodos_pago {
+    id
+  }
+}
+
+' ===========================
+' CLUSTER: CAJA
+' ===========================
+rectangle "CAJA" {
+
+  entity cajas {
+    id
+    id_usuario_apertura
+    id_usuario_cierre
+  }
+}
+
+' ===========================
+' RELACIONES VENTAS & CAJA
+' ===========================
+
+clientes "1" ||--o{ ventas : id_cliente
+turnos "1" ||--o{ ventas : id_turno
+
+ventas "1" ||--o{ detalles_venta : id_venta
+ventas "1" ||--o{ pagos : id_venta
+
+metodos_pago "1" ||--o{ pagos : id_metodo_pago
+
+usuarios "1" ||--o{ cajas : id_usuario_apertura
+usuarios "1" ||--o{ cajas : id_usuario_cierre
+
+cajas "1" ||--o{ ventas : id_caja
+
+servicios "1" ||--o{ detalles_venta : id_servicio
+productos "1" ||--o{ detalles_venta : id_producto
+estilistas "1" ||--o{ detalles_venta : id_estilista
+
+
+
+' ===========================
+' CLUSTER: FACTURACIÓN (SUNAT)
+' ===========================
+rectangle "FACTURACIÓN (SUNAT)" {
+
+  entity tipos_comprobante {
+    id
+  }
+
+  entity estados_comprobante {
+    id
+  }
+
+  entity series_comprobante {
+    id
+    id_tipo_comprobante
+  }
+
+  entity comprobantes {
+    id
+    id_venta
+    id_tipo_comprobante
+    id_serie_comprobante
+    id_estado_comprobante
+  }
+
+  entity archivos_sunat {
+    id
+    id_comprobante
+  }
+
+  entity config_facturador {
+    id
+  }
+}
+
+' ===========================
+' RELACIONES FACTURACIÓN
+' ===========================
+
+ventas "1" ||--o{ comprobantes : id_venta
+
+tipos_comprobante "1" ||--o{ comprobantes : id_tipo_comprobante
+series_comprobante "1" ||--o{ comprobantes : id_serie_comprobante
+estados_comprobante "1" ||--o{ comprobantes : id_estado_comprobante
+
+tipos_comprobante "1" ||--o{ series_comprobante : id_tipo_comprobante
+
+comprobantes "1" ||--o{ archivos_sunat : id_comprobante
+
+
+' ===========================
+' CLUSTER: ANALÍTICA
+' ===========================
+rectangle "ANALÍTICA" {
+
+  entity fact_ventas {
+    id_venta
+    id_cliente
+    id_caja
+  }
+
+  entity fact_venta_detalle {
+    id
+    id_venta
+    id_servicio
+    id_producto
+    id_estilista
+  }
+
+  entity fact_frecuencia {
+    id
+    id_cliente
+    id_servicio
+  }
+
+  entity dim_cliente {
+    id_cliente
+    id_origen_cliente
+  }
+
+  entity dim_estilista {
+    id_estilista
+  }
+
+  entity dim_servicio {
+    id_servicio
+    id_categoria_servicio
+  }
+
+  entity dim_producto {
+    id_producto
+  }
+}
+
+' ===========================
+' RELACIONES ANALÍTICA
+' ===========================
+
+ventas "1" ||--o{ fact_ventas : id_venta
+ventas "1" ||--o{ fact_venta_detalle : id_venta
+
+clientes "1" ||--o{ fact_ventas : id_cliente
+cajas    "1" ||--o{ fact_ventas : id_caja
+
+clientes  "1" ||--o{ fact_frecuencia : id_cliente
+servicios "1" ||--o{ fact_frecuencia : id_servicio
+
+clientes "1" ||--o{ dim_cliente : id_cliente
+estilistas "1" ||--o{ dim_estilista : id_estilista
+servicios "1" ||--o{ dim_servicio : id_servicio
+productos "1" ||--o{ dim_producto : id_producto
+
+' relación entre catálogo y dims
+categorias_servicio "1" ||--o{ dim_servicio : id_categoria_servicio
+
+
+@enduml
