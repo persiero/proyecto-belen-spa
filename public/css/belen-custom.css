@@ -1,0 +1,113 @@
+/* public/css/belen-custom.css */
+
+:root {
+    /* --- PALETA DE COLORES BELEN SPA --- */
+    --belen-dark: #212124;       /* El fondo oscuro del logo */
+    --belen-cream: #E6DFD3;      /* El color de las letras */
+    --belen-cream-dim: #cfc5b1;  /* Un crema un poco más oscuro para hovers */
+    --belen-grey: #8F8F8F;       /* Texto secundario */
+}
+
+/* =========================================
+   1. SIDEBAR (Barra Lateral)
+   ========================================= */
+/* Quitamos los colores por defecto de Bootstrap/AdminLTE */
+.app-sidebar {
+    background-color: var(--belen-dark) !important;
+    color: var(--belen-grey) !important;
+}
+
+/* --- ARREGLO DEL LOGO (BRAND LINK) --- */
+/* Esto soluciona el fondo negro diferente */
+.sidebar-brand {
+    background-color: var(--belen-dark) !important; 
+    border-bottom: 1px solid rgba(230, 223, 211, 0.1); /* Línea sutil color crema */
+}
+
+.brand-link .brand-text {
+    color: var(--belen-cream) !important;
+    font-family: 'Helvetica Neue', sans-serif; /* O una fuente con serifa si prefieres elegancia */
+    letter-spacing: 1px;
+    font-weight: 400 !important;
+}
+
+/* --- MENÚ DE NAVEGACIÓN --- */
+.sidebar-menu .nav-link {
+    color: #b0b0b0 !important; /* Gris claro para items inactivos */
+    border-radius: 0px !important; /* Bordes rectos son más elegantes */
+    margin-bottom: 2px;
+}
+
+/* Hover (Cuando pasas el mouse) */
+.sidebar-menu .nav-link:hover {
+    color: var(--belen-cream) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Activo (La página actual) */
+.sidebar-menu .nav-link.active {
+    background-color: var(--belen-cream) !important;
+    color: var(--belen-dark) !important;
+    font-weight: bold;
+    box-shadow: none !important; /* Quitamos la sombra azul por defecto */
+    border-left: 4px solid #ffffff; /* Pequeño detalle de diseño */
+}
+
+/* Iconos del menú */
+.sidebar-menu .nav-icon {
+    color: var(--belen-grey);
+}
+.sidebar-menu .nav-link.active .nav-icon {
+    color: var(--belen-dark); /* Icono oscuro sobre fondo crema */
+}
+
+/* =========================================
+   2. NAVBAR (Cabecera Superior)
+   ========================================= */
+.app-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #eaeaea !important;
+}
+
+.app-header .nav-link {
+    color: var(--belen-dark) !important;
+}
+
+/* Badge de notificaciones (Rojo o Naranja no pegan, usaremos el gris oscuro) */
+.navbar-badge {
+    background-color: var(--belen-dark) !important;
+    color: var(--belen-cream) !important;
+}
+
+/* =========================================
+   3. BOTONES Y ACENTOS
+   ========================================= */
+/* Reemplazamos el botón primario azul por el Crema */
+.btn-primary {
+    background-color: var(--belen-cream) !important;
+    border-color: var(--belen-cream) !important;
+    color: var(--belen-dark) !important;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background-color: var(--belen-cream-dim) !important;
+    border-color: var(--belen-cream-dim) !important;
+}
+
+/* El botón del POS (Punto de Venta) destacado */
+.nav-link.bg-success {
+    background-color: #2ecc71 !important; /* Un verde más elegante */
+    color: white !important;
+}
+
+/* --- FIX: Forzar fondo oscuro en Autocompletado de Chrome/Edge --- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #212124 inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: white;
+}

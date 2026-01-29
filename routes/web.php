@@ -30,11 +30,15 @@ use App\Models\ConfigNegocio;
 */
 
 // Rutas de Autenticación (Login, Registro, etc.)
-Auth::routes();
+Auth::routes([
+    'register' => false, 
+    'verify' => false,
+    'reset' => true // Mantén true si quieres que puedan recuperar contraseña
+]);
 
 // Ruta pública (Inicio)
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login'); // Redirige automáticamente al Login
 });
 
 // ==========================================
@@ -61,6 +65,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/inventario', GestionInventario::class)->name('inventario');
     Route::get('/ventas/historial', HistorialVentas::class)->name('ventas.historial');
     Route::get('/configuracion', \App\Livewire\Admin\Configuracion\GestionConfiguracion::class)->name('configuracion');
+    Route::get('/perfil', App\Livewire\Admin\Perfil\MiPerfil::class)->name('perfil');
 
     // Reportes
     Route::get('/reportes/comisiones', ReporteComisiones::class)->name('reportes.comisiones');
