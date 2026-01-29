@@ -28,7 +28,7 @@ class Servicio extends Model
 
     //Relaciones
     public function categoria(){
-        return $this->belongsTo(CategoriaServicio::class,'id_Categoria');
+        return $this->belongsTo(categoriaServicio::class,'id_Categoria');
     }
 
     public function unidad(){

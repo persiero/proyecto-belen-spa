@@ -4,7 +4,8 @@ namespace App\Livewire\Admin\Estilistas;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Layout; // Importante para la plantilla
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Models\Estilista;
 
 class GestionEstilistas extends Component
@@ -16,7 +17,6 @@ class GestionEstilistas extends Component
     // Propiedades
     public $search = '';
     public $isOpen = false;
-    public $confirmingDeletion = false;
 
     // Campos del Formulario
     public $estilista_id;
@@ -25,7 +25,7 @@ class GestionEstilistas extends Component
     public $telefono;
     public $activo = true;
 
-    // Reglas de Validación
+    // Reglas (Mismos campos, validación robusta)
     protected $rules = [
         'nombre' => 'required|string|max:150',
         'especialidad' => 'nullable|string|max:150',
@@ -34,14 +34,15 @@ class GestionEstilistas extends Component
     ];
 
     #[Layout('layouts.admin')]
+    #[Title('Gestión de Estilistas')]
     public function render()
     {
         $estilistas = Estilista::where('nombre', 'like', '%' . $this->search . '%')
-            ->orderBy('id', 'desc')
+            ->orderBy('activo', 'desc') // Mostrar activos primero
+            ->orderBy('nombre', 'asc')
             ->paginate(10);
 
-        return view('livewire.admin.estilistas.gestion-estilistas', compact('estilistas'))
-            ->with('titulo', 'Gestión de Estilistas');
+        return view('livewire.admin.estilistas.gestion-estilistas', compact('estilistas'));
     }
 
     public function create()
@@ -75,7 +76,7 @@ class GestionEstilistas extends Component
         ]);
 
         session()->flash('message', 
-            $this->estilista_id ? 'Estilista actualizado correctamente.' : 'Estilista registrado correctamente.'
+            $this->estilista_id ? 'Estilista actualizado correctamente.' : 'Estilista registrado exitosamente.'
         );
 
         $this->closeModal();

@@ -9,30 +9,24 @@ use App\Models\CategoriaServicio;
 use App\Models\UnidadSunat;
 use App\Models\AfectacionIgv;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
 class GestionServicios extends Component
 {
     use WithPagination;
 
-    // Configuración de paginación para Bootstrap
     protected $paginationTheme = 'bootstrap';
 
-    // Variables de Búsqueda y Modal
+    // Variables
     public $search = '';
     public $isOpen = false;
-    public $confirmingDeletion = false;
-
-    // Campos del Formulario (Modelos)
-    public $servicio_id;
-    public $nombre;
-    public $precio;
-    public $duracion_minutos;
-    public $id_categoria;
-    public $id_unidad;
-    public $id_afectacion;
+    
+    // Campos
+    public $servicio_id, $nombre, $precio, $duracion_minutos;
+    public $id_categoria, $id_unidad, $id_afectacion;
     public $activo = true;
 
-    // Reglas de Validación
+    // Reglas (Categoría ahora es nullable)
     protected $rules = [
         'nombre' => 'required|string|max:150',
         'precio' => 'required|numeric|min:0',
@@ -44,30 +38,27 @@ class GestionServicios extends Component
     ];
 
     #[Layout('layouts.admin')]
+    #[Title('Gestión de Servicios')]
     public function render()
     {
-        // Traemos los servicios filtrados
         $servicios = Servicio::where('nombre', 'like', '%' . $this->search . '%')
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        // Cargamos los catálogos para los <select> del modal
+        // Cargamos catálogos (Cache simple o consulta directa)
         $categorias = CategoriaServicio::where('activo', true)->get();
         $unidades = UnidadSunat::all();
-        $afectaciones = AfectacionIgv::where('gravado', true)->get(); // Priorizamos las gravadas
+        $afectaciones = AfectacionIgv::where('gravado', true)->get();
 
-        return view('livewire.admin.servicios.gestion-servicios', compact('servicios', 'categorias', 'unidades', 'afectaciones'))
-            ->with('titulo', 'Gestión de Servicios');
+        return view('livewire.admin.servicios.gestion-servicios', compact('servicios', 'categorias', 'unidades', 'afectaciones'));
     }
 
-    // Método para abrir el modal de CREAR
     public function create()
     {
         $this->resetInputFields();
         $this->openModal();
     }
 
-    // Método para abrir el modal de EDITAR
     public function edit($id)
     {
         $servicio = Servicio::findOrFail($id);
@@ -84,7 +75,6 @@ class GestionServicios extends Component
         $this->openModal();
     }
 
-    // Método Guardar (Sirve para Crear y Actualizar)
     public function store()
     {
         $this->validate();
@@ -93,28 +83,27 @@ class GestionServicios extends Component
             'nombre' => $this->nombre,
             'precio' => $this->precio,
             'duracion_minutos' => $this->duracion_minutos,
-            'id_categoria' => $this->id_categoria ?: null, // Si está vacío guarda NULL
+            // Importante: Si viene vacío, guardamos NULL
+            'id_categoria' => $this->id_categoria == "" ? null : $this->id_categoria,
             'id_unidad' => $this->id_unidad,
             'id_afectacion' => $this->id_afectacion,
             'activo' => $this->activo,
         ]);
 
         session()->flash('message', 
-            $this->servicio_id ? 'Servicio actualizado correctamente.' : 'Servicio creado correctamente.'
+            $this->servicio_id ? 'Servicio actualizado correctamente.' : 'Servicio creado exitosamente.'
         );
 
         $this->closeModal();
         $this->resetInputFields();
     }
 
-    // Método Eliminar
     public function delete($id)
     {
         Servicio::find($id)->delete();
         session()->flash('message', 'Servicio eliminado correctamente.');
     }
 
-    // Funciones Auxiliares
     public function openModal() { $this->isOpen = true; }
     public function closeModal() { $this->isOpen = false; }
     
@@ -124,10 +113,10 @@ class GestionServicios extends Component
         $this->nombre = '';
         $this->precio = '';
         $this->duracion_minutos = '';
-        $this->id_categoria = '';
-        // Valores por defecto útiles para Sunat
-        $this->id_unidad = 1; // ZZ (Servicio) - Ajusta según tu ID real en la BD
-        $this->id_afectacion = 1; // 10 (Gravado) - Ajusta según tu ID real
+        $this->id_categoria = null; // Por defecto nulo
+        // Valores por defecto seguros (Asumiendo que existen en tu BD)
+        $this->id_unidad = UnidadSunat::first()->id ?? 1; 
+        $this->id_afectacion = AfectacionIgv::where('codigo', '10')->first()->id ?? 1;
         $this->activo = true;
     }
 }
