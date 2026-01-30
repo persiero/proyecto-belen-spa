@@ -83,6 +83,15 @@ class GestionClientes extends Component
             return;
         }
 
+        // --- CAMBIO AQUÍ: OBTENER TOKEN DE LA BD ---
+        $config = \App\Models\ConfigNegocio::first();
+        $tokenBD = $config->api_token ?? ''; // Obtener token o vacío
+
+        if (empty($tokenBD)) {
+            $this->addError('numero_documento', 'Falta configurar el Token API en el sistema.');
+            return;
+        }
+
         try {
             $url = ($this->tipo_documento == 'DNI') 
                     ? $this->urlDni . $this->numero_documento 
@@ -90,7 +99,7 @@ class GestionClientes extends Component
 
             // Laravel agrega automáticamente "Bearer " antes del token
             /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::withToken($this->apiToken)->get($url);
+            $response = Http::withToken($tokenBD)->get($url);
 
             if ($response->successful()) {
                 $data = $response->json();

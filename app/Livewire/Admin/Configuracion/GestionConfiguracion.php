@@ -14,6 +14,7 @@ class GestionConfiguracion extends Component
 
     // Datos Negocio
     public $nombre_comercial, $direccion, $telefono, $email, $ruc;
+    public $api_token;
     
     // Datos Tributarios
     public $igv_porcentaje, $modo, $usuario_sol, $clave_sol;
@@ -32,6 +33,7 @@ class GestionConfiguracion extends Component
             $this->telefono = $negocio->telefono;
             $this->email = $negocio->email;
             $this->ruc = $negocio->ruc;
+            $this->api_token = $negocio->api_token;
         }
 
         // Cargar Tributaria
@@ -54,6 +56,7 @@ class GestionConfiguracion extends Component
             'nombre_comercial' => 'required',
             'ruc' => 'required|digits:11',
             'direccion' => 'required',
+            'api_token' => 'nullable|string',
         ]);
 
         ConfigNegocio::updateOrCreate(['id' => 1], [
@@ -62,9 +65,10 @@ class GestionConfiguracion extends Component
             'telefono' => $this->telefono,
             'email' => $this->email,
             'ruc' => $this->ruc,
+            'api_token' => $this->api_token,
         ]);
 
-        session()->flash('message_negocio', 'Datos del negocio actualizados.');
+        session()->flash('message_negocio', 'Datos del negocio y API Token actualizados.');
     }
 
     public function guardarTributaria()

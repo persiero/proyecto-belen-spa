@@ -15,6 +15,7 @@ class ConfigNegocio extends Model
         'telefono',
         'email',
         'ruc',
-        'precio_incluye_igv'
+        'precio_incluye_igv',
+        'api_token'
     ];
 }

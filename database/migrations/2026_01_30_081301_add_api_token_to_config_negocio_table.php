@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('config_negocio', function (Blueprint $table) {
-            //
+            $table->string('api_token', 255)->nullable()->after('ruc');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('config_negocio', function (Blueprint $table) {
-            //
+            $table->dropColumn('api_token');
         });
     }
 };

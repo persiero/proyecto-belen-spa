@@ -170,17 +170,30 @@
                             @endif
 
                             {{-- CONTACTO --}}
-                            <div class="col-12 mt-4"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Contacto & Ubicación</label></div>
+                            <div class="col-12 mt-4">
+                                <label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Contacto & Ubicación</label>
+                            </div>
 
-                            <div class="col-md-4">
+                            {{-- FILA 1: Teléfono y Email --}}
+                            <div class="col-md-6">
                                 <label class="form-label">Teléfono</label>
                                 <div class="input-group shadow-sm">
                                     <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-whatsapp"></i></span>
-                                    <input type="text" wire:model="telefono" class="form-control border-start-0">
+                                    <input type="text" wire:model="telefono" class="form-control border-start-0" placeholder="999 999 999">
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Correo Electrónico</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" wire:model="email" class="form-control border-start-0 @error('email') is-invalid @enderror" placeholder="cliente@correo.com">
+                                </div>
+                                @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- FILA 2: Dirección (Más espacio) y Procedencia --}}
+                            <div class="col-md-8">
                                 <label class="form-label">Dirección</label>
                                 <input type="text" wire:model="direccion" class="form-control shadow-sm" placeholder="{{ $tipo_documento == 'RUC' ? 'Dirección Fiscal...' : 'Dirección...' }}">
                             </div>
