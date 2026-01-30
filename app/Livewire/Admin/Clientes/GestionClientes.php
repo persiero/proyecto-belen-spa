@@ -32,7 +32,7 @@ class GestionClientes extends Component
 
     // --- CONFIGURACIÓN API CORREGIDA ---
     // 1. Quité el "_BEARER" del final. Solo va el código puro.
-    private $apiToken = 'sk_12198.iMcPvw0tx01jydlLTqCcsIVKZBtShXxM'; 
+    //private $apiToken = 'sk_12198.iMcPvw0tx01jydlLTqCcsIVKZBtShXxM'; 
     
     // URLs
     private $urlDni = 'https://api.decolecta.com/v1/reniec/dni?numero=';

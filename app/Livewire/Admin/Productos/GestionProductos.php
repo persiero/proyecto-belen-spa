@@ -5,7 +5,8 @@ namespace App\Livewire\Admin\Productos;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
-use App\Models\Producto; // Asegúrate de tener este Modelo (lo creamos implícitamente, ver abajo nota*)
+use Livewire\Attributes\Title;
+use App\Models\Producto;
 use App\Models\UnidadSunat;
 use App\Models\AfectacionIgv;
 
@@ -49,6 +50,7 @@ class GestionProductos extends Component
     }
 
     #[Layout('layouts.admin')]
+    #[Title('Gestión de Productos')]
     public function render()
     {
         $productos = Producto::where('nombre', 'like', '%' . $this->search . '%')

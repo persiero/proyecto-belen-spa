@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Compras;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Compra;
@@ -33,17 +34,27 @@ class GestionCompras extends Component
     }
 
     #[Layout('layouts.admin')]
+    #[Title('Registro de Compras')]
     public function render()
     {
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre_empresa')->get();
         
-        $productos = Producto::where('nombre', 'like', '%' . $this->searchProducto . '%')
-            ->where('activo', true)
-            ->take(5)
-            ->get();
+        // BÚSQUEDA INTELIGENTE (Nombre o Código)
+        $productos = [];
+        if(strlen($this->searchProducto) > 1) { // Solo busca si escriben algo
+            $productos = Producto::where('activo', true)
+                ->where(function($q) {
+                    $q->where('nombre', 'like', '%' . $this->searchProducto . '%')
+                      ->orWhere('codigo_barras', 'like', '%' . $this->searchProducto . '%');
+                })
+                ->take(10) // Limitamos a 10 para no saturar
+                ->get();
+        } elseif (empty($this->cart)) {
+             // Si el carrito está vacío y no buscan nada, mostramos los últimos creados como sugerencia
+             $productos = Producto::where('activo', true)->latest()->take(5)->get();
+        }
 
-        return view('livewire.admin.compras.gestion-compras', compact('proveedores', 'productos'))
-            ->with('titulo', 'Registrar Ingreso de Mercadería');
+        return view('livewire.admin.compras.gestion-compras', compact('proveedores', 'productos'));
     }
 
     // Agregar producto al carrito de entrada
@@ -72,15 +83,11 @@ class GestionCompras extends Component
     // Recalcular montos al editar inputs en la tabla
     public function updateItem($index, $field, $value)
     {
+        // Validar que no metan texto o negativos
+        if (!is_numeric($value)) $value = 0;
+        
         $this->cart[$index][$field] = $value;
         
-        // Validar números
-        //if(!is_numeric($this->cart[$index]['cantidad']) || $this->cart[$index]['cantidad'] < 1) 
-            //$this->cart[$index]['cantidad'] = 1;
-            
-        //if(!is_numeric($this->cart[$index]['costo']) || $this->cart[$index]['costo'] < 0) 
-            //$this->cart[$index]['costo'] = 0;
-
         if($field == 'cantidad' && $value < 1) $this->cart[$index]['cantidad'] = 1;
         if($field == 'costo' && $value < 0) $this->cart[$index]['costo'] = 0;
 
@@ -108,7 +115,8 @@ class GestionCompras extends Component
         $this->validate([
             'fecha_compra' => 'required|date',
             'cart' => 'required|array|min:1',
-            'numero_documento' => 'nullable|string|max:50'
+            'numero_documento' => 'nullable|string|max:50',
+            'id_proveedor' => 'nullable|exists:proveedores,id'
         ]);
 
         DB::beginTransaction();
@@ -155,19 +163,19 @@ class GestionCompras extends Component
                     'id_producto' => $prod->id,
                     'tipo' => 'entrada',
                     'cantidad' => $item['cantidad'],
-                    'referencia' => 'COMPRA #' . $compra->id,
-                    'motivo' => 'Ingreso por Compra',
+                    'referencia' => 'COMPRA #' . str_pad($compra->id, 5, '0', STR_PAD_LEFT),
+                    'motivo' => 'Ingreso de Mercadería',
                     'fecha' => $this->fecha_compra
                 ]);
             }
 
             DB::commit();
-            session()->flash('message', 'Compra registrada. Stock actualizado correctamente.');
+            session()->flash('message', 'Compra registrada exitosamente.');
             $this->reset(['cart', 'total', 'id_proveedor', 'numero_documento', 'observaciones']);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Ocurrió un error: ' . $e->getMessage());
+            session()->flash('error', 'Error: ' . $e->getMessage());
         }
     }
 }

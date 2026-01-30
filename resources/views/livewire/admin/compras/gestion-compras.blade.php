@@ -1,128 +1,175 @@
 <div>
-    <div class="row">
-        <div class="col-12">
-            @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    {{ session('message') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-        </div>
-
+    <div class="row g-3">
+        
+        {{-- COLUMNA IZQUIERDA: CATÁLOGO --}}
         <div class="col-md-4">
-            <div class="card card-outline card-secondary">
-                <div class="card-header">
-                    <h3 class="card-title">📦 Catálogo</h3>
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-bottom border-light">
+                    <h5 class="card-title fw-bold text-dark mb-0">
+                        <i class="bi bi-box-seam me-2 text-primary"></i> Catálogo
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <input type="text" wire:model.live="searchProducto" class="form-control mb-3" placeholder="Buscar insumo o producto...">
+                <div class="card-body bg-light">
+                    {{-- Buscador --}}
+                    <div class="input-group mb-3 shadow-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" wire:model.live="searchProducto" class="form-control border-start-0" placeholder="Buscar o escanear código...">
+                        <span class="input-group-text bg-white text-muted"><i class="bi bi-upc-scan"></i></span>
+                    </div>
                     
-                    <div class="list-group">
-                        @foreach($productos as $p)
-                            <button wire:click="addProducto({{ $p->id }})" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{-- Lista de Resultados --}}
+                    <div class="list-group shadow-sm">
+                        @forelse($productos as $p)
+                            <button wire:click="addProducto({{ $p->id }})" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 border-0 mb-1 rounded">
                                 <div>
-                                    <strong>{{ $p->nombre }}</strong>
-                                    <br><small class="text-muted">Stock actual: {{ $p->stock_actual }}</small>
+                                    <div class="fw-bold text-dark">{{ $p->nombre }}</div>
+                                    <small class="text-muted d-block">
+                                        Stock: 
+                                        @if($p->tipo == 'insumo') {{ $p->stock_insumo }} (Interno)
+                                        @else {{ $p->stock_actual }} (Venta)
+                                        @endif
+                                    </small>
                                 </div>
-                                <span class="badge bg-secondary">Costo: S/ {{ $p->costo_compra }}</span>
+                                <div class="text-end">
+                                    <span class="badge bg-primary rounded-pill mb-1">S/ {{ number_format($p->costo_compra, 2) }}</span>
+                                    <br>
+                                    <i class="bi bi-plus-circle-fill text-success fs-5"></i>
+                                </div>
                             </button>
-                        @endforeach
+                        @empty
+                            @if(strlen($searchProducto) > 1)
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-emoji-frown fs-1"></i><br>No encontrado
+                                </div>
+                            @else
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="bi bi-search fs-1 opacity-25"></i><br>Escribe para buscar...
+                                </div>
+                            @endif
+                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
 
+        {{-- COLUMNA DERECHA: DOCUMENTO DE INGRESO --}}
         <div class="col-md-8">
-            <div class="card card-outline card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">Ingreso de Mercadería</h3>
+            {{-- ALERTAS --}}
+            @if (session()->has('message'))
+                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-3">
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }} 
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <div class="card-body">
+            @endif
+
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="card-title fw-bold mb-0">
+                        <i class="bi bi-cart-plus me-2"></i> Ingreso de Mercadería
+                    </h5>
+                </div>
+                <div class="card-body p-4">
                     
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-4">
-                            <label class="small">Fecha</label>
-                            <input type="date" wire:model="fecha_compra" class="form-control form-control-sm">
+                    {{-- CABECERA DEL DOCUMENTO --}}
+                    <div class="row g-3 mb-4 p-3 bg-light rounded border">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-secondary">FECHA</label>
+                            <input type="date" wire:model="fecha_compra" class="form-control form-control-sm border-0 shadow-sm">
                         </div>
-                        <div class="col-md-4">
-                            <label class="small">Proveedor (Opcional)</label>
-                            <select wire:model="id_proveedor" class="form-select form-select-sm">
-                                <option value="">-- Sin Proveedor --</option>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold text-secondary">PROVEEDOR</label>
+                            <select wire:model="id_proveedor" class="form-select form-select-sm border-0 shadow-sm">
+                                <option value="">-- Público / Sin Proveedor --</option>
                                 @foreach($proveedores as $prov)
                                     <option value="{{ $prov->id }}">{{ $prov->nombre_empresa }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="small">Nro. Documento / Nota</label>
-                            <input type="text" wire:model="numero_documento" class="form-control form-control-sm" placeholder="Ej: F001-456">
+                            <label class="form-label small fw-bold text-secondary">DOC. REFERENCIA</label>
+                            <input type="text" wire:model="numero_documento" class="form-control form-control-sm border-0 shadow-sm" placeholder="Ej: F001-456">
                         </div>
                     </div>
 
-                    <table class="table table-bordered table-sm text-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Producto</th>
-                                <th width="15%">Cantidad</th>
-                                <th width="20%">Costo Unit. (S/)</th>
-                                <th width="20%" class="text-end">Subtotal</th>
-                                <th width="5%"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($cart as $index => $item)
+                    {{-- TABLA DE DETALLE --}}
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light text-secondary small text-uppercase">
                                 <tr>
-                                    <td class="align-middle">
-                                        {{ $item['nombre'] }}
-                                        {{-- NUEVO: INDICADOR DE DESTINO --}}
-                                        <br>
-                                        @if($item['tipo'] == 'insumo')
-                                            <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">
-                                                <i class="bi bi-box-seam"></i> Destino: Insumos
-                                            </span>
-                                        @else
-                                            <span class="badge bg-success" style="font-size: 0.7rem;">
-                                                <i class="bi bi-shop"></i> Destino: Venta
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <input type="number" 
-                                            wire:change="updateItem({{ $index }}, 'cantidad', $event.target.value)"
-                                            value="{{ $item['cantidad'] }}" 
-                                            class="form-control form-control-sm text-center">
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" 
-                                            wire:change="updateItem({{ $index }}, 'costo', $event.target.value)"
-                                            value="{{ $item['costo'] }}" 
-                                            class="form-control form-control-sm text-end">
-                                    </td>
-                                    <td class="align-middle text-end fw-bold">
-                                        S/ {{ number_format($item['subtotal'], 2) }}
-                                    </td>
-                                    <td class="text-center align-middle">
-                                        <button wire:click="removeItem({{ $index }})" class="btn btn-xs btn-danger"><i class="bi bi-x"></i></button>
-                                    </td>
+                                    <th class="ps-3">Producto</th>
+                                    <th width="15%" class="text-center">Cant.</th>
+                                    <th width="20%" class="text-end">Costo Unit.</th>
+                                    <th width="20%" class="text-end">Subtotal</th>
+                                    <th width="5%"></th>
                                 </tr>
-                            @empty
-                                <tr><td colspan="5" class="text-center text-muted p-3">Agrega productos del catálogo</td></tr>
-                            @endforelse
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="text-end fw-bold fs-5">TOTAL COMPRA:</td>
-                                <td class="text-end fw-bold fs-5 text-primary">S/ {{ number_format($total, 2) }}</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @forelse($cart as $index => $item)
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">{{ $item['nombre'] }}</div>
+                                            @if($item['tipo'] == 'insumo')
+                                                <span class="badge bg-warning text-dark border border-warning" style="font-size: 0.65rem;">
+                                                    <i class="bi bi-bucket-fill"></i> Destino: Interno
+                                                </span>
+                                            @else
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size: 0.65rem;">
+                                                    <i class="bi bi-shop"></i> Destino: Venta
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <input type="number" 
+                                                wire:change="updateItem({{ $index }}, 'cantidad', $event.target.value)"
+                                                value="{{ $item['cantidad'] }}" 
+                                                class="form-control form-control-sm text-center fw-bold bg-light border-0">
+                                        </td>
+                                        <td>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text border-0 bg-transparent text-muted">S/</span>
+                                                <input type="number" step="0.01" 
+                                                    wire:change="updateItem({{ $index }}, 'costo', $event.target.value)"
+                                                    value="{{ $item['costo'] }}" 
+                                                    class="form-control form-control-sm text-end fw-bold bg-light border-0">
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold text-dark fs-6">
+                                            S/ {{ number_format($item['subtotal'], 2) }}
+                                        </td>
+                                        <td class="text-center">
+                                            <button wire:click="removeItem({{ $index }})" class="btn btn-sm text-danger hover-bg-danger">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="bi bi-cart-x fs-1 opacity-25"></i>
+                                            <p class="mt-2 small">El carrito de ingreso está vacío.</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            @if(!empty($cart))
+                                <tfoot class="border-top border-2">
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold text-secondary pt-3">TOTAL A PAGAR:</td>
+                                        <td class="text-end fw-bold text-primary fs-4 pt-3">S/ {{ number_format($total, 2) }}</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            @endif
+                        </table>
+                    </div>
 
-                    <div class="mt-3 text-end">
-                        <button wire:confirm="¿Confirmar ingreso de stock? Esto actualizará las cantidades." 
+                    {{-- BOTÓN GUARDAR --}}
+                    <div class="d-grid">
+                        <button wire:confirm="¿Confirmar ingreso? Se actualizará el stock de los productos." 
                                 wire:click="guardarCompra" 
-                                class="btn btn-primary" 
+                                class="btn btn-primary btn-lg shadow fw-bold" 
                                 @if(empty($cart)) disabled @endif>
-                            <i class="bi bi-save"></i> Guardar Ingreso
+                            <i class="bi bi-save2-fill me-2"></i> Registrar Compra
                         </button>
                     </div>
 

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Inventario;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Models\Producto;
 use App\Models\MovimientoInventario;
 use App\Models\Transferencia;
@@ -16,13 +17,13 @@ class GestionInventario extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
-    public $tab = 'stock'; // Cambiamos el default a 'stock' para que sea lo primero que veas
+    public $tab = 'stock'; 
     public $search = '';
 
     // -- Formulario Ajuste --
     public $producto_id;
-    public $producto_seleccionado = null; // Para mostrar la info de stock
-    public $tipo_movimiento = 'salida_insumo'; // Default más común
+    public $producto_seleccionado = null; 
+    public $tipo_movimiento = 'salida_insumo'; 
     public $cantidad = 1;
     public $motivo = '';
 
@@ -34,9 +35,10 @@ class GestionInventario extends Component
     public $motivo_transferencia = '';
 
     #[Layout('layouts.admin')]
+    #[Title('Centro de Control de Stock')]
     public function render()
     {
-        // 1. Pestaña STOCK (Nueva)
+        // 1. Pestaña STOCK
         $listaStock = [];
         if($this->tab == 'stock') {
             $listaStock = Producto::where('activo', true)
@@ -60,37 +62,35 @@ class GestionInventario extends Component
                 ->paginate(15);
         }
 
-        // Productos para selects (Optimizados)
+        // Productos para selects (Limitado para rendimiento)
         $productos = Producto::where('activo', true)
-            ->where('nombre', 'like', '%' . $this->search . '%')
             ->orderBy('nombre')
-            ->take(50)
+            ->take(100) // Limite seguro
             ->get();
 
         return view('livewire.admin.inventario.gestion-inventario', 
-            compact('movimientos', 'productos', 'listaStock'))
-            ->with('titulo', 'Control de Inventario');
+            compact('movimientos', 'productos', 'listaStock'));
     }
 
     public function cambiarTab($nombreTab) {
         $this->tab = $nombreTab;
         $this->resetValidation();
         $this->reset(['producto_id', 'cantidad', 'motivo', 'prod_transferencia_id', 'cant_transferencia', 'producto_seleccionado']);
-        $this->search = ''; // Limpiar búsqueda al cambiar
+        $this->search = ''; 
     }
 
-    // Detectar cambio en el select de Ajuste para mostrar info
+    // Reactividad: Actualizar info al seleccionar producto (Ajuste)
     public function updatedProductoId($value) {
         $this->producto_seleccionado = Producto::find($value);
     }
 
-    // ... (MANTÉN TUS FUNCIONES guardarAjuste Y guardarTransferencia EXACTAMENTE IGUAL QUE ANTES) ...
-    // Solo asegúrate de copiar las funciones guardarAjuste y guardarTransferencia que te pasé en la respuesta anterior.
-    
-    // ==========================================
-    // (Pega aquí guardarAjuste y guardarTransferencia)
-    // ==========================================
-     public function guardarAjuste()
+    // Reactividad: Actualizar info al seleccionar producto (Transferencia)
+    public function updatedProdTransferenciaId($value) {
+        $this->producto_seleccionado = Producto::find($value);
+        $this->cant_transferencia = 1; 
+    }
+
+    public function guardarAjuste()
     {
         $this->validate([
             'producto_id' => 'required|exists:productos,id',
@@ -101,29 +101,25 @@ class GestionInventario extends Component
 
         $prod = Producto::find($this->producto_id);
         
-        $bolsillo = 'stock_actual'; // Default
+        $bolsillo = 'stock_actual'; 
         $operacion = '+';
         $tipoDb = 'ajuste';
 
         switch ($this->tipo_movimiento) {
-            case 'ajuste_entrada':
-                $operacion = '+';
-                break;
-            case 'ajuste_salida':
-                $operacion = '-';
-                break;
-            case 'salida_insumo':
-                $bolsillo = 'stock_insumo'; // Afecta Lavadero
-                $operacion = '-';
+            case 'ajuste_entrada': $operacion = '+'; break;
+            case 'ajuste_salida':  $operacion = '-'; break;
+            case 'salida_insumo':  
+                $bolsillo = 'stock_insumo'; 
+                $operacion = '-'; 
                 $tipoDb = 'salida_insumo';
                 break;
         }
 
-        // Validación de Stock Negativo
+        // Validación Stock
         if ($operacion == '-') {
             $stockDisponible = ($bolsillo == 'stock_actual') ? $prod->stock_actual : $prod->stock_insumo;
             if ($stockDisponible < $this->cantidad) {
-                $this->addError('cantidad', "Stock insuficiente en " . ($bolsillo == 'stock_actual' ? 'Venta' : 'Insumos') . " (Tienes: $stockDisponible)");
+                $this->addError('cantidad', "Stock insuficiente (Disponible: $stockDisponible).");
                 return;
             }
         }
@@ -145,7 +141,7 @@ class GestionInventario extends Component
             ]);
         });
 
-        session()->flash('message', 'Ajuste realizado correctamente.');
+        session()->flash('message', 'Movimiento registrado correctamente.');
         $this->reset(['producto_id', 'cantidad', 'motivo', 'producto_seleccionado']);
     }
 
@@ -162,11 +158,11 @@ class GestionInventario extends Component
         $prod = Producto::find($this->prod_transferencia_id);
 
         if ($this->origen == 'venta' && $prod->stock_actual < $this->cant_transferencia) {
-            $this->addError('cant_transferencia', 'No hay stock suficiente en Venta (Tienes: ' . $prod->stock_actual . ').');
+            $this->addError('cant_transferencia', 'Stock insuficiente en Venta (Tienes: ' . $prod->stock_actual . ').');
             return;
         }
         if ($this->origen == 'insumo' && $prod->stock_insumo < $this->cant_transferencia) {
-            $this->addError('cant_transferencia', 'No hay stock suficiente en Insumo (Tienes: ' . $prod->stock_insumo . ').');
+            $this->addError('cant_transferencia', 'Stock insuficiente en Insumo (Tienes: ' . $prod->stock_insumo . ').');
             return;
         }
 
@@ -174,7 +170,7 @@ class GestionInventario extends Component
             if ($this->origen == 'venta') {
                 $prod->decrement('stock_actual', $this->cant_transferencia);
                 $prod->increment('stock_insumo', $this->cant_transferencia);
-                $desc = "Traslado a Uso Interno";
+                $desc = "Traslado a Insumo";
             } else {
                 $prod->decrement('stock_insumo', $this->cant_transferencia);
                 $prod->increment('stock_actual', $this->cant_transferencia);
@@ -193,25 +189,15 @@ class GestionInventario extends Component
             MovimientoInventario::create([
                 'id_producto' => $this->prod_transferencia_id,
                 'tipo' => 'ajuste', 
-                'cantidad' => 0, 
+                'cantidad' => 0, // No altera el total global, solo mueve bolsillos
                 'motivo' => $desc . ($this->motivo_transferencia ? ': '.$this->motivo_transferencia : ''),
                 'fecha' => Carbon::now(),
-                'referencia' => 'TRANSFERENCIA INT.'
+                'referencia' => 'TRANSFERENCIA'
             ]);
         });
 
-        session()->flash('message', 'Transferencia realizada con éxito.');
-        $this->reset(['prod_transferencia_id', 'cant_transferencia', 'motivo_transferencia']);
-        $this->tab = 'stock'; // Volver al stock
+        session()->flash('message', 'Transferencia exitosa.');
+        $this->reset(['prod_transferencia_id', 'cant_transferencia', 'motivo_transferencia', 'producto_seleccionado']);
+        $this->tab = 'stock'; 
     }
-
-    // Escucha cambios en el select de TRANSFERENCIA
-    public function updatedProdTransferenciaId($value)
-    {
-        $this->producto_seleccionado = Producto::find($value);
-        
-        // UX: Resetear valores lógicos para evitar errores
-        $this->cant_transferencia = 1; 
-    }
-
 }
