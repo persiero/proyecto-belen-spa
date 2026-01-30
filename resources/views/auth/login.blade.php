@@ -93,7 +93,7 @@
                 </div>
             </div>
             
-            <div class="text-center mt-5 small" style="color: var(--belen-cream); opacity: 0.6;">
+            <div class="text-center mt-2 small" style="color: var(--belen-cream); opacity: 0.6;">
                 &copy; {{ date('Y') }} <span class="fw-bold">Belén</span>. Sistema Interno.
             </div>
 
