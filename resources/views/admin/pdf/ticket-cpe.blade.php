@@ -2,31 +2,38 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Ticket {{ $cpe->serie }}-{{ $cpe->correlativo }}</title>
+    <title>CPE {{ $cpe->serie }}-{{ $cpe->correlativo }}</title>
     <style>
-        body { font-family: 'Courier New', Courier, monospace; font-size: 12px; margin: 0; padding: 5px; position: relative; }
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 11px; 
+            margin: 0; 
+            padding: 5px; 
+            position: relative; 
+        }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .bold { font-weight: bold; }
         .line { border-bottom: 1px dashed #000; margin: 5px 0; }
-        .tabla { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .tabla th { text-align: left; font-size: 10px; border-bottom: 1px solid #000; }
-        .tabla td { font-size: 11px; vertical-align: top; }
         
-        /* MARCA DE AGUA PARA ANULADOS */
+        .tabla { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .tabla th { text-align: left; font-size: 9px; border-bottom: 1px solid #000; padding-bottom: 2px;}
+        .tabla td { font-size: 10px; vertical-align: top; padding-top: 2px;}
+        
+        /* Marca de agua ANULADO */
         .anulado-watermark {
             position: absolute;
-            top: 30%;
-            left: 50%;
+            top: 35%; left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 40px;
-            color: rgba(255, 0, 0, 0.2); /* Rojo muy transparente */
+            font-size: 50px;
+            color: rgba(255, 0, 0, 0.15);
             font-weight: bold;
-            border: 5px solid rgba(255, 0, 0, 0.2);
-            padding: 10px;
+            border: 4px solid rgba(255, 0, 0, 0.15);
+            padding: 10px 40px;
             z-index: -1;
-            pointer-events: none;
         }
+        
+        .logo { max-width: 150px; height: auto; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -36,40 +43,36 @@
         <div class="anulado-watermark">ANULADO</div>
     @endif
 
-    <div class="text-center">
-        {{-- <img src="{{ public_path('storage/logo.png') }}" class="logo" style="max-width: 150px;"> <br> --}}
-        
-        <span class="bold" style="font-size: 14px">{{ $negocio->nombre_comercial }}</span><br>
+    <div class="text-center">                
+        <span class="bold" style="font-size: 13px">{{ $negocio->nombre_comercial }}</span><br>
         RUC: {{ $negocio->ruc }}<br>
-        {{ $negocio->direccion }}<br>
-        {{ $negocio->telefono }}<br>
+        <span style="font-size: 10px;">{{ $negocio->direccion }}</span><br>
+        <span style="font-size: 10px;">{{ $negocio->telefono }}</span><br>
     </div>
 
     <div class="line"></div>
 
     <div class="text-center">
-        <span class="bold" style="font-size: 13px;">
-            {{-- LÓGICA INFALIBLE BASADA EN LA SERIE --}}
-            @if(str_starts_with($cpe->serie, 'F'))
-                FACTURA ELECTRÓNICA
-            @elseif(str_starts_with($cpe->serie, 'B'))
-                BOLETA DE VENTA ELECTRÓNICA
-            @else
-                TICKET DE VENTA
+        <span class="bold" style="font-size: 12px;">
+            @if(str_starts_with($cpe->serie, 'F')) FACTURA ELECTRÓNICA
+            @elseif(str_starts_with($cpe->serie, 'B')) BOLETA DE VENTA ELECTRÓNICA
+            @else NOTA DE CRÉDITO
             @endif
         </span><br>
-        <span style="font-size: 14px;">{{ $cpe->serie }} - {{ str_pad($cpe->correlativo, 8, '0', STR_PAD_LEFT) }}</span>
+        <span style="font-size: 13px;">{{ $cpe->serie }} - {{ str_pad($cpe->correlativo, 8, '0', STR_PAD_LEFT) }}</span>
     </div>
 
-    <div style="margin-top: 5px;">
-        Fecha Emisión: {{ $cpe->fecha_emision->format('d/m/Y H:i:s') }}<br>
+    <div style="margin-top: 8px;">
+        <strong>FECHA:</strong> {{ $cpe->fecha_emision->format('d/m/Y H:i:s') }}<br>
+        <strong>CLIENTE:</strong> {{ $cpe->receptor_razon_social ?: 'PÚBLICO GENERAL' }}<br>
         
-        {{-- CLIENTE --}}
-        Cliente: {{ $cpe->receptor_razon_social ?: 'PÚBLICO GENERAL' }}<br>
-        
-        {{-- DOCUMENTO DEL CLIENTE --}}
         @if($cpe->receptor_numero_doc)
-            {{ strlen($cpe->receptor_numero_doc) == 11 ? 'RUC:' : 'DNI:' }} {{ $cpe->receptor_numero_doc }}
+            <strong>{{ strlen($cpe->receptor_numero_doc) == 11 ? 'RUC' : 'DNI' }}:</strong> {{ $cpe->receptor_numero_doc }}<br>
+        @endif
+
+        {{-- MOSTRAR DIRECCIÓN (Lógica: Si es Factura o si el campo tiene datos) --}}
+        @if( (str_starts_with($cpe->serie, 'F') || $cpe->receptor_direccion) && $cpe->receptor_direccion != '-' )
+            <strong>DIR:</strong> {{ Str::limit($cpe->receptor_direccion, 40) }}
         @endif
     </div>
 
@@ -78,9 +81,9 @@
     <table class="tabla">
         <thead>
             <tr>
-                <th style="width: 10%">Cant.</th>
-                <th style="width: 65%">Desc.</th>
-                <th style="width: 25%" class="text-right">Total</th>
+                <th style="width: 10%">CANT</th>
+                <th style="width: 65%">DESCRIPCIÓN</th>
+                <th style="width: 25%" class="text-right">TOTAL</th>
             </tr>
         </thead>
         <tbody>
@@ -114,32 +117,27 @@
     <div class="line"></div>
 
     <div class="text-center" style="font-size: 10px;">
-        {{-- LÓGICA BÁSICA PARA TEXTO DE MONEDA (O usa tu librería si tienes) --}}
         SON: {{ $cpe->total }} SOLES
     </div>
 
-    {{-- SI ES NOTA DE CRÉDITO (Opcional, si llegas a implementar NC) --}}
+    {{-- BLOQUE SI ES NOTA DE CRÉDITO --}}
     @if($cpe->tipo_comprobante == '07')
-        <div class="text-center" style="margin-top: 5px;">
-            <strong>NOTA DE CRÉDITO</strong><br>
-            Motivo: Anulación de la operación
+        <div class="text-center" style="margin-top: 5px; border: 1px dashed #000; padding: 2px;">
+            <strong>MOTIVO DE NOTA DE CRÉDITO</strong><br>
+            Anulación de la operación
         </div>
     @endif
 
     <div class="text-center" style="margin-top: 10px">
         @if(isset($qr))
-            <img src="data:image/svg+xml;base64,{{ $qr }}" width="100" style="margin-bottom: 5px;"><br>
+            <img src="data:image/svg+xml;base64,{{ $qr }}" width="90" style="margin-bottom: 5px;"><br>
         @endif
         
         <span style="font-size: 9px">Representación impresa del Comprobante Electrónico</span><br>
-        
         @if($cpe->hash_cpe)
-            <span style="font-size: 9px">Hash: {{ $cpe->hash_cpe }}</span><br>
+            <span style="font-size: 8px">Hash: {{ $cpe->hash_cpe }}</span><br>
         @endif
-        
         <span style="font-size: 9px">Consulte en: portal.sunat.gob.pe</span>
-        <br>
-        <span style="font-size: 9px; font-style: italic;">¡Gracias por su preferencia!</span>
     </div>
 </body>
 </html>

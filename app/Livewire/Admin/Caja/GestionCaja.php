@@ -176,6 +176,9 @@ class GestionCaja extends Component
         $this->dispatch('close-modal-cierre'); 
 
         session()->flash('message', 'Caja cerrada. Diferencia registrada: S/ ' . number_format($diferenciaFinal, 2));
+
+        // TRUCO: Redireccionar a la misma ruta fuerza la recarga limpia
+        return redirect()->route('admin.caja');
     }
 
     // Esta función calcula la diferencia en tiempo real mientras escribes

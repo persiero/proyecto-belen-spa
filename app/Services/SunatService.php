@@ -77,10 +77,12 @@ class SunatService
         $tipoDocCliente = '0'; // Sin RUC
         $numDocCliente = '00000000';
         $razonSocialCliente = 'CLIENTE GENERICO';
+        $direccionCliente = '-'; // <--- NUEVO: Variable para dirección
 
         if ($venta->cliente) {
             $razonSocialCliente = $venta->cliente->nombre . ' ' . $venta->cliente->apellido;
             $numDocCliente = $venta->cliente->numero_documento;
+            $direccionCliente = $venta->cliente->direccion ?? '-'; // <--- NUEVO: Obtenemos dirección
             
             if (strlen($numDocCliente) == 11) {
                 $tipoDocCliente = '6'; // RUC
@@ -169,6 +171,7 @@ class SunatService
             $mensaje = '';
             $cdr = null;
             $hash = null;
+            $nombreCdr = null; // <--- NUEVO: Variable para el nombre del ZIP
 
             if ($result->isSuccess()) {
                 /** @var \Greenter\Model\Response\BillResult $result */
@@ -176,7 +179,9 @@ class SunatService
                 $cdr = $result->getCdrResponse();
                 $mensaje = $cdr->getDescription();
                 $hash = $cdr->getId();
-                
+
+                // <--- NUEVO: Definimos el nombre y guardamos
+                $nombreCdr = 'R-' . $nombreArchivo . '.zip';
                 Storage::put('comprobantes/cdr/R-' . $nombreArchivo . '.zip', $result->getCdrZip());
             } else {
                 $estado = 'rechazado';
@@ -196,6 +201,7 @@ class SunatService
                 'receptor_tipo_doc' => $tipoDocCliente,
                 'receptor_numero_doc' => $numDocCliente,
                 'receptor_razon_social' => $razonSocialCliente,
+                'receptor_direccion' => $direccionCliente, // <--- NUEVO: Guardamos la dirección
                 // ---------------------------------------------
                 
                 // DATOS TRIBUTARIOS NUEVOS
@@ -205,6 +211,7 @@ class SunatService
 
                 // DATOS SUNAT
                 'nombre_xml' => $nombreArchivo,
+                'cdr_xml' => $nombreCdr, // <--- NUEVO: Guardamos el nombre del archivo ZIP
                 'hash_cpe' => $hash,
                 'estado_sunat' => $estado,
                 'mensaje_sunat' => $mensaje,
@@ -245,12 +252,15 @@ class SunatService
             $tipoDoc = $cpeOriginal->receptor_tipo_doc;
             $numDoc = $cpeOriginal->receptor_numero_doc;
             $rznSocial = $cpeOriginal->receptor_razon_social;
+            // <--- NUEVO: Recuperamos la dirección del comprobante original
+            $direccionCliente = $cpeOriginal->receptor_direccion ?? '-';
 
             // B. Si está vacío (Venta antigua o error de guardado), recalculamos desde la Venta
             if (empty($numDoc)) {
                 if ($venta->cliente) {
                     $numDoc = $venta->cliente->numero_documento;
                     $rznSocial = $venta->cliente->nombre . ' ' . $venta->cliente->apellido;
+                    $direccionCliente = $venta->cliente->direccion ?? '-'; // <--- NUEVO
                     
                     // Lógica simple para detectar tipo
                     if (strlen($numDoc) == 11) {
@@ -373,6 +383,7 @@ class SunatService
             $estado = 'rechazado';
             $mensaje = '';
             $cdr = null;
+            $nombreCdr = null; // <--- NUEVO
 
             if ($result->isSuccess()) {
 
@@ -382,6 +393,8 @@ class SunatService
                 $cdr = $result->getCdrResponse();
                 $mensaje = $cdr->getDescription();
                 $hash = $cdr->getId();
+                // <--- NUEVO: Guardar CDR
+                $nombreCdr = 'R-' . $nombreArchivo . '.zip';
                 Storage::put('comprobantes/cdr/R-' . $nombreArchivo . '.zip', $result->getCdrZip());
             } else {
                 $mensaje = $result->getError()->getCode() . ' - ' . $result->getError()->getMessage();
@@ -405,6 +418,7 @@ class SunatService
                 'total' => $cpeOriginal->total,             // Usamos datos del original
                 
                 'nombre_xml' => $nombreArchivo ?? 'NC_PENDIENTE',
+                'cdr_xml' => $nombreCdr,
                 'hash_cpe' => $hash ?? null,
                 'estado_sunat' => $estado ?? 'rechazado',
                 'mensaje_sunat' => $mensaje ?? 'Error',
@@ -414,6 +428,7 @@ class SunatService
                 'receptor_tipo_doc' => $client->getTipoDoc(),
                 'receptor_numero_doc' => $client->getNumDoc(),
                 'receptor_razon_social' => $client->getRznSocial(),
+                'receptor_direccion' => $direccionCliente, // <--- NUEVO: Guardar Dirección
             ]);
 
             return ['success' => $result->isSuccess(), 'message' => $mensaje];

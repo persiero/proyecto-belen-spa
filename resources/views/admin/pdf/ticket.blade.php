@@ -1,108 +1,101 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
     <title>Ticket #{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</title>
     <style>
-        body {
-            font-family: 'Courier New', Courier, monospace; /* Fuente tipo ticket */
-            font-size: 12px;
-            margin: 0;
-            padding: 5px;
-            width: 80mm; /* Ancho estándar de ticket */
+        /* Estilos idénticos al ticket CPE para uniformidad */
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 11px; 
+            margin: 0; 
+            padding: 5px; 
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .fw-bold { font-weight: bold; }
-        .uppercase { text-transform: uppercase; }
-        .divider { border-top: 1px dashed #000; margin: 5px 0; }
+        .bold { font-weight: bold; }
+        .line { border-bottom: 1px dashed #000; margin: 5px 0; }
         
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 2px 0; vertical-align: top; }
+        .tabla { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .tabla th { text-align: left; font-size: 10px; border-bottom: 1px solid #000; }
+        .tabla td { font-size: 11px; vertical-align: top; }
         
-        .header { margin-bottom: 10px; }
-        .footer { margin-top: 10px; font-size: 10px; }
-        
-        /* Ocultar botón en impresión */
-        @media print {
-            .no-print { display: none; }
-        }
+        .logo { max-width: 120px; height: auto; margin-bottom: 5px; filter: grayscale(100%); }
     </style>
 </head>
-<body onload="window.print()">
+<body>
 
-    {{-- Botón para reimprimir si falla el auto-print --}}
-    <div class="no-print" style="margin-bottom: 10px; text-align: center;">
-        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">🖨️ IMPRIMIR</button>
-    </div>
-
-    <div class="header text-center">
-        <h3 style="margin: 0;">{{ $config->nombre_comercial ?? 'SALÓN DE BELLEZA' }}</h3>
-        <div>{{ $config->direccion ?? 'Av. Principal 123' }}</div>
-        <div>RUC: {{ $config->ruc ?? '00000000000' }}</div>
-        <div>Tel: {{ $config->telefono ?? '-' }}</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div>
-        <strong>TICKET: {{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</strong><br>
-        FECHA: {{ $venta->fecha->format('d/m/Y H:i') }}<br>
-        CLIENTE: {{ $venta->cliente ? $venta->cliente->nombre . ' ' . $venta->cliente->apellido : 'PÚBLICO GENERAL' }}
-        @if($venta->cliente && $venta->cliente->numero_documento)
-            <br>DOC: {{ $venta->cliente->numero_documento }}
+    <div class="text-center">
+        {{-- LOGO SEGURO PARA PDF --}}
+        @php
+            // Ajusta aquí si tu imagen es .jpg o .png
+            $pathLogo = public_path('adminlte/assets/img/Logo1.jpg'); 
+        @endphp
+        
+        @if(file_exists($pathLogo))
+            <img src="{{ $pathLogo }}" class="logo"><br>
         @endif
+
+        <span class="bold" style="font-size: 14px">{{ $config->nombre_comercial ?? 'BELEN SPA' }}</span><br>
+        RUC: {{ $config->ruc ?? '-' }}<br>
+        {{ $config->direccion ?? '-' }}<br>
+        {{ $config->telefono ?? '-' }}<br>
     </div>
 
-    <div class="divider"></div>
+    <div class="line"></div>
 
-    <table>
+    <div class="text-center">
+        <span class="bold" style="font-size: 14px;">TICKET DE VENTA</span><br>
+        NRO: {{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}
+    </div>
+
+    <div style="margin-top: 5px;">
+        FECHA: {{ $venta->fecha->format('d/m/Y h:i A') }}<br>
+        CLIENTE: {{ $venta->cliente ? $venta->cliente->nombre . ' ' . $venta->cliente->apellido : 'PÚBLICO GENERAL' }}
+    </div>
+
+    <div class="line"></div>
+
+    <table class="tabla">
         <thead>
-            <tr style="border-bottom: 1px solid #000;">
-                <th style="text-align: left;">CANT</th>
-                <th style="text-align: left;">DESCRIPCIÓN</th>
-                <th style="text-align: right;">IMPORTE</th>
+            <tr>
+                <th style="width: 10%">CANT</th>
+                <th style="width: 65%">DESCRIPCIÓN</th>
+                <th style="width: 25%" class="text-right">TOTAL</th>
             </tr>
         </thead>
         <tbody>
             @foreach($venta->detalles as $item)
             <tr>
-                <td style="width: 10%;">{{ $item->cantidad }}</td>
-                <td>
-                    {{ $item->nombre_item }}
-                    {{-- Mostrar Estilista si aplica (RF-TK-08) --}}
-                    @if($item->tipo_item == 'servicio' && $item->servicio) 
-                         {{-- Aquí tendrías que cruzar con turno_servicios si quieres el estilista exacto del item, 
-                              o asumir el del turno. Por simplicidad mostramos nombre item --}}
-                    @endif
-                </td>
+                <td style="text-align: center;">{{ $item->cantidad }}</td>
+                <td>{{ $item->nombre_item }}</td>
                 <td class="text-right">{{ number_format($item->subtotal, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div class="divider"></div>
+    <div class="line"></div>
 
-    <table style="font-size: 14px;">
+    <table style="width: 100%">
         <tr>
-            <td class="text-right fw-bold">TOTAL A PAGAR:</td>
-            <td class="text-right fw-bold">S/ {{ number_format($venta->total, 2) }}</td>
+            <td class="text-right bold" style="font-size: 13px">TOTAL A PAGAR:</td>
+            <td class="text-right bold" style="font-size: 13px">S/ {{ number_format($venta->total, 2) }}</td>
         </tr>
     </table>
 
-    <div class="divider"></div>
+    <div class="line"></div>
 
-    <div>
-        <strong>MÉTODOS DE PAGO:</strong><br>
+    <div style="font-size: 10px;">
+        <strong>PAGADO CON:</strong><br>
         @foreach($venta->pagos as $pago)
             - {{ ucfirst($pago->metodoPago->nombre) }}: S/ {{ number_format($pago->monto, 2) }}<br>
         @endforeach
     </div>
 
-    <div class="footer text-center">
-        <p>¡Gracias por su preferencia!</p>
+    <div class="text-center" style="margin-top: 15px; font-size: 10px;">
+        ¡Gracias por su visita!<br>
+        Vuelva pronto.
     </div>
 
 </body>

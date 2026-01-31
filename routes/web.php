@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\VentaController;
 use App\Http\Controllers\Admin\ComprobanteController;
 use App\Http\Controllers\Admin\ReporteCajaController;
 use App\Livewire\Admin\Servicios\GestionServicios;
@@ -21,6 +20,7 @@ use App\Livewire\Admin\Dashboard;
 // Importaciones de Modelos
 use App\Models\Venta;
 use App\Models\ConfigNegocio;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 /*
@@ -81,12 +81,22 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::middleware(['auth'])->group(function () {
     
     Route::get('/imprimir/ticket/{id}', function($id) {
-        $venta = Venta::with(['cliente', 'detalles', 'pagos.metodoPago', 'turno.estilista'])->findOrFail($id);
+        $venta = Venta::with(['cliente', 'detalles', 'pagos.metodoPago', 'turno.servicios.estilista'])->findOrFail($id);
         
         // Usamos first() porque solo hay una configuración de negocio
         $config = ConfigNegocio::first(); 
         
-        return view('admin.pdf.ticket', compact('venta', 'config'));
+        // --- AQUÍ OCURRE LA MAGIA DEL CAMBIO A PDF ---
+        
+        // A. Cargamos la vista en memoria (igual que antes)
+        $pdf = Pdf::loadView('admin.pdf.ticket', compact('venta', 'config'));
+
+        // B. Configuramos el tamaño (80mm ancho x largo automático/fijo)
+        // 226.77 puntos = 80mm aprox. 800 es el largo (ajustable si sale cortado)
+        $pdf->setPaper([0, 0, 226.77, 800], 'portrait');
+
+        // C. En lugar de "view", retornamos el "stream" (visor PDF)
+        return $pdf->stream('Ticket-Venta-' . $id . '.pdf');
     })->name('print.ticket'); // <--- AHORA SÍ FUNCIONARÁ
 
 
