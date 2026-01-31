@@ -1,169 +1,174 @@
 <div>
-    <div class="row">
-        <div class="col-12">
-            
-            {{-- 1. MENSAJES DE ALERTA --}}
-            @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    {{ session('message') }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
+    {{-- MENSAJES DE ALERTA --}}
+    @if (session()->has('message'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" 
+             style="background-color: #d1e7dd; color: #0f5132;">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-            {{-- 2. MONITOR DE ESTILISTAS (NUEVO CÓDIGO AQUÍ) --}}
-            {{-- Agregamos wire:poll.30s para que los minutos "hace X min" se actualicen solos cada 30 seg --}}
-            <div class="row mb-4" wire:poll.30s>
-                <div class="col-12">
-                    <h5 class="mb-3 text-secondary"><i class="bi bi-person-workspace"></i> Monitor de Personal</h5>
-                </div>
-            
-                @foreach($monitorEstilistas as $estilista)
-                    @php
-                        // Verificamos si tiene atenciones activas
-                        $ocupado = $estilista->atencionesEnCurso->count() > 0;
-                        $atencion = $ocupado ? $estilista->atencionesEnCurso->first() : null;
-                    @endphp
-            
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card h-100 shadow-sm {{ $ocupado ? 'border-warning' : 'border-success' }}" style="border-top-width: 4px;">
-                            <div class="card-body p-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="fw-bold mb-0 text-truncate" title="{{ $estilista->nombre }}">
-                                        {{ $estilista->nombre }}
-                                    </h6>
-                                    @if($ocupado)
-                                        <span class="badge bg-warning text-dark blink_me">
-                                            <i class="bi bi-scissors"></i> OCUPADO
-                                        </span>
-                                    @else
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle"></i> LIBRE
-                                        </span>
-                                    @endif
-                                </div>
-            
-                                @if($ocupado && $atencion)
-                                    <div class="small mt-2 bg-light p-2 rounded">
-                                        <strong class="d-block text-primary text-truncate">
-                                            {{ $atencion->servicio->nombre ?? 'Servicio' }}
-                                        </strong>
-                                        <span class="text-muted d-block text-truncate">
-                                            <i class="bi bi-person"></i> {{ $atencion->turno->cliente->nombre ?? 'Cliente' }}
-                                        </span>
-                                        
-                                        <div class="mt-2 pt-2 border-top text-muted d-flex justify-content-between align-items-center" style="font-size: 0.85rem;">
-                                            <span><i class="bi bi-clock"></i> {{ $atencion->created_at->format('H:i') }}</span>
-                                            {{-- CÓDIGO CORREGIDO (Sin decimales) --}}
-                                            <span class="fw-bold text-dark bg-white px-1 border rounded">
-                                                {{ $atencion->created_at->diffForHumans(null, true) }}
-                                            </span>
-                                        </div>
-                                    </div>
+    {{-- 1. MONITOR DE ESTILISTAS (Auto-refresco cada 30s) --}}
+    <div wire:poll.30s>
+        <h5 class="fw-bold text-dark mb-3 ps-1">
+            <i class="bi bi-person-workspace text-primary me-2"></i> Monitor de Personal
+        </h5>
+        
+        <div class="row g-3 mb-4">
+            @foreach($monitorEstilistas as $estilista)
+                @php
+                    $ocupado = $estilista->atencionesEnCurso->isNotEmpty();
+                    // Tomamos la primera atención activa (si tiene varias, muestra la primera)
+                    $atencion = $ocupado ? $estilista->atencionesEnCurso->first() : null;
+                @endphp
+        
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 shadow-sm border-0 position-relative overflow-hidden">
+                        {{-- Borde superior de color según estado --}}
+                        <div class="position-absolute top-0 start-0 w-100" 
+                             style="height: 4px; background-color: {{ $ocupado ? '#ffc107' : '#198754' }};">
+                        </div>
+                        
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-truncate text-dark" title="{{ $estilista->nombre }}">
+                                    {{ Str::limit($estilista->nombre, 18) }}
+                                </h6>
+                                @if($ocupado)
+                                    <span class="badge bg-warning text-dark shadow-sm">
+                                        <i class="bi bi-scissors"></i> Ocupado
+                                    </span>
                                 @else
-                                    <div class="text-center text-muted py-3 opacity-50">
-                                        <i class="bi bi-emoji-smile fs-4"></i><br>
-                                        <small>Disponible</small>
-                                    </div>
+                                    <span class="badge bg-success shadow-sm">
+                                        <i class="bi bi-check-lg"></i> Libre
+                                    </span>
                                 @endif
                             </div>
+        
+                            @if($ocupado && $atencion)
+                                <div class="bg-light p-2 rounded border border-light mt-2" style="font-size: 0.85rem;">
+                                    <div class="text-primary fw-bold text-truncate mb-1">
+                                        {{ $atencion->servicio->nombre ?? 'Servicio' }}
+                                    </div>
+                                    <div class="text-muted text-truncate mb-2">
+                                        <i class="bi bi-person-fill me-1"></i> {{ $atencion->turno->cliente->nombre ?? 'Cliente' }}
+                                    </div>
+                                    <div class="d-flex justify-content-between text-secondary border-top pt-2 mt-1">
+                                        <span><i class="bi bi-clock me-1"></i> {{ $atencion->created_at->format('H:i') }}</span>
+                                        <span class="fw-bold">{{ $atencion->created_at->diffForHumans(null, true) }}</span>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="text-center py-3 opacity-25">
+                                    <i class="bi bi-emoji-smile fs-3"></i>
+                                    <p class="mb-0 small fw-bold">Disponible</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
-                @endforeach
-            </div>
-            {{-- FIN MONITOR --}}
-
-            {{-- 3. TARJETA PRINCIPAL (TU CÓDIGO ORIGINAL) --}}
-            <div class="card card-outline card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">Turnos Activos (En Atención)</h3>
-                    <div class="card-tools">
-                         {{-- Aquí podrías poner un filtro de fecha --}}
-                    </div>
                 </div>
-
-                <div class="card-body">
-                    <button wire:click="create()" class="btn btn-primary mb-3">
-                        <i class="bi bi-calendar-plus"></i> Nueva Atención
-                    </button>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th># Turno</th>
-                                    <th>Cliente</th>
-                                    <th>Inicio</th>
-                                    <th>Servicios / Estilistas</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($turnos as $turno)
-                                    <tr>
-                                        <td>{{ str_pad($turno->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                        <td class="fw-bold">{{ $turno->cliente->nombre }} {{ $turno->cliente->apellido }}</td>
-                                        <td>{{ $turno->hora_inicio->format('h:i a') }}</td>
-                                        <td>
-                                            <ul class="mb-0 ps-3">
-                                                @foreach($turno->servicios as $detalle)
-                                                    <li>
-                                                        {{ $detalle->servicio->nombre }} 
-                                                        <span class="badge bg-secondary fw-normal">{{ $detalle->estilista->nombre }}</span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </td>
-                                        <td><span class="badge bg-success">En Proceso</span></td>
-                                        <td class="text-center">
-                                            {{-- 1. BOTÓN EDITAR / AGREGAR SERVICIO (NUEVO) --}}
-                                            <button wire:click="edit({{ $turno->id }})" class="btn btn-sm btn-info text-white me-1" title="Editar / Agregar Servicios">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-
-                                            {{-- 2. BOTÓN COBRAR (Ahora redirigiremos al POS más adelante, por ahora link simple) --}}
-                                            <a href="{{ route('admin.pos', $turno->id) }}" class="btn btn-sm btn-success me-1" title="Ir a Caja">
-                                                <i class="bi bi-cash-coin"></i> Cobrar
-                                            </a>
-                                            
-                                            {{-- 3. BOTÓN CANCELAR --}}
-                                            <button wire:confirm="¿Cancelar este turno?" wire:click="cancelar({{ $turno->id }})" class="btn btn-sm btn-danger" title="Cancelar">
-                                                <i class="bi bi-x-circle"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="6" class="text-center text-muted py-4">No hay clientes atendiéndose en este momento.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    {{-- Paginación --}}
-                    <div class="mt-3">
-                        {{ $turnos->links() }}
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 
-    {{-- 4. MODAL (TU CÓDIGO ORIGINAL) --}}
+    {{-- 2. LISTADO DE TURNOS ACTIVOS --}}
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white py-3 border-top border-4" style="border-color: var(--belen-cream) !important;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-event me-2"></i> Recepción: Turnos Activos</h5>
+                <button wire:click="create()" class="btn btn-primary shadow-sm text-dark fw-bold">
+                    <i class="bi bi-plus-lg me-1"></i> Nueva Atención
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: var(--belen-dark); color: white;">
+                    <tr>
+                        <th class="ps-4 py-3">Turno / Cliente</th>
+                        <th class="py-3">Inicio</th>
+                        <th class="py-3">Servicios en Curso</th>
+                        <th class="py-3 text-center">Estado</th>
+                        <th class="py-3 text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($turnos as $turno)
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark fs-6">{{ $turno->cliente->nombre }} {{ $turno->cliente->apellido }}</div>
+                                <small class="text-muted fw-bold">#{{ str_pad($turno->id, 5, '0', STR_PAD_LEFT) }}</small>
+                            </td>
+                            <td>
+                                <div class="text-dark"><i class="bi bi-clock me-1 text-secondary"></i> {{ $turno->hora_inicio->format('h:i A') }}</div>
+                                <small class="text-muted">{{ $turno->hora_inicio->diffForHumans() }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    @foreach($turno->servicios as $detalle)
+                                        <div class="d-flex align-items-center bg-light px-2 py-1 rounded border">
+                                            <small class="fw-bold text-dark me-auto">{{ $detalle->servicio->nombre }}</small>
+                                            <span class="badge bg-secondary fw-normal text-white ms-2" style="font-size: 0.7rem;">
+                                                {{ $detalle->estilista->nombre }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">
+                                    En Proceso
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button wire:click="edit({{ $turno->id }})" class="btn btn-sm btn-outline-primary border-0 bg-light me-1 shadow-sm" title="Editar / Agregar">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                
+                                <a href="{{ route('admin.pos', $turno->id) }}" class="btn btn-sm btn-success text-white shadow-sm fw-bold me-1" title="Ir a Caja">
+                                    <i class="bi bi-cash-coin me-1"></i> Cobrar
+                                </a>
+
+                                <button wire:confirm="¿Cancelar este turno? Se perderá el registro." wire:click="cancelar({{ $turno->id }})" class="btn btn-sm btn-outline-danger border-0 bg-light shadow-sm" title="Cancelar">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted opacity-50">
+                                    <i class="bi bi-shop-window fs-1 d-block mb-2"></i>
+                                    No hay clientes en atención en este momento.
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white border-top-0 py-3">{{ $turnos->links() }}</div>
+    </div>
+
+    {{-- MODAL CREAR / EDITAR ATENCIÓN --}}
     @if($isOpen)
-    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    {{-- TÍTULO DINÁMICO --}}
-                    <h5 class="modal-title">
-                        {{ $turno_id ? '✏️ Editar Atención / Agregar Servicios' : '✨ Registrar Entrada de Cliente' }}
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="modal-header px-4 py-3" style="background-color: var(--belen-dark); color: white;">
+                    <h5 class="modal-title fw-light text-uppercase" style="letter-spacing: 1px;">
+                        {{ $turno_id ? 'Editar Atención' : 'Nueva Entrada' }}
                     </h5>
                     <button wire:click="closeModal()" type="button" class="btn-close btn-close-white"></button>
                 </div>
-                <div class="modal-body">
+
+                <div class="modal-body p-4 bg-light">
                     <form>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Cliente</label>
-                            <select wire:model="id_cliente" class="form-select form-select-lg">
+                        {{-- 1. CLIENTE --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">1. Cliente</label>
+                            <select wire:model="id_cliente" class="form-select form-select-lg shadow-sm border-0">
                                 <option value="">-- Seleccionar Cliente --</option>
                                 @foreach($clientes as $c)
                                     <option value="{{ $c->id }}">{{ $c->nombre }} {{ $c->apellido }}</option>
@@ -172,100 +177,76 @@
                             @error('id_cliente') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="p-3 bg-light rounded border mb-3">
-                            <label class="form-label text-primary fw-bold mb-3"><i class="bi bi-list-check"></i> Servicios a realizar</label>
+                        {{-- 2. SERVICIOS --}}
+                        <div class="p-3 bg-white rounded shadow-sm border mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <label class="form-label fw-bold text-primary mb-0 small text-uppercase">2. Servicios & Profesionales</label>
+                                <button wire:click="addItem()" type="button" class="btn btn-sm btn-outline-primary fw-bold">
+                                    <i class="bi bi-plus-lg"></i> Agregar Servicio
+                                </button>
+                            </div>
 
-                            <table class="table table-sm table-borderless">
-                                <thead class="text-muted small text-uppercase">
-                                    <tr>
-                                        <th width="40%">Servicio</th>
-                                        <th width="35%">Estilista</th>
-                                        <th width="20%">Precio (S/)</th>
-                                        <th width="5%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($items as $index => $item)
-                                    <tr>
-                                        <td>
-                                            <select wire:model.live="items.{{ $index }}.servicio_id" class="form-select form-select-sm">
-                                                <option value="">-- Servicio --</option>
-                                                @foreach($servicios as $s)
-                                                    <option value="{{ $s->id }}">{{ $s->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select wire:model="items.{{ $index }}.estilista_id" class="form-select form-select-sm">
-                                                <option value="">-- Estilista --</option>
-                                                
-                                                @foreach($estilistas as $e)
-                                                    @php
-                                                        // 1. ¿Está ocupado en general?
-                                                        $isBusy = $e->atencionesEnCurso->count() > 0;
-                                                        
-                                                        // 2. ¿Está ocupado CONMIGO (en este mismo turno)?
-                                                        // Si estoy editando el turno 100, y él está en el turno 100, para mí NO está ocupado, es mi estilista.
-                                                        $busyWithMe = false;
-                                                        if($turno_id && $isBusy) {
-                                                            // Verificamos si alguna de sus atenciones pertenece a este turno actual
-                                                            $busyWithMe = $e->atencionesEnCurso->where('id_turno', $turno_id)->count() > 0;
-                                                        }
-
-                                                        // Lógica de Texto Visual
-                                                        $estadoTexto = '';
-                                                        $style = '';
-
-                                                        if ($isBusy) {
-                                                            if ($busyWithMe) {
-                                                                $estadoTexto = '(Asignado a este turno)';
-                                                                $style = 'font-weight: bold; color: green;';
-                                                            } else {
-                                                                $estadoTexto = '(🔴 OCUPADO)';
-                                                                $style = 'color: red;';
-                                                            }
-                                                        } else {
-                                                            $estadoTexto = '(Libre)';
-                                                        }
-                                                    @endphp
-
-                                                    <option value="{{ $e->id }}" style="{{ $style }}">
-                                                        {{ $e->nombre }} {{ $estadoTexto }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" wire:model="items.{{ $index }}.precio" class="form-control form-control-sm">
-                                        </td>
-                                        <td class="text-center">
-                                            <button wire:click="removeItem({{ $index }})" type="button" class="btn btn-xs btn-outline-danger border-0">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            
-                            <button wire:click="addItem()" type="button" class="btn btn-sm btn-link text-decoration-none">
-                                <i class="bi bi-plus-circle"></i> Agregar otro servicio
-                            </button>
-                            
-                            @error('items') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+                            @foreach($items as $index => $item)
+                                <div class="row g-2 align-items-center mb-2">
+                                    <div class="col-md-5">
+                                        <select wire:model.live="items.{{ $index }}.servicio_id" class="form-select form-select-sm bg-light border-0">
+                                            <option value="">-- Servicio --</option>
+                                            @foreach($servicios as $s) <option value="{{ $s->id }}">{{ $s->nombre }}</option> @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select wire:model="items.{{ $index }}.estilista_id" class="form-select form-select-sm bg-light border-0">
+                                            <option value="">-- Profesional --</option>
+                                            @foreach($estilistas as $e)
+                                                @php
+                                                    // Validar si está ocupado
+                                                    $isBusy = $e->atencionesEnCurso->isNotEmpty();
+                                                    // Validar si está ocupado EN ESTE TURNO (es decir, conmigo)
+                                                    $busyWithMe = $turno_id && $e->atencionesEnCurso->where('id_turno', $turno_id)->isNotEmpty();
+                                                    
+                                                    // Estilos visuales
+                                                    $style = '';
+                                                    $text = '';
+                                                    if($isBusy) {
+                                                        if($busyWithMe) { $style = 'color: green; font-weight: bold;'; $text = '(Asignado)'; }
+                                                        else { $style = 'color: red;'; $text = '(Ocupado)'; }
+                                                    }
+                                                @endphp
+                                                <option value="{{ $e->id }}" style="{{ $style }}">
+                                                    {{ $e->nombre }} {{ $text }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text border-0 bg-transparent text-muted">S/</span>
+                                            <input type="number" step="0.01" wire:model="items.{{ $index }}.precio" class="form-control border-0 bg-light fw-bold text-end">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-center">
+                                        <button wire:click="removeItem({{ $index }})" type="button" class="btn btn-sm text-danger hover-bg-danger rounded-circle">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                            @error('items') <div class="text-danger small mt-2 text-center">{{ $message }}</div> @enderror
                         </div>
 
+                        {{-- 3. OBSERVACIONES --}}
                         <div class="mb-3">
-                            <label class="form-label">Observaciones (Opcional)</label>
-                            <textarea wire:model="observaciones" class="form-control" rows="2" placeholder="Ej: Cliente trae su propio tinte..."></textarea>
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Observaciones (Opcional)</label>
+                            <textarea wire:model="observaciones" class="form-control border-0 shadow-sm" rows="2" placeholder="Notas internas..."></textarea>
                         </div>
 
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button wire:click="closeModal()" type="button" class="btn btn-secondary">Cancelar</button>
-                    <button wire:click="store()" type="button" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Registrar Atención
+                
+                <div class="modal-footer bg-white py-3">
+                    <button wire:click="closeModal()" type="button" class="btn btn-light border">Cancelar</button>
+                    <button wire:click="store()" type="button" class="btn btn-primary px-4 shadow-sm text-dark fw-bold">
+                        <i class="bi bi-check-circle-fill me-2"></i> Confirmar Atención
                     </button>
                 </div>
             </div>

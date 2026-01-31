@@ -4,8 +4,8 @@ namespace App\Livewire\Admin\Pos;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Models\Producto;
-use App\Models\Servicio;
 use App\Models\Cliente;
 use App\Models\Turno;
 use App\Models\Venta;
@@ -36,6 +36,7 @@ class GestionPos extends Component
     public $metodo_pago_id = 1; // Efectivo por defecto
     public $monto_recibido = 0;
     public $vuelto = 0;
+    public $referencia_pago = null; // <--- NUEVA VARIABLE
 
     // ... propiedades ...
     public $isSuccessModalOpen = false;
@@ -51,7 +52,7 @@ class GestionPos extends Component
 
         // Si NO tiene caja abierta, lo redirigimos
         if (!$tengoCajaAbierta) {
-            session()->flash('error', '⚠️ DEBES ABRIR CAJA antes de poder realizar ventas.');
+            session()->flash('error', '⚠️ DEBES ABRIR CAJA antes de vender.');
             return redirect()->route('admin.caja');
         }
 
@@ -63,25 +64,35 @@ class GestionPos extends Component
     }
 
     #[Layout('layouts.admin')]
+    #[Title('Punto de Venta (POS)')]
     public function render()
     {
-        // Buscador de Productos (Solo activos y stock > 0 para venta)
-        $productos = Producto::where('activo', true)
-            ->where('tipo', '!=', 'insumo') // Solo venta o mixto
-            ->where('nombre', 'like', '%' . $this->searchProducto . '%')
-            ->take(5) // Limitamos para no saturar
-            ->get();
+        // BÚSQUEDA INTELIGENTE
+        $productos = [];
+        if(strlen($this->searchProducto) > 0) {
+            $productos = Producto::where('activo', true)
+                ->where('tipo', '!=', 'insumo')
+                ->where(function($q) {
+                    $q->where('nombre', 'like', '%' . $this->searchProducto . '%')
+                      ->orWhere('codigo_barras', 'like', '%' . $this->searchProducto . '%');
+                })
+                ->take(10)
+                ->get();
+        } else {
+            // Sugerencias iniciales (los más vendidos o recientes)
+            $productos = Producto::where('activo', true)
+                ->where('tipo', '!=', 'insumo')
+                ->latest()
+                ->take(6)
+                ->get();
+        }
 
-        // Turnos pendientes de cobro
-        $turnosPendientes = Turno::where('estado', 'activo')
-            ->with('cliente')
-            ->get();
-
-        $clientes = Cliente::orderBy('nombre')->get();
+        $turnosPendientes = Turno::where('estado', 'activo')->with('cliente')->get();
+        $clientes = Cliente::orderBy('nombre')->take(50)->get(); // Limitar carga
         $metodos = MetodoPago::where('activo', true)->get();
 
-        return view('livewire.admin.pos.gestion-pos', compact('productos', 'turnosPendientes', 'clientes', 'metodos'))
-            ->with('titulo', 'Punto de Venta (POS)');
+        return view('livewire.admin.pos.gestion-pos', 
+            compact('productos', 'turnosPendientes', 'clientes', 'metodos'));
     }
 
     // ==========================================
@@ -112,7 +123,7 @@ class GestionPos extends Component
         }
 
         $this->calculateTotal();
-        session()->flash('message', 'Turno #' . $idTurno . ' cargado correctamente.');
+        session()->flash('message', 'Turno cargado.');
     }
 
     // ==========================================
@@ -123,7 +134,7 @@ class GestionPos extends Component
         $prod = Producto::find($idProducto);
 
         if ($prod->stock_actual <= 0) {
-            session()->flash('error', 'Producto sin stock.');
+            session()->flash('error', 'Producto AGOTADO.');
             return;
         }
 
@@ -132,7 +143,7 @@ class GestionPos extends Component
         foreach ($this->cart as $key => $item) {
             if ($item['tipo'] == 'producto' && $item['id'] == $idProducto) {
                 if ($this->cart[$key]['cantidad'] + 1 > $prod->stock_actual) {
-                    session()->flash('error', 'No hay suficiente stock.');
+                    session()->flash('error', 'Stock insuficiente.');
                     return;
                 }
                 $this->cart[$key]['cantidad']++;
@@ -167,6 +178,47 @@ class GestionPos extends Component
         $this->calculateTotal();
     }
 
+    // INCREMENTAR CANTIDAD
+    public function incrementQuantity($index)
+    {
+        $item = $this->cart[$index];
+        
+        // Si es producto, validamos stock
+        if ($item['tipo'] == 'producto') {
+            $prod = Producto::find($item['id']);
+            if ($item['cantidad'] + 1 > $prod->stock_actual) {
+                session()->flash('error', 'No hay suficiente stock.');
+                return;
+            }
+        }
+        
+        $this->cart[$index]['cantidad']++;
+        $this->cart[$index]['subtotal'] = $this->cart[$index]['cantidad'] * $this->cart[$index]['precio'];
+        $this->calculateTotal();
+    }
+
+    // DECREMENTAR CANTIDAD
+    public function decrementQuantity($index)
+    {
+        if ($this->cart[$index]['cantidad'] > 1) {
+            $this->cart[$index]['cantidad']--;
+            $this->cart[$index]['subtotal'] = $this->cart[$index]['cantidad'] * $this->cart[$index]['precio'];
+            $this->calculateTotal();
+        }
+    }
+
+    public function cambiarMetodoPago($id)
+    {
+        $this->metodo_pago_id = $id;
+        $this->referencia_pago = null; // Limpiamos referencia al cambiar
+        
+        // CORRECCIÓN: Siempre asignamos el total al cambiar de método.
+        // Así evitamos que el sistema piense que "falta dinero" y bloquee el botón.
+        $this->monto_recibido = $this->total; 
+        
+        $this->calculateVuelto();
+    }
+
     public function calculateTotal()
     {
         $this->total = 0;
@@ -177,9 +229,19 @@ class GestionPos extends Component
         $this->calculateVuelto();
     }
 
+    // Este "hook" se ejecuta automáticamente cada vez que escribes en el input 'monto_recibido'
+    public function updatedMontoRecibido()
+    {
+        $this->calculateVuelto();
+    }
+
     public function calculateVuelto()
     {
-        $this->vuelto = (float)$this->monto_recibido - (float)$this->total;
+        // Forzamos que sean números (float) para evitar errores con vacíos
+        $monto = (float) ($this->monto_recibido ?? 0);
+        $total = (float) $this->total;
+
+        $this->vuelto = $monto - $total;
     }
 
     // ==========================================
@@ -253,7 +315,9 @@ class GestionPos extends Component
                 'id_metodo_pago' => $this->metodo_pago_id,
                 'monto' => $this->total, // Asumiendo pago total por ahora
                 'fecha' => Carbon::now(),
-                'referencia' => null,
+                // LÓGICA DE REFERENCIA
+                // Si es efectivo (1), va null. Si no, guardamos lo que escribió.
+                'referencia' => $this->metodo_pago_id == 1 ? null : $this->referencia_pago,
                 'confirmado' => true
             ]);
 
@@ -292,6 +356,8 @@ class GestionPos extends Component
         $this->cliente_id = null;
         $this->total = 0;
         $this->monto_recibido = 0;
+        $this->vuelto = 0;
+        $this->referencia_pago = null;
     }
     
     public function cerrarSuccessModal()
@@ -302,32 +368,5 @@ class GestionPos extends Component
 
     public function closePaymentModal() { $this->isPaymentModalOpen = false; }
 
-    // INCREMENTAR CANTIDAD
-    public function incrementQuantity($index)
-    {
-        $item = $this->cart[$index];
-        
-        // Si es producto, validamos stock
-        if ($item['tipo'] == 'producto') {
-            $prod = Producto::find($item['id']);
-            if ($item['cantidad'] + 1 > $prod->stock_actual) {
-                session()->flash('error', 'No hay suficiente stock.');
-                return;
-            }
-        }
-        
-        $this->cart[$index]['cantidad']++;
-        $this->cart[$index]['subtotal'] = $this->cart[$index]['cantidad'] * $this->cart[$index]['precio'];
-        $this->calculateTotal();
-    }
-
-    // DECREMENTAR CANTIDAD
-    public function decrementQuantity($index)
-    {
-        if ($this->cart[$index]['cantidad'] > 1) {
-            $this->cart[$index]['cantidad']--;
-            $this->cart[$index]['subtotal'] = $this->cart[$index]['cantidad'] * $this->cart[$index]['precio'];
-            $this->calculateTotal();
-        }
-    }
+    
 }

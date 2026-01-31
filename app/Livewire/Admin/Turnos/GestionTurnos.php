@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Turnos;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Models\Turno;
 use App\Models\TurnoServicio;
 use App\Models\Cliente;
@@ -39,47 +40,43 @@ class GestionTurnos extends Component
     ];
 
     #[Layout('layouts.admin')]
+    #[Title('Recepción y Turnos')]
     public function render()
     {
-        // 1. MONITOR DE ESTILISTAS (Lo Nuevo)
-        // Traemos todos los estilistas activos y cargamos sus atenciones en curso
+        // 1. MONITOR DE ESTILISTAS
+        // Traemos estilistas activos y sus atenciones de hoy que NO han terminado
         $monitorEstilistas = Estilista::where('activo', true)
-            ->with('atencionesEnCurso') // Usamos la relación que creamos arriba
-            ->get();
-
-        // 2. LISTA PARA EL SELECT (Aquí hacemos el cambio)
-        // Cargamos 'atencionesEnCurso' también aquí para poder pintar el estado en el select
-        $estilistas = Estilista::where('activo', true)
-            ->with('atencionesEnCurso') // <--- AGREGADO
+            ->with(['atencionesEnCurso' => function($q) {
+                // Filtramos solo las atenciones de turnos ACTIVOS
+                $q->whereHas('turno', function($t) {
+                    $t->where('estado', 'activo');
+                });
+            }]) 
             ->orderBy('nombre')
             ->get();
 
-        // 3. HISTORIAL DE TURNOS
-        $turnos = Turno::with(['cliente', 'servicios.servicio'])
-            ->where('estado', 'activo') // Opcional: quita esto si quieres ver historial completo
+        // 2. HISTORIAL DE TURNOS ACTIVOS
+        $turnos = Turno::with(['cliente', 'servicios.servicio', 'servicios.estilista'])
+            ->where('estado', 'activo') 
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        // Catálogos
+        // Catálogos para el Modal
         $clientes = Cliente::orderBy('nombre')->get();
-        // Nota: Para el select del modal, usamos los mismos estilistas pero sin la carga pesada
-        $servicios = Servicio::where('activo', true)->get();
+        $servicios = Servicio::where('activo', true)->orderBy('nombre')->get();
+        $estilistas = Estilista::where('activo', true)->orderBy('nombre')->get(); // Para el select
 
-        // AGREGAMOS 'estilistas' AL COMPACT
         return view('livewire.admin.turnos.gestion-turnos', 
-            compact('turnos', 'monitorEstilistas', 'estilistas', 'clientes', 'servicios'))
-            ->with('titulo', 'Recepción y Turnos');
+            compact('turnos', 'monitorEstilistas', 'estilistas', 'clientes', 'servicios'));
     }
 
     public function create()
     {
         $this->resetInputFields();
-        // Agregamos una fila vacía por defecto para facilitar la carga
-        $this->addItem(); 
+        $this->addItem(); // Fila vacía por defecto
         $this->openModal();
     }
 
-    // Agregar una fila al formulario dinámico
     public function addItem()
     {
         $this->items[] = [
@@ -89,42 +86,34 @@ class GestionTurnos extends Component
         ];
     }
 
-    // Eliminar una fila del formulario
     public function removeItem($index)
     {
         unset($this->items[$index]);
-        $this->items = array_values($this->items); // Reindexar array
+        $this->items = array_values($this->items);
     }
 
-    // Cuando seleccionan un servicio, actualizamos el precio automáticamente
+    // Actualizar precio automáticamente al seleccionar servicio
     public function updatedItems($value, $key)
     {
-        // La $key viene como "0.servicio_id"
         $parts = explode('.', $key);
         if (count($parts) == 2 && $parts[1] == 'servicio_id') {
             $index = $parts[0];
-            $servicioId = $value;
-            
-            // Buscar precio original
-            $servicio = Servicio::find($servicioId);
+            $servicio = Servicio::find($value);
             if ($servicio) {
                 $this->items[$index]['precio'] = $servicio->precio;
             }
         }
     }
 
-    // === NUEVA FUNCIÓN: CARGAR DATOS PARA EDITAR ===
     public function edit($id)
     {
         $this->resetInputFields();
         $this->turno_id = $id;
 
         $turno = Turno::with('servicios')->find($id);
-
         $this->id_cliente = $turno->id_cliente;
         $this->observaciones = $turno->observaciones;
 
-        // Cargamos los servicios existentes al array de items visual
         foreach($turno->servicios as $detalle) {
             $this->items[] = [
                 'servicio_id' => $detalle->id_servicio,
@@ -136,39 +125,35 @@ class GestionTurnos extends Component
         $this->openModal();
     }
 
-    // === STORE ACTUALIZADO (CREAR O EDITAR) ===
     public function store()
     {
         $this->validate();
 
-        DB::beginTransaction(); // Usamos transacción por seguridad
+        DB::beginTransaction();
         try {
-            
             if ($this->turno_id) {
-                // CASO EDITAR: Actualizamos cabecera
+                // EDITAR
                 $turno = Turno::find($this->turno_id);
                 $turno->update([
                     'id_cliente' => $this->id_cliente,
                     'observaciones' => $this->observaciones
                 ]);
-
-                // ESTRATEGIA: Borrón y cuenta nueva para los detalles
-                // Es lo más seguro para evitar duplicados o lógica compleja de diff
-                TurnoServicio::where('id_turno', $this->turno_id)->delete();
                 
-                $mensaje = 'Turno actualizado y servicios agregados.';
+                // Borrón y cuenta nueva de detalles (Estrategia segura)
+                TurnoServicio::where('id_turno', $this->turno_id)->delete();
+                $mensaje = 'Atención actualizada correctamente.';
             } else {
-                // CASO CREAR
+                // CREAR
                 $turno = Turno::create([
                     'id_cliente' => $this->id_cliente,
                     'hora_inicio' => Carbon::now(),
                     'estado' => 'activo',
                     'observaciones' => $this->observaciones
                 ]);
-                $mensaje = 'Turno registrado correctamente.';
+                $mensaje = 'Nueva atención iniciada.';
             }
 
-            // CREAR LOS DETALLES (Sea nuevo o editado, se crean igual)
+            // GUARDAR DETALLES
             foreach ($this->items as $item) {
                 TurnoServicio::create([
                     'id_turno' => $turno->id,
@@ -179,7 +164,6 @@ class GestionTurnos extends Component
             }
 
             DB::commit();
-
             session()->flash('message', $mensaje);
             $this->closeModal();
             $this->resetInputFields();
@@ -190,7 +174,6 @@ class GestionTurnos extends Component
         }
     }
 
-    // Cancelar turno (Si el cliente se va sin pagar)
     public function cancelar($id)
     {
         $turno = Turno::find($id);
@@ -203,7 +186,7 @@ class GestionTurnos extends Component
 
     private function resetInputFields()
     {
-        $this->turno_id = null; // Resetear ID
+        $this->turno_id = null;
         $this->id_cliente = '';
         $this->observaciones = '';
         $this->items = [];

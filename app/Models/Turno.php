@@ -11,7 +11,6 @@ class Turno extends Model
 
     protected $fillable = [
         'id_cliente',
-        'id_estilista', // Estilista principal (opcional)
         'hora_inicio',
         'hora_fin',
         'estado',       // activo, cerrado, cancelado
@@ -26,10 +25,6 @@ class Turno extends Model
     // Relaciones
     public function cliente() {
         return $this->belongsTo(Cliente::class, 'id_cliente');
-    }
-
-    public function estilista() {
-        return $this->belongsTo(Estilista::class, 'id_estilista');
     }
 
     // Un turno tiene muchos servicios detallados

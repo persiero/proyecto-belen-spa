@@ -229,38 +229,56 @@
                         <div class="d-flex gap-2 mb-3">
                             @foreach($metodos as $m)
                                 <button type="button" class="btn flex-grow-1 {{ $metodo_pago_id == $m->id ? 'btn-primary' : 'btn-outline-secondary' }}" 
-                                    wire:click="$set('metodo_pago_id', {{ $m->id }})">
+                                    wire:click="cambiarMetodoPago({{ $m->id }})">
                                     <i class="bi {{ $m->nombre == 'efectivo' ? 'bi-cash-stack' : ($m->nombre == 'yape' ? 'bi-qr-code' : 'bi-credit-card') }}"></i>
                                     <br><small>{{ ucfirst($m->nombre) }}</small>
                                 </button>
                             @endforeach
                         </div>
                         
-                        <label class="form-label fw-bold">Dinero Recibido</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-white">S/</span>
-                            <input type="number" step="0.01" wire:model.live="monto_recibido" class="form-control fw-bold text-end" placeholder="0.00" autofocus>
-                        </div>
-                    </div>
+                        {{-- INPUT DE REFERENCIA (Solo si NO es efectivo) --}}
+                        {{-- Asumimos que ID 1 es Efectivo. Ajusta si tu ID es otro --}}
+                        @if($metodo_pago_id != 1) 
+                            <div class="mb-3 text-start bg-light p-3 rounded border">
+                                <label class="form-label small fw-bold text-secondary">
+                                    <i class="bi bi-hash"></i> Nro. Operación / Referencia
+                                </label>
+                                <input type="text" wire:model.live="referencia_pago" class="form-control" 
+                                    placeholder="Ej: 987654 (Yape) o 4 últimos dígitos tarjeta">
+                            </div>
+                        @endif
 
-                    @if($vuelto >= 0)
-                        <div class="alert alert-success d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm">
-                            <span class="fw-bold"><i class="bi bi-arrow-return-left me-2"></i> VUELTO:</span>
-                            <span class="h4 mb-0 fw-bold">S/ {{ number_format($vuelto, 2) }}</span>
-                        </div>
-                    @else
-                        <div class="alert alert-danger d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm">
-                            <span class="fw-bold"><i class="bi bi-exclamation-circle me-2"></i> FALTA:</span>
-                            <span class="h4 mb-0 fw-bold">S/ {{ number_format(abs($vuelto), 2) }}</span>
-                        </div>
-                    @endif
+                        {{-- INPUT DE MONTO (Solo si ES efectivo pide vuelto, si es digital se asume exacto) --}}
+                        @if($metodo_pago_id == 1) 
+                            <div class="form-floating mb-3">
+                                <input type="number" step="0.01" wire:model.live="monto_recibido" class="form-control fs-4 fw-bold text-center" id="montoInput" placeholder="Monto">
+                                <label for="montoInput" class="text-center w-100">Dinero Recibido (S/)</label>
+                            </div>
+                            @if($vuelto >= 0)
+                                <div class="alert alert-success d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm">
+                                    <span class="fw-bold"><i class="bi bi-arrow-return-left me-2"></i> VUELTO:</span>
+                                    <span class="h4 mb-0 fw-bold">S/ {{ number_format($vuelto, 2) }}</span>
+                                </div>
+                            @else
+                                <div class="alert alert-danger d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm">
+                                    <span class="fw-bold"><i class="bi bi-exclamation-circle me-2"></i> FALTA:</span>
+                                    <span class="h4 mb-0 fw-bold">S/ {{ number_format(abs($vuelto), 2) }}</span>
+                                </div>
+                            @endif
+                        @endif                
 
                     @if (session()->has('error_pago'))
                         <div class="text-danger text-center small mt-2 fw-bold">{{ session('error_pago') }}</div>
                     @endif
                 </div>
                 <div class="modal-footer border-0 pt-0 bg-light pb-4 px-4">
-                    <button wire:click="procesarVenta" class="btn btn-success w-100 btn-lg shadow fw-bold" {{ $vuelto < 0 ? 'disabled' : '' }}>
+                    <button wire:click="procesarVenta" class="btn btn-success w-100 btn-lg shadow fw-bold" 
+                        {{-- Lógica de Bloqueo: --}}
+                        {{-- 1. Si es Efectivo (ID 1) y falta dinero (vuelto < 0) -> Bloqueado --}}
+                        {{-- 2. Si NO es Efectivo y la referencia está vacía -> Bloqueado --}}
+                        @if( ($metodo_pago_id == 1 && $vuelto < 0) || ($metodo_pago_id != 1 && empty($referencia_pago)) )
+                            disabled 
+                        @endif>
                         <i class="bi bi-check-lg me-2"></i> CONFIRMAR PAGO
                     </button>
                 </div>
