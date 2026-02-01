@@ -30,6 +30,9 @@ class GestionPos extends Component
 
     // Buscadores
     public $searchProducto = '';
+    public $buscar_cliente = ''; 
+    public $clientes_encontrados = []; 
+    public $cliente_seleccionado_nombre = null;
     
     // Modal de Pago
     public $isPaymentModalOpen = false;
@@ -41,6 +44,7 @@ class GestionPos extends Component
     // ... propiedades ...
     public $isSuccessModalOpen = false;
     public $ultimaVenta = null; // Para mostrar en el ticket final
+
 
     public function mount($turno_id = null)
     {
@@ -61,6 +65,42 @@ class GestionPos extends Component
             // Reutilizamos tu función cargarTurno que ya programamos antes
             $this->cargarTurno($turno_id);
         }
+    }
+
+    public function updatedBuscarCliente()
+    {
+        // Limpiamos espacios en blanco al inicio/final
+        $termino = trim($this->buscar_cliente);
+
+        if(strlen($termino) < 2) {
+            $this->clientes_encontrados = [];
+            return;
+        }
+
+        $this->clientes_encontrados = \App\Models\Cliente::where(function($query) use ($termino) {
+                $query->where('nombre', 'like', '%' . $termino . '%')
+                      ->orWhere('apellido', 'like', '%' . $termino . '%')
+                      ->orWhere('numero_documento', 'like', '%' . $termino . '%');
+            })->limit(5)->get();
+    }
+
+    public function seleccionarCliente($id)
+    {
+        $cliente = \App\Models\Cliente::find($id);
+        if($cliente) {
+            $this->cliente_id = $cliente->id; // Usamos tu variable original $cliente_id
+            $this->cliente_seleccionado_nombre = $cliente->nombre . ' ' . $cliente->apellido;
+            $this->buscar_cliente = '';
+            $this->clientes_encontrados = [];
+        }
+    }
+
+    public function limpiarCliente()
+    {
+        $this->cliente_id = null;
+        $this->cliente_seleccionado_nombre = null;
+        $this->buscar_cliente = '';
+        $this->clientes_encontrados = [];
     }
 
     #[Layout('layouts.admin')]
@@ -358,6 +398,7 @@ class GestionPos extends Component
         $this->monto_recibido = 0;
         $this->vuelto = 0;
         $this->referencia_pago = null;
+        $this->limpiarCliente();
     }
     
     public function cerrarSuccessModal()

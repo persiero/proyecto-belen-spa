@@ -168,12 +168,66 @@
                         {{-- 1. CLIENTE --}}
                         <div class="mb-4">
                             <label class="form-label fw-bold text-secondary small text-uppercase">1. Cliente</label>
-                            <select wire:model="id_cliente" class="form-select form-select-lg shadow-sm border-0">
-                                <option value="">-- Seleccionar Cliente --</option>
-                                @foreach($clientes as $c)
-                                    <option value="{{ $c->id }}">{{ $c->nombre }} {{ $c->apellido }}</option>
-                                @endforeach
-                            </select>
+                            {{-- 1. ESTADO: CLIENTE YA SELECCIONADO --}}
+                            @if($id_cliente && $cliente_seleccionado_nombre)
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white border-0">
+                                        <i class="bi bi-person-check-fill"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-white fw-bold text-success" 
+                                        value="{{ $cliente_seleccionado_nombre }}" readonly>
+                                    <button class="btn btn-outline-danger" wire:click="limpiarCliente" title="Quitar cliente">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+
+                            {{-- 2. ESTADO: BUSCANDO CLIENTE --}}
+                            @else
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-search text-secondary"></i>
+                                    </span>
+                                    {{-- Input con debounce para no saturar el servidor (300ms espera a que termines de escribir) --}}
+                                    <input type="text" 
+                                        class="form-control border-start-0 ps-0" 
+                                        wire:model.live.debounce.300ms="buscar_cliente" 
+                                        placeholder="Buscar por Nombre o DNI/RUC..."
+                                        autocomplete="off">
+                                </div>
+
+                                {{-- 3. LISTA DE RESULTADOS FLOTANTE --}}
+                                @if(count($clientes_encontrados) > 0)
+                                    <div class="list-group position-absolute w-100 shadow-lg mt-1" 
+                                        style="z-index: 1050; max-height: 200px; overflow-y: auto;">
+                                        
+                                        @foreach($clientes_encontrados as $cliente)
+                                            <button type="button" 
+                                                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                                    wire:click="seleccionarCliente({{ $cliente->id }})">
+                                                
+                                                <div>
+                                                    <span class="fw-bold">{{ $cliente->nombre }} {{ $cliente->apellido }}</span><br>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-card-heading"></i> {{ $cliente->numero_documento }}
+                                                    </small>
+                                                </div>
+                                                
+                                                <i class="bi bi-chevron-right text-muted small"></i>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                
+                                {{-- MENSAJE SI NO ENCUENTRA NADA (Opcional) --}}
+                                @elseif(strlen($buscar_cliente) > 2)
+                                    <div class="position-absolute w-100 mt-1" style="z-index: 1050;">
+                                        <div class="alert alert-warning p-2 small shadow-sm border-warning">
+                                            <i class="bi bi-exclamation-circle me-1"></i> No se encontró el cliente.
+                                            {{-- Aquí podrías poner un botón para abrir modal de crear cliente --}}
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
+                            
                             @error('id_cliente') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
 

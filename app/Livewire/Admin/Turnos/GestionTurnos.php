@@ -26,6 +26,11 @@ class GestionTurnos extends Component
     public $turno_id = null;
     public $id_cliente;
     public $observaciones;
+
+    // [PEGAR AQUÍ] BLOQUE DE BUSCADOR DE CLIENTES -----------------------
+    public $buscar_cliente = ''; 
+    public $clientes_encontrados = []; 
+    public $cliente_seleccionado_nombre = null;
     
     // Lista dinámica de servicios [servicio_id, estilista_id, precio]
     public $items = []; 
@@ -38,6 +43,42 @@ class GestionTurnos extends Component
         'items.*.estilista_id' => 'required|exists:estilistas,id',
         'items.*.precio' => 'required|numeric|min:0',
     ];
+
+    public function updatedBuscarCliente()
+    {
+        // Limpiamos espacios en blanco al inicio/final
+        $termino = trim($this->buscar_cliente);
+
+        if(strlen($termino) < 2) {
+            $this->clientes_encontrados = [];
+            return;
+        }
+
+        $this->clientes_encontrados = \App\Models\Cliente::where(function($query) use ($termino) {
+                $query->where('nombre', 'like', '%' . $termino . '%')
+                      ->orWhere('apellido', 'like', '%' . $termino . '%')
+                      ->orWhere('numero_documento', 'like', '%' . $termino . '%');
+            })->limit(5)->get();
+    }
+
+    public function seleccionarCliente($id)
+    {
+        $cliente = \App\Models\Cliente::find($id);
+        if($cliente) {
+            $this->id_cliente = $cliente->id; // Usamos tu variable original $id_cliente
+            $this->cliente_seleccionado_nombre = $cliente->nombre . ' ' . $cliente->apellido;
+            $this->buscar_cliente = '';
+            $this->clientes_encontrados = [];
+        }
+    }
+
+    public function limpiarCliente()
+    {
+        $this->id_cliente = null;
+        $this->cliente_seleccionado_nombre = null;
+        $this->buscar_cliente = '';
+        $this->clientes_encontrados = [];
+    }
 
     #[Layout('layouts.admin')]
     #[Title('Recepción y Turnos')]
@@ -112,6 +153,10 @@ class GestionTurnos extends Component
 
         $turno = Turno::with('servicios')->find($id);
         $this->id_cliente = $turno->id_cliente;
+        // AGREGAR ESTO: Cargar el nombre visual para que el buscador aparezca verde
+        if($turno->cliente) {
+            $this->cliente_seleccionado_nombre = $turno->cliente->nombre . ' ' . $turno->cliente->apellido;
+        }
         $this->observaciones = $turno->observaciones;
 
         foreach($turno->servicios as $detalle) {
@@ -190,5 +235,6 @@ class GestionTurnos extends Component
         $this->id_cliente = '';
         $this->observaciones = '';
         $this->items = [];
+        $this->limpiarCliente();
     }
 }
