@@ -5,7 +5,8 @@ namespace App\Services;
 use App\Models\Venta;
 use App\Models\ConfigTributaria;
 use App\Models\ConfigNegocio;
-use App\Models\Comprobante; // <--- ERROR 1 CORREGIDO: Importación agregada
+use App\Models\Comprobante; 
+use App\Models\ComprobanteDetalle;
 use App\Models\TipoComprobante;
 use Greenter\See;
 use Greenter\Model\Client\Client;
@@ -157,7 +158,7 @@ class SunatService
 
         $legend = new Legend();
         $legend->setCode('1000')
-            ->setValue('SON: ' . $venta->total . ' SOLES'); 
+            ->setValue($this->numeroALetras($venta->total)); 
         $invoice->setLegends([$legend]);
 
         // 6. ENVIAR A SUNAT
@@ -189,7 +190,7 @@ class SunatService
             }
 
             // 7. REGISTRAR EN BD (AHORA SÍ GUARDAMOS LOS MONTOS)
-            Comprobante::create([
+            $comprobante = Comprobante::create([
                 'id_venta' => $venta->id,
                 'id_tipo_comprobante' => ($tipoComprobante == '01' ? 1 : 2),
                 'id_serie_comprobante' => ($serie == 'F001' ? 1 : 2),
@@ -208,6 +209,10 @@ class SunatService
                 'op_gravadas' => $opGravadas,  // <--- Guardamos en BD
                 'monto_igv' => $mtoIgv,          // <--- Guardamos en BD
                 'total' => $total,
+                'moneda' => 'PEN',
+                'forma_pago' => 'Contado', // Por ahora SPA es contado
+                //'leyenda_sunat' => 'SON: ' . $venta->total . ' SOLES',
+                'leyenda_sunat' => $this->numeroALetras($venta->total), // Guardamos la leyenda
 
                 // DATOS SUNAT
                 'nombre_xml' => $nombreArchivo,
@@ -217,6 +222,29 @@ class SunatService
                 'mensaje_sunat' => $mensaje,
                 'enviado_sunat' => true
             ]);
+
+            // 8. ¡AQUÍ ESTÁ EL FIX! LLENAR DETALLES (SNAPSHOT)
+            // Recorremos los items de la VENTA y los guardamos en COMPROBANTES_DETALLE
+            foreach ($venta->detalles as $det) {
+                // Recálculos auxiliares
+                $valorUnitario = round($det->precio_unitario / 1.18, 2);
+                $subtotalBase = round($valorUnitario * $det->cantidad, 2);
+                $igvItem = round(($det->precio_unitario - $valorUnitario) * $det->cantidad, 2);
+                $totalItem = $det->subtotal; // Precio * Cantidad
+
+                ComprobanteDetalle::create([
+                    'id_comprobante' => $comprobante->id,
+                    'tipo_item'      => $det->tipo_item, // servicio/producto
+                    'descripcion'    => $det->nombre_item,
+                    'codigo_unidad'  => ($det->tipo_item == 'servicio' ? 'ZZ' : 'NIU'),
+                    'cantidad'       => $det->cantidad,
+                    'precio_unitario'=> $det->precio_unitario, // Con IGV
+                    'valor_unitario' => $valorUnitario,        // Sin IGV
+                    'subtotal'       => $subtotalBase,
+                    'igv_total'      => $igvItem,
+                    'total'          => $totalItem
+                ]);
+            }
 
             return ['success' => $result->isSuccess(), 'message' => $mensaje];
 
@@ -370,7 +398,8 @@ class SunatService
             $note->setDetails($items);
 
             $legend = new Legend();
-            $legend->setCode('1000')->setValue('SON: ' . $total . ' SOLES');
+            $legend->setCode('1000')
+                ->setValue($this->numeroALetras($cpeOriginal->total)); // <--- CAMBIO AQUÍ;
             $note->setLegends([$legend]);
 
             // 7. ENVIAR A SUNAT
@@ -405,7 +434,7 @@ class SunatService
             // Asumimos que es el ID 3 o lo buscamos dinámicamente
             $tipoNcId = TipoComprobante::where('codigo_sunat', '07')->first()->id;
 
-            Comprobante::create([
+            $nc = Comprobante::create([
                 'id_venta' => $venta->id, // Lo vinculamos a la misma venta
                 'id_tipo_comprobante' => $tipoNcId,
                 'id_serie_comprobante' => $idSerieNota, //Faltaba esto
@@ -413,28 +442,171 @@ class SunatService
                 'correlativo' => $correlativoNota,
                 'fecha_emision' => Carbon::now(),
 
+                // VINCULACIÓN CON EL PADRE (CRÍTICO)
+                'id_comprobante_ref' => $cpeOriginal->id, // <--- NUEVO CAMPO
+                'cod_motivo_nc' => '01', // Anulación de la operación
+                'descripcion_motivo_nc' => $motivo,
+
+                // Datos Económicos (Copia del original)
                 'op_gravadas' => $cpeOriginal->op_gravadas, // Usamos datos del original
                 'monto_igv' => $cpeOriginal->monto_igv,     // Usamos datos del original
                 'total' => $cpeOriginal->total,             // Usamos datos del original
+                'moneda' => 'PEN',
+                'leyenda_sunat' => $this->numeroALetras($cpeOriginal->total),
+                'forma_pago' => 'Contado', // Agregamos este que faltaba en tu código anterior
                 
+                // Datos Receptor
+                'receptor_tipo_doc' => $client->getTipoDoc(),
+                'receptor_numero_doc' => $client->getNumDoc(),
+                'receptor_razon_social' => $client->getRznSocial(),
+                'receptor_direccion' => $direccionCliente, // <--- NUEVO: Guardar Dirección
+
+                // Datos Técnicos
                 'nombre_xml' => $nombreArchivo ?? 'NC_PENDIENTE',
                 'cdr_xml' => $nombreCdr,
                 'hash_cpe' => $hash ?? null,
                 'estado_sunat' => $estado ?? 'rechazado',
                 'mensaje_sunat' => $mensaje ?? 'Error',
-                'enviado_sunat' => true,
+                'enviado_sunat' => true,               
                 
-                // IMPORTANTE: Guardamos datos del receptor nuevamente
-                'receptor_tipo_doc' => $client->getTipoDoc(),
-                'receptor_numero_doc' => $client->getNumDoc(),
-                'receptor_razon_social' => $client->getRznSocial(),
-                'receptor_direccion' => $direccionCliente, // <--- NUEVO: Guardar Dirección
             ]);
+
+            // 9. GUARDAR LOS DETALLES DE LA NOTA DE CRÉDITO
+            // (Deben ser espejo del original)
+            // OJO: Si tienes ComprobanteDetalle lleno, úsalo. Si no, usa la venta.
+            // Como recién vamos a llenar la tabla, usaremos la venta por ahora.
+            foreach ($venta->detalles as $det) {
+                 // ... (mismos cálculos que arriba) ...
+                 $valorUnitario = round($det->precio_unitario / 1.18, 2);
+                 $subtotalBase = round($valorUnitario * $det->cantidad, 2); // Base imponible
+                 $igvItem = round(($det->precio_unitario - $valorUnitario) * $det->cantidad, 2); // Monto IGV
+                 $totalItem = $det->subtotal; // Precio Venta Total del item
+
+                 \App\Models\ComprobanteDetalle::create([
+                    'id_comprobante' => $nc->id,
+                    'tipo_item'      => $det->tipo_item,
+                    'descripcion'    => $det->nombre_item,
+                    'codigo_unidad'  => ($det->tipo_item == 'servicio' ? 'ZZ' : 'NIU'),
+                    'cantidad'       => $det->cantidad,
+                    'precio_unitario'=> $det->precio_unitario,
+                    'valor_unitario' => $valorUnitario,
+                    'subtotal'       => $subtotalBase,
+                    'igv_total'      => $igvItem,
+                    'total'          => $det->subtotal
+                ]);
+            }
 
             return ['success' => $result->isSuccess(), 'message' => $mensaje];
 
         } catch (\Exception $e) {
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
+    }
+
+    // ==========================================
+    // UTILITARIO: CONVERTIR NÚMERO A LETRAS (PHP PURO)
+    // ==========================================
+    private function numeroALetras($monto)
+    {
+        $monto = floatval($monto);
+        $entero = floor($monto);
+        $centavos = round(($monto - $entero) * 100);
+        
+        $texto = $this->convertirEntero($entero);
+        
+        // Ajuste final para monedas
+        $texto = trim($texto);
+        if ($texto == 'UNO') $texto = 'UN'; // Caso "UN SOL"
+        
+        return 'SON: ' . $texto . ' CON ' . str_pad($centavos, 2, '0', STR_PAD_LEFT) . '/100 SOLES';
+    }
+
+    private function convertirEntero($n)
+    {
+        $output = '';
+        
+        if ($n == 0) return 'CERO';
+        
+        if ($n >= 1000000) {
+            $n_millon = floor($n / 1000000);
+            $n = $n % 1000000;
+            if ($n_millon == 1) $output .= 'UN MILLON ';
+            else $output .= $this->convertirEntero($n_millon) . ' MILLONES ';
+        }
+        
+        if ($n >= 1000) {
+            $n_miles = floor($n / 1000);
+            $n = $n % 1000;
+            if ($n_miles == 1) $output .= 'MIL ';
+            else $output .= $this->convertirEntero($n_miles) . ' MIL ';
+        }
+        
+        if ($n >= 100) {
+            $n_centenas = floor($n / 100);
+            $n = $n % 100;
+            switch ($n_centenas) {
+                case 1: $output .= ($n == 0) ? 'CIEN ' : 'CIENTO '; break;
+                case 2: $output .= 'DOSCIENTOS '; break;
+                case 3: $output .= 'TRESCIENTOS '; break;
+                case 4: $output .= 'CUATROCIENTOS '; break;
+                case 5: $output .= 'QUINIENTOS '; break;
+                case 6: $output .= 'SEISCIENTOS '; break;
+                case 7: $output .= 'SETECIENTOS '; break;
+                case 8: $output .= 'OCHOCIENTOS '; break;
+                case 9: $output .= 'NOVECIENTOS '; break;
+            }
+        }
+        
+        if ($n >= 10) {
+            if ($n <= 15) {
+                switch ($n) {
+                    case 10: $output .= 'DIEZ '; break;
+                    case 11: $output .= 'ONCE '; break;
+                    case 12: $output .= 'DOCE '; break;
+                    case 13: $output .= 'TRECE '; break;
+                    case 14: $output .= 'CATORCE '; break;
+                    case 15: $output .= 'QUINCE '; break;
+                }
+                $n = 0;
+            } else if ($n < 20) {
+                $output .= 'DIECI';
+                $n -= 10;
+            } else if ($n == 20) {
+                $output .= 'VEINTE ';
+                $n = 0;
+            } else if ($n < 30) {
+                $output .= 'VEINTI';
+                $n -= 20;
+            } else {
+                $n_decenas = floor($n / 10);
+                $n = $n % 10;
+                switch ($n_decenas) {
+                    case 3: $output .= 'TREINTA '; break;
+                    case 4: $output .= 'CUARENTA '; break;
+                    case 5: $output .= 'CINCUENTA '; break;
+                    case 6: $output .= 'SESENTA '; break;
+                    case 7: $output .= 'SETENTA '; break;
+                    case 8: $output .= 'OCHENTA '; break;
+                    case 9: $output .= 'NOVENTA '; break;
+                }
+                if ($n > 0) $output .= 'Y ';
+            }
+        }
+        
+        if ($n > 0) {
+            switch ($n) {
+                case 1: $output .= 'UNO '; break;
+                case 2: $output .= 'DOS '; break;
+                case 3: $output .= 'TRES '; break;
+                case 4: $output .= 'CUATRO '; break;
+                case 5: $output .= 'CINCO '; break;
+                case 6: $output .= 'SEIS '; break;
+                case 7: $output .= 'SIETE '; break;
+                case 8: $output .= 'OCHO '; break;
+                case 9: $output .= 'NUEVE '; break;
+            }
+        }
+        
+        return $output;
     }
 }

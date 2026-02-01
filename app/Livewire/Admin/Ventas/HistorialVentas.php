@@ -130,7 +130,7 @@ class HistorialVentas extends Component
 
         // Llamar al servicio
         $sunatService = new SunatService();
-        $resultado = $sunatService->generarNotaCredito($venta, "Devolución de item");
+        $resultado = $sunatService->generarNotaCredito($venta);
 
         // --- AGREGA ESTO AQUÍ ---
         //dd($resultado); 

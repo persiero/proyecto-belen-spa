@@ -19,6 +19,14 @@ class Comprobante extends Model
         'correlativo',
         'fecha_emision',
 
+        // --- CAMPOS NUEVOS (AGREGAR ESTOS) ---
+        'id_comprobante_ref',      // <--- Faltaba
+        'cod_motivo_nc',           // <--- Faltaba
+        'descripcion_motivo_nc',   // <--- Faltaba
+        'leyenda_sunat',           // <--- Faltaba
+        'forma_pago',              // <--- Faltaba
+        // -------------------------------------
+
         // Snapshot del Receptor (Cliente)
         'receptor_tipo_doc',
         'receptor_numero_doc',
@@ -31,6 +39,7 @@ class Comprobante extends Model
         'op_inafectas',
         'monto_igv',
         'total',
+        'moneda',
 
         // Respuesta SUNAT / Archivos
         'nombre_xml',
@@ -64,13 +73,19 @@ class Comprobante extends Model
         return $this->belongsTo(TipoComprobante::class, 'id_tipo_comprobante');
     }
 
+    public function detalles()
+    {
+        return $this->hasMany(ComprobanteDetalle::class, 'id_comprobante');
+    }
+
     public function serieComprobante()
     {
         return $this->belongsTo(SerieComprobante::class, 'id_serie_comprobante');
     }
 
-    public function detalles()
+    // Relación para Nota de Crédito (Saber cuál es el padre)
+    public function comprobanteReferencia()
     {
-        return $this->hasMany(ComprobanteDetalle::class, 'id_comprobante');
+        return $this->belongsTo(Comprobante::class, 'id_comprobante_ref');
     }
 }
