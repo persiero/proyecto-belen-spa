@@ -162,6 +162,13 @@ class GestionPos extends Component
             ];
         }
 
+        $this->cliente_id = $turno->id_cliente;
+
+        // --- AGREGAR ESTO PARA QUE SE VEA EL NOMBRE AL CARGAR ---
+        if ($turno->cliente) {
+            $this->cliente_seleccionado_nombre = $turno->cliente->nombre . ' ' . $turno->cliente->apellido;
+        }
+
         $this->calculateTotal();
         session()->flash('message', 'Turno cargado.');
     }

@@ -170,7 +170,7 @@
                             <label class="form-label fw-bold text-secondary small text-uppercase">1. Cliente</label>
                             {{-- 1. ESTADO: CLIENTE YA SELECCIONADO --}}
                             @if($id_cliente && $cliente_seleccionado_nombre)
-                                <div class="input-group">
+                                <div class="input-group" wire:key="turno-cliente-selected">
                                     <span class="input-group-text bg-success text-white border-0">
                                         <i class="bi bi-person-check-fill"></i>
                                     </span>
@@ -183,7 +183,7 @@
 
                             {{-- 2. ESTADO: BUSCANDO CLIENTE --}}
                             @else
-                                <div class="input-group">
+                                <div class="input-group" wire:key="turno-cliente-search">
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="bi bi-search text-secondary"></i>
                                     </span>

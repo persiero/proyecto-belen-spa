@@ -1,68 +1,29 @@
 /* public/css/belen-custom.css */
 
+/* =========================================
+   1. VARIABLES Y BASE
+   ========================================= */
 :root {
     /* --- PALETA DE COLORES BELEN SPA --- */
-    --belen-dark: #212124;       /* El fondo oscuro del logo */
-    --belen-cream: #E6DFD3;      /* El color de las letras */
-    --belen-cream-dim: #cfc5b1;  /* Un crema un poco más oscuro para hovers */
+    --belen-dark: #212124;       /* Fondo oscuro principal */
+    --belen-cream: #E6DFD3;      /* Color de acento (Letras/Fondos) */
+    --belen-cream-dim: #cfc5b1;  /* Crema oscuro para hovers */
     --belen-grey: #8F8F8F;       /* Texto secundario */
 }
 
-/* =========================================
-   1. SIDEBAR (Barra Lateral)
-   ========================================= */
-/* Quitamos los colores por defecto de Bootstrap/AdminLTE */
-.app-sidebar {
-    background-color: var(--belen-dark) !important;
-    color: var(--belen-grey) !important;
-}
-
-/* --- ARREGLO DEL LOGO (BRAND LINK) --- */
-/* Esto soluciona el fondo negro diferente */
-.sidebar-brand {
-    background-color: var(--belen-dark) !important; 
-    border-bottom: 1px solid rgba(230, 223, 211, 0.1); /* Línea sutil color crema */
-}
-
-.brand-link .brand-text {
-    color: var(--belen-cream) !important;
-    font-family: 'Helvetica Neue', sans-serif; /* O una fuente con serifa si prefieres elegancia */
-    letter-spacing: 1px;
-    font-weight: 400 !important;
-}
-
-/* --- MENÚ DE NAVEGACIÓN --- */
-.sidebar-menu .nav-link {
-    color: #b0b0b0 !important; /* Gris claro para items inactivos */
-    border-radius: 0px !important; /* Bordes rectos son más elegantes */
-    margin-bottom: 2px;
-}
-
-/* Hover (Cuando pasas el mouse) */
-.sidebar-menu .nav-link:hover {
-    color: var(--belen-cream) !important;
-    background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Activo (La página actual) */
-.sidebar-menu .nav-link.active {
-    background-color: var(--belen-cream) !important;
-    color: var(--belen-dark) !important;
-    font-weight: bold;
-    box-shadow: none !important; /* Quitamos la sombra azul por defecto */
-    border-left: 4px solid #ffffff; /* Pequeño detalle de diseño */
-}
-
-/* Iconos del menú */
-.sidebar-menu .nav-icon {
-    color: var(--belen-grey);
-}
-.sidebar-menu .nav-link.active .nav-icon {
-    color: var(--belen-dark); /* Icono oscuro sobre fondo crema */
+/* Fix para Autocompletado de Chrome (Fondo oscuro forzado) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #212124 inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: white;
 }
 
 /* =========================================
-   2. NAVBAR (Cabecera Superior)
+   2. NAVBAR & HEADER
    ========================================= */
 .app-header {
     background-color: #ffffff !important;
@@ -73,41 +34,244 @@
     color: var(--belen-dark) !important;
 }
 
-/* Badge de notificaciones (Rojo o Naranja no pegan, usaremos el gris oscuro) */
 .navbar-badge {
     background-color: var(--belen-dark) !important;
     color: var(--belen-cream) !important;
 }
 
 /* =========================================
-   3. BOTONES Y ACENTOS
+   3. SIDEBAR GENERAL (Barra Lateral)
    ========================================= */
-/* Reemplazamos el botón primario azul por el Crema */
+.app-sidebar {
+    background-color: var(--belen-dark) !important;
+    color: var(--belen-grey) !important;
+}
+
+/* Logo / Brand */
+.sidebar-brand {
+    background-color: var(--belen-dark) !important; 
+    border-bottom: 1px solid rgba(230, 223, 211, 0.1);
+}
+
+.brand-link .brand-text {
+    color: var(--belen-cream) !important;
+    font-family: 'Helvetica Neue', sans-serif;
+    letter-spacing: 1px;
+    font-weight: 400 !important;
+}
+
+/* Títulos de Sección (Gestión, Finanzas...) */
+.nav-header {
+    color: var(--belen-cream-dim) !important;
+    opacity: 0.6;
+    font-weight: 600;
+    font-size: 0.7rem !important;
+    padding-top: 1rem !important;
+}
+
+/* =========================================
+   4. ITEMS DEL MENÚ (Nivel Superior)
+   ========================================= */
+.sidebar-menu .nav-link {
+    color: #b0b0b0 !important;
+    border-radius: 6px !important; /* Bordes ligeramente redondeados */
+    margin-bottom: 4px;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover General */
+.sidebar-menu .nav-link:hover {
+    color: var(--belen-cream) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Activo General (Dashboard, Turnos) */
+.sidebar-menu .nav-link.active {
+    background-color: var(--belen-cream) !important;
+    color: var(--belen-dark) !important;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.sidebar-menu .nav-icon { color: var(--belen-grey); }
+.sidebar-menu .nav-link.active .nav-icon { color: var(--belen-dark); }
+
+
+/* =========================================
+   5. AGRUPACIÓN PADRE (Logística, Catálogos)
+   ========================================= */
+
+/* La "Caja" contenedora cuando se despliega */
+.sidebar-menu > .nav-item.menu-open {
+    background-color: rgba(0, 0, 0, 0.2); /* Fondo oscuro bloque */
+    margin-bottom: 20px !important;       /* Separación inferior */
+    border: 1px solid rgba(230, 223, 211, 0.08); 
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* El Header (Padre) cuando está abierto */
+.sidebar-menu > .nav-item.menu-open > .nav-link {
+    background-color: rgba(230, 223, 211, 0.1) !important; /* Fondo suave */
+    color: var(--belen-cream) !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Línea divisoria */
+    border-radius: 0 !important; /* Recto para pegar con los hijos */
+}
+
+/* Iconos del Padre Abierto */
+.sidebar-menu > .nav-item.menu-open > .nav-link > .nav-icon,
+.sidebar-menu > .nav-item.menu-open > .nav-link p i {
+    color: var(--belen-cream) !important;
+    opacity: 1;
+}
+
+/* Corrección: Si el padre estaba "activo", le quitamos el estilo de botón */
+.sidebar-menu > .nav-item.menu-open > .nav-link.active {
+    box-shadow: none !important;
+    border-left: none !important;
+}
+
+/* =========================================
+   6. SUBMENÚS / HIJOS (Clientes, Productos)
+   ========================================= */
+
+/* A. Estilo Base para TODOS los hijos (Sangría/Indentation) */
+.nav-treeview > .nav-item > .nav-link {
+    padding-left: 3rem !important; /* EMPUJE A LA DERECHA (Lo que pediste) */
+    width: auto;
+}
+
+/* B. Hijo Activo (Seleccionado) */
+.nav-treeview > .nav-item > .nav-link.active {
+    background-color: var(--belen-cream) !important;
+    color: var(--belen-dark) !important;
+    font-weight: 800 !important;
+    border-left: none !important;
+    border-radius: 6px !important;
+    margin: 5px 10px; /* Margen para flotar dentro del grupo */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* C. Icono del Hijo Activo */
+.nav-treeview > .nav-item > .nav-link.active .nav-icon {
+    color: var(--belen-dark) !important;
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* D. EL CANDADO: Hover sobre el Hijo Activo */
+/* Esto evita que se ponga negro al pasar el mouse */
+.nav-treeview > .nav-item > .nav-link.active:hover {
+    background-color: var(--belen-cream) !important;
+    color: var(--belen-dark) !important;
+    cursor: default;
+}
+.nav-treeview > .nav-item > .nav-link.active:hover .nav-icon {
+    color: var(--belen-dark) !important;
+}
+
+/* E. Hover sobre Hijo INACTIVO */
+.nav-treeview > .nav-item > .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #fff !important;
+    border-radius: 6px;
+    margin: 2px 10px;
+}
+
+/* =========================================
+   7. BOTONES ESPECIALES (POS & Otros)
+   ========================================= */
+
+/* Botón POS Destacado */
+/* ESTILO BASE DEL BOTÓN POS */
+.nav-link-pos {
+    background-color: rgba(230, 223, 211, 0.15) !important;
+    border: 1px solid var(--belen-cream);
+    color: var(--belen-cream) !important;
+    text-align: center;
+    margin: 10px 0;
+    transition: all 0.3s ease; /* Suavizamos la animación */
+}
+
+/* El icono en estado normal (Crema) */
+.nav-link-pos .nav-icon { 
+    color: var(--belen-cream) !important; 
+    transition: color 0.3s ease;
+}
+
+/* ESTADO HOVER (Cuando pasas el mouse) */
+.nav-link-pos:hover {
+    background-color: var(--belen-cream) !important;
+    color: var(--belen-dark) !important;
+    transform: translateY(-2px); /* Pequeña elevación */
+    box-shadow: 0 4px 8px rgba(230, 223, 211, 0.2); /* Sombra suave */
+}
+
+/* IMPORTANTE: Al hacer hover, el icono se vuelve OSCURO */
+.nav-link-pos:hover .nav-icon { 
+    color: var(--belen-dark) !important; 
+}
+
+.nav-link-pos.active {
+    background-color: var(--belen-cream) !important; /* Fondo sólido */
+    color: var(--belen-dark) !important;             /* Texto oscuro */
+    font-weight: 800 !important;
+    box-shadow: 0 0 15px rgba(230, 223, 211, 0.3);    /* Resplandor */
+}
+
+.nav-link-pos.active .nav-icon { 
+    color: var(--belen-dark) !important; 
+}
+
+.nav-link-pos.active:hover {
+    transform: scale(1.02); /* Solo crece un poquito */
+    cursor: default;
+}
+
+/* Botones Generales */
 .btn-primary {
     background-color: var(--belen-cream) !important;
     border-color: var(--belen-cream) !important;
     color: var(--belen-dark) !important;
     font-weight: 600;
 }
-
 .btn-primary:hover {
     background-color: var(--belen-cream-dim) !important;
     border-color: var(--belen-cream-dim) !important;
 }
 
-/* El botón del POS (Punto de Venta) destacado */
-.nav-link.bg-success {
-    background-color: #2ecc71 !important; /* Un verde más elegante */
-    color: white !important;
+/* Botón Cerrar Caja */
+button.btn.btn-outline-danger.btn-cierre:hover {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+button.btn.btn-outline-danger.btn-cierre:hover i {
+    color: #fff !important;
 }
 
-/* --- FIX: Forzar fondo oscuro en Autocompletado de Chrome/Edge --- */
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active{
-    -webkit-box-shadow: 0 0 0 30px #212124 inset !important;
-    -webkit-text-fill-color: white !important;
-    transition: background-color 5000s ease-in-out 0s;
-    caret-color: white;
+/* =========================================
+   8. DASHBOARD CARDS
+   ========================================= */
+.icon-square {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important;
+}
+.card-hover:hover .icon-square { transform: scale(1.1); }
+
+.table thead th {
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    border-bottom: 0;
 }

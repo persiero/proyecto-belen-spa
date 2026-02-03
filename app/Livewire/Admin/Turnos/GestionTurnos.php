@@ -151,7 +151,7 @@ class GestionTurnos extends Component
         $this->resetInputFields();
         $this->turno_id = $id;
 
-        $turno = Turno::with('servicios')->find($id);
+        $turno = Turno::with('servicios', 'cliente')->find($id);
         $this->id_cliente = $turno->id_cliente;
         // AGREGAR ESTO: Cargar el nombre visual para que el buscador aparezca verde
         if($turno->cliente) {

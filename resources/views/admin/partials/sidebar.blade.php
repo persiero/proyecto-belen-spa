@@ -6,102 +6,157 @@
                  alt="Belen Spa Logo"
                  class="brand-image" 
                  style="opacity: 1; max-height: 40px;">
-            
-            <span class="brand-text fw-light">BELÉN SYSTEM</span>
+            <span class="brand-text fw-light">Belén System</span>
         </a>
-        </div>
+    </div>
+
     <div class="sidebar-wrapper">
         <nav class="mt-2">
-            <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
-                aria-label="Main navigation" data-accordion="false">
+            <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" aria-label="Main navigation">
                 
-                <li class="nav-header text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">Gestión</li>
-
+                {{-- 1. ACCIONES RÁPIDAS --}}
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-speedometer2"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.turnos') }}" class="nav-link {{ request()->routeIs('admin.turnos') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-calendar-check"></i>
-                        <p>Turnos / Citas</p>
-                    </a>
-                </li>
                 
-                {{-- BOTÓN POS DESTACADO --}}
-                <li class="nav-item my-2">
-                    <a href="{{ route('admin.pos') }}" class="nav-link" 
-                       style="background-color: var(--belen-cream) !important; color: var(--belen-dark) !important; font-weight: bold;">
-                        <i class="nav-icon bi bi-cart4 text-dark"></i>
+                {{-- BOTÓN POS DESTACADO (CLASE PERSONALIZADA) --}}
+                <li class="nav-item my-2 px-2">
+                    <a href="{{ route('admin.pos') }}" class="nav-link nav-link-pos {{ request()->routeIs('admin.pos') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-cart4"></i>
                         <p>PUNTO DE VENTA</p>
                     </a>
                 </li>
 
-                <li class="nav-header text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">Administración</li>
-
                 <li class="nav-item">
-                    <a href="{{ route('admin.caja') }}" class="nav-link {{ request()->routeIs('admin.caja') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-wallet2"></i>
-                        <p>Caja Chica</p>
+                    <a href="{{ route('admin.turnos') }}" class="nav-link {{ request()->routeIs('admin.turnos') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-calendar-week"></i>
+                        <p>Agenda / Turnos</p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.productos') }}" class="nav-link {{ request()->routeIs('admin.productos') ? 'active' : '' }}">
+
+                <li class="nav-header mt-2">GESTIÓN COMERCIAL</li>
+
+                {{-- GRUPO: CATÁLOGOS --}}
+                {{-- Se abre si la ruta actual es clientes*, estilistas* o servicios* --}}
+                <li class="nav-item {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-collection"></i>
+                        <p>
+                            Catálogos
+                            <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.clientes') }}" class="nav-link {{ request()->routeIs('admin.clientes') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-people"></i>
+                                <p>Clientes</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.estilistas') }}" class="nav-link {{ request()->routeIs('admin.estilistas') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-person-hearts"></i>
+                                <p>Estilistas</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.servicios') }}" class="nav-link {{ request()->routeIs('admin.servicios') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-scissors"></i>
+                                <p>Servicios</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                {{-- GRUPO: LOGÍSTICA --}}
+                <li class="nav-item {{ request()->routeIs('admin.productos*', 'admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.productos*', 'admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-box-seam"></i>
-                        <p>Productos</p>
+                        <p>
+                            Logística
+                            <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.inventario') }}" class="nav-link {{ request()->routeIs('admin.inventario') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-clipboard-data"></i>
-                        <p>Kardex</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.compras') }}" class="nav-link {{ request()->routeIs('admin.compras') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-bag-plus"></i>
-                        <p>Compras</p>
-                    </a>
-                </li>
-
-                <li class="nav-header text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">Personal</li>
-
-                <li class="nav-item">
-                    <a href="{{ route('admin.estilistas') }}" class="nav-link {{ request()->routeIs('admin.estilistas') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-person-hearts"></i>
-                        <p>Estilistas</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.clientes') }}" class="nav-link {{ request()->routeIs('admin.clientes') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-people"></i>
-                        <p>Clientes</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.servicios') }}" class="nav-link {{ request()->routeIs('admin.servicios') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-scissors"></i>
-                        <p>Servicios</p>
-                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.productos') }}" class="nav-link {{ request()->routeIs('admin.productos') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-tags"></i>
+                                <p>Productos</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.inventario') }}" class="nav-link {{ request()->routeIs('admin.inventario') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-clipboard-data"></i>
+                                <p>Kardex / Stock</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.compras') }}" class="nav-link {{ request()->routeIs('admin.compras') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-bag-plus"></i>
+                                <p>Compras</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.proveedores') }}" class="nav-link {{ request()->routeIs('admin.proveedores') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-truck"></i>
+                                <p>Proveedores</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
-                <li class="nav-header text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 1px;">Sistema</li>
+                <li class="nav-header mt-2">FINANZAS & CONTROL</li>
 
-                <li class="nav-item">
-                    <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-receipt"></i>
-                        <p>Historial Ventas</p>
+                {{-- GRUPO: CAJA Y VENTAS --}}
+                <li class="nav-item {{ request()->routeIs('admin.caja*', 'admin.ventas*', 'admin.reportes*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.caja*', 'admin.ventas*', 'admin.reportes*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-cash-coin"></i>
+                        <p>
+                            Finanzas
+                            <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
                     </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('admin.caja') }}" class="nav-link {{ request()->routeIs('admin.caja') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-wallet2"></i>
+                                <p>Caja Chica</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-receipt"></i>
+                                <p>Historial Ventas</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reportes.comisiones') }}" class="nav-link {{ request()->routeIs('admin.reportes.comisiones') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-currency-exchange"></i>
+                                <p>Comisiones</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-bar-chart-line"></i>
+                                <p>Analítica</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
+
+                <li class="nav-header mt-2">SISTEMA</li>
+
                 <li class="nav-item">
                     <a href="{{ route('admin.configuracion') }}" class="nav-link {{ request()->routeIs('admin.configuracion') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-gear"></i>
                         <p>Configuración</p>
                     </a>
                 </li>
+
             </ul>
-            </nav>
+        </nav>
     </div>
 </aside>

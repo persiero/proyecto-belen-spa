@@ -37,7 +37,7 @@
                     <span class="d-none d-md-inline fw-bold ms-1">{{ Auth::user()->nombre }}</span>
                 </a>
                 
-                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end border-0 shadow">
+                <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end border-2 shadow">
                     
                     <li class="user-header" style="background-color: var(--belen-dark); color: var(--belen-cream);">
                         

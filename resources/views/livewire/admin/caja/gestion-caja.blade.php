@@ -63,7 +63,7 @@
                             <small class="text-muted">Apertura: {{ $cajaAbierta->fecha_apertura->format('h:i A') }}</small>
                         </div>
                     </div>
-                    <button class="btn btn-outline-danger fw-bold border-0 bg-light" data-bs-toggle="modal" data-bs-target="#modalCierre">
+                    <button class="btn btn-outline-danger fw-bold border-0 bg-light btn-cierre" data-bs-toggle="modal" data-bs-target="#modalCierre">
                         <i class="bi bi-lock-fill me-2"></i> Cerrar Caja
                     </button>
                 </div>

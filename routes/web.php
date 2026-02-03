@@ -67,7 +67,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/configuracion', \App\Livewire\Admin\Configuracion\GestionConfiguracion::class)->name('configuracion');
     Route::get('/perfil', App\Livewire\Admin\Perfil\MiPerfil::class)->name('perfil');
 
-    // Reportes
+    // ========================
+    // MÓDULO DE REPORTES
+    // ========================
+    // 1. Panel Principal de Analítica (EL NUEVO)
+    Route::get('/reportes/analitica', \App\Livewire\Admin\Reportes\ReportesPrincipal::class)->name('reportes.analitica');
+    
     Route::get('/reportes/comisiones', ReporteComisiones::class)->name('reportes.comisiones');
 
 });
