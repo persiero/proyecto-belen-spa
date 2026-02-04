@@ -341,6 +341,7 @@ class GestionPos extends Component
                 DetalleVenta::create([
                     'id_venta' => $venta->id,
                     'tipo_item' => $item['tipo'],
+                    'id_estilista' => $item['estilista_id'] ?? null,
                     'id_servicio' => $item['tipo'] == 'servicio' ? $item['id'] : null,
                     'id_producto' => $item['tipo'] == 'producto' ? $item['id'] : null,
                     'nombre_item' => $item['nombre'],

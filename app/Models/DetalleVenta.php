@@ -13,6 +13,7 @@ class DetalleVenta extends Model
         'tipo_item', // 'servicio', 'producto'
         'id_servicio',
         'id_producto',
+        'id_estilista',
         'nombre_item',
         'codigo_afectacion_igv',
         'porcentaje_igv',

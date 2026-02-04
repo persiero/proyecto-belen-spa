@@ -14,7 +14,11 @@
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" aria-label="Main navigation">
                 
-                {{-- 1. ACCIONES RÁPIDAS --}}
+                {{-- =========================================================
+                     BLOQUE 1: OPERACIÓN DIARIA
+                     ROLES: Admin, Encargado, Cajero
+                     ========================================================= --}}
+                
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-speedometer2"></i>
@@ -22,7 +26,7 @@
                     </a>
                 </li>
                 
-                {{-- BOTÓN POS DESTACADO (CLASE PERSONALIZADA) --}}
+                {{-- BOTÓN POS (ACCESO RÁPIDO VENTA) --}}
                 <li class="nav-item my-2 px-2">
                     <a href="{{ route('admin.pos') }}" class="nav-link nav-link-pos {{ request()->routeIs('admin.pos') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-cart4"></i>
@@ -37,10 +41,21 @@
                     </a>
                 </li>
 
-                <li class="nav-header mt-2">GESTIÓN COMERCIAL</li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.caja') }}" class="nav-link {{ request()->routeIs('admin.caja') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-wallet2"></i>
+                        <p>Caja Chica</p>
+                    </a>
+                </li>
+
+                {{-- =========================================================
+                     BLOQUE 2: GESTIÓN & LOGÍSTICA
+                     ROLES: Admin, Encargado (Cajero NO debería ver esto)
+                     ========================================================= --}}
+                
+                <li class="nav-header mt-2">GESTIÓN ADMINISTRATIVA</li>
 
                 {{-- GRUPO: CATÁLOGOS --}}
-                {{-- Se abre si la ruta actual es clientes*, estilistas* o servicios* --}}
                 <li class="nav-item {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-collection"></i>
@@ -87,6 +102,7 @@
                                 <p>Productos</p>
                             </a>
                         </li>
+                        {{-- Kardex: Ver movimientos de stock --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.inventario') }}" class="nav-link {{ request()->routeIs('admin.inventario') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-clipboard-data"></i>
@@ -108,45 +124,56 @@
                     </ul>
                 </li>
 
-                <li class="nav-header mt-2">FINANZAS & CONTROL</li>
+                {{-- =========================================================
+                     BLOQUE 3: INTELIGENCIA DE NEGOCIO (EL REQUERIMIENTO NUEVO)
+                     ROLES: Admin, Encargado (Cajero NO)
+                     Aquí van las métricas solicitadas
+                     ========================================================= --}}
+                
+                <li class="nav-header mt-2">INTELIGENCIA DE NEGOCIO</li>
 
-                {{-- GRUPO: CAJA Y VENTAS --}}
-                <li class="nav-item {{ request()->routeIs('admin.caja*', 'admin.ventas*', 'admin.reportes*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->routeIs('admin.caja*', 'admin.ventas*', 'admin.reportes*') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-cash-coin"></i>
+                <li class="nav-item {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-graph-up-arrow"></i>
                         <p>
-                            Finanzas
+                            Reportes
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
+                        {{-- 1. ANALÍTICA GENERAL (RF-AN-04 al 12) --}}
+                        {{-- Aquí verán: Rankings, Ticket Promedio, Márgenes, Procedencia --}}
                         <li class="nav-item">
-                            <a href="{{ route('admin.caja') }}" class="nav-link {{ request()->routeIs('admin.caja') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-wallet2"></i>
-                                <p>Caja Chica</p>
+                            <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-pie-chart-fill"></i>
+                                <p>Analítica Gerencial</p>
                             </a>
                         </li>
+
+                        {{-- 2. HISTORIAL DE VENTAS (RF-AN-01 al 03) --}}
+                        {{-- Consultas por fecha, estilista, cliente --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-receipt"></i>
                                 <p>Historial Ventas</p>
                             </a>
                         </li>
+
+                        {{-- 3. COMISIONES (Financiera Interna) --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.comisiones') }}" class="nav-link {{ request()->routeIs('admin.reportes.comisiones') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-currency-exchange"></i>
                                 <p>Comisiones</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-bar-chart-line"></i>
-                                <p>Analítica</p>
-                            </a>
-                        </li>
                     </ul>
                 </li>
 
+                {{-- =========================================================
+                     BLOQUE 4: SISTEMA
+                     ROLES: Solo Admin
+                     ========================================================= --}}
+                
                 <li class="nav-header mt-2">SISTEMA</li>
 
                 <li class="nav-item">

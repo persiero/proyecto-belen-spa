@@ -18,11 +18,11 @@ class ConfigSeeder extends Seeder
         DB::table('config_negocio')->updateOrInsert(
             ['id' => 1],
             [
-                'nombre_comercial' => 'BELEN SPA',
-                'direccion' => 'Av. Pablo Casals 555',
+                'nombre_comercial' => 'EMPRESA DE PRUEBAS S.A.C',
+                'direccion' => 'AV. PRUEBAS 123',
                 'telefono' => '999999999',
-                'email' => 'contacto@belenspa.com',
-                'ruc' => '20000000001',
+                'email' => 'belendegregori@hotmail.com',
+                'ruc' => '20614899515',
                 'precio_incluye_igv' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),

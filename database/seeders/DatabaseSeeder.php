@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
             ['nombre' => 'tarjeta', 'descripcion' => 'Crédito/Débito', 'activo' => 1, 'created_at' => now()],
             ['nombre' => 'yape', 'descripcion' => 'Billetera Digital', 'activo' => 1, 'created_at' => now()],
             ['nombre' => 'plin', 'descripcion' => 'Billetera Digital', 'activo' => 1, 'created_at' => now()],
+            ['nombre' => 'transferencia', 'descripcion' => 'TransferenciaBancaria', 'activo' => 1, 'created_at' => now()],
         ]);
 
         // 4. Unidades SUNAT
