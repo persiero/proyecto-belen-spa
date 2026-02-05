@@ -36,8 +36,8 @@
 
                 <li class="nav-item">
                     <a href="{{ route('admin.turnos') }}" class="nav-link {{ request()->routeIs('admin.turnos') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-calendar-week"></i>
-                        <p>Agenda / Turnos</p>
+                        <i class="nav-icon bi bi-people"></i>
+                        <p>Atenciones</p>
                     </a>
                 </li>
 

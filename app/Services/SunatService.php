@@ -172,7 +172,8 @@ class SunatService
             $mensaje = '';
             $cdr = null;
             $hash = null;
-            $nombreCdr = null; // <--- NUEVO: Variable para el nombre del ZIP
+            $nombreCdr = null;
+            $nombrePdf = null;
 
             if ($result->isSuccess()) {
                 /** @var \Greenter\Model\Response\BillResult $result */
@@ -181,9 +182,14 @@ class SunatService
                 $mensaje = $cdr->getDescription();
                 $hash = $cdr->getId();
 
-                // <--- NUEVO: Definimos el nombre y guardamos
                 $nombreCdr = 'R-' . $nombreArchivo . '.zip';
-                Storage::put('comprobantes/cdr/R-' . $nombreArchivo . '.zip', $result->getCdrZip());
+                Storage::put('comprobantes/cdr/' . $nombreCdr, $result->getCdrZip());
+
+                // <--- NUEVO: GENERAR Y GUARDAR PDF ---
+                $nombrePdf = $nombreArchivo . '.pdf';
+                $pdfContent = $this->generarPDF($invoice, $company, $client, $venta, $hash);
+                Storage::put('comprobantes/pdf/' . $nombrePdf, $pdfContent);
+                // -------------------------------------
             } else {
                 $estado = 'rechazado';
                 $mensaje = $result->getError()->getCode() . ' - ' . $result->getError()->getMessage();
@@ -198,25 +204,21 @@ class SunatService
                 'correlativo' => $correlativo,
                 'fecha_emision' => Carbon::now(),
 
-                // --- AGREGAR ESTO (Tus datos del receptor) ---
                 'receptor_tipo_doc' => $tipoDocCliente,
                 'receptor_numero_doc' => $numDocCliente,
                 'receptor_razon_social' => $razonSocialCliente,
-                'receptor_direccion' => $direccionCliente, // <--- NUEVO: Guardamos la dirección
-                // ---------------------------------------------
+                'receptor_direccion' => $direccionCliente,
                 
-                // DATOS TRIBUTARIOS NUEVOS
-                'op_gravadas' => $opGravadas,  // <--- Guardamos en BD
-                'monto_igv' => $mtoIgv,          // <--- Guardamos en BD
+                'op_gravadas' => $opGravadas,
+                'monto_igv' => $mtoIgv,
                 'total' => $total,
                 'moneda' => 'PEN',
-                'forma_pago' => 'Contado', // Por ahora SPA es contado
-                //'leyenda_sunat' => 'SON: ' . $venta->total . ' SOLES',
-                'leyenda_sunat' => $this->numeroALetras($venta->total), // Guardamos la leyenda
+                'forma_pago' => 'Contado',
+                'leyenda_sunat' => $this->numeroALetras($venta->total),
 
-                // DATOS SUNAT
                 'nombre_xml' => $nombreArchivo,
-                'cdr_xml' => $nombreCdr, // <--- NUEVO: Guardamos el nombre del archivo ZIP
+                'cdr_xml' => $nombreCdr,
+                'ruta_pdf' => $nombrePdf, // <--- NUEVO: Guardar ruta PDF
                 'hash_cpe' => $hash,
                 'estado_sunat' => $estado,
                 'mensaje_sunat' => $mensaje,
@@ -412,7 +414,8 @@ class SunatService
             $estado = 'rechazado';
             $mensaje = '';
             $cdr = null;
-            $nombreCdr = null; // <--- NUEVO
+            $nombreCdr = null;
+            $nombrePdf = null;
 
             if ($result->isSuccess()) {
 
@@ -422,9 +425,15 @@ class SunatService
                 $cdr = $result->getCdrResponse();
                 $mensaje = $cdr->getDescription();
                 $hash = $cdr->getId();
-                // <--- NUEVO: Guardar CDR
+                
                 $nombreCdr = 'R-' . $nombreArchivo . '.zip';
-                Storage::put('comprobantes/cdr/R-' . $nombreArchivo . '.zip', $result->getCdrZip());
+                Storage::put('comprobantes/cdr/' . $nombreCdr, $result->getCdrZip());
+
+                // <--- NUEVO: GENERAR Y GUARDAR PDF DE NC ---
+                $nombrePdf = $nombreArchivo . '.pdf';
+                $pdfContent = $this->generarPDFNotaCredito($note, $company, $client, $venta, $cpeOriginal, $hash);
+                Storage::put('comprobantes/pdf/' . $nombrePdf, $pdfContent);
+                // -------------------------------------------
             } else {
                 $mensaje = $result->getError()->getCode() . ' - ' . $result->getError()->getMessage();
             }
@@ -435,35 +444,32 @@ class SunatService
             $tipoNcId = TipoComprobante::where('codigo_sunat', '07')->first()->id;
 
             $nc = Comprobante::create([
-                'id_venta' => $venta->id, // Lo vinculamos a la misma venta
+                'id_venta' => $venta->id,
                 'id_tipo_comprobante' => $tipoNcId,
-                'id_serie_comprobante' => $idSerieNota, //Faltaba esto
+                'id_serie_comprobante' => $idSerieNota,
                 'serie' => $serieNota,
                 'correlativo' => $correlativoNota,
                 'fecha_emision' => Carbon::now(),
 
-                // VINCULACIÓN CON EL PADRE (CRÍTICO)
-                'id_comprobante_ref' => $cpeOriginal->id, // <--- NUEVO CAMPO
-                'cod_motivo_nc' => '01', // Anulación de la operación
+                'id_comprobante_ref' => $cpeOriginal->id,
+                'cod_motivo_nc' => '01',
                 'descripcion_motivo_nc' => $motivo,
 
-                // Datos Económicos (Copia del original)
-                'op_gravadas' => $cpeOriginal->op_gravadas, // Usamos datos del original
-                'monto_igv' => $cpeOriginal->monto_igv,     // Usamos datos del original
-                'total' => $cpeOriginal->total,             // Usamos datos del original
+                'op_gravadas' => $cpeOriginal->op_gravadas,
+                'monto_igv' => $cpeOriginal->monto_igv,
+                'total' => $cpeOriginal->total,
                 'moneda' => 'PEN',
                 'leyenda_sunat' => $this->numeroALetras($cpeOriginal->total),
-                'forma_pago' => 'Contado', // Agregamos este que faltaba en tu código anterior
+                'forma_pago' => 'Contado',
                 
-                // Datos Receptor
                 'receptor_tipo_doc' => $client->getTipoDoc(),
                 'receptor_numero_doc' => $client->getNumDoc(),
                 'receptor_razon_social' => $client->getRznSocial(),
-                'receptor_direccion' => $direccionCliente, // <--- NUEVO: Guardar Dirección
+                'receptor_direccion' => $direccionCliente,
 
-                // Datos Técnicos
                 'nombre_xml' => $nombreArchivo ?? 'NC_PENDIENTE',
                 'cdr_xml' => $nombreCdr,
+                'ruta_pdf' => $nombrePdf, // <--- NUEVO: Guardar ruta PDF
                 'hash_cpe' => $hash ?? null,
                 'estado_sunat' => $estado ?? 'rechazado',
                 'mensaje_sunat' => $mensaje ?? 'Error',
@@ -608,5 +614,89 @@ class SunatService
         }
         
         return $output;
+    }
+
+    // ==========================================
+    // GENERAR PDF DEL COMPROBANTE
+    // ==========================================
+    private function generarPDF($invoice, $company, $client, $venta, $hash)
+    {
+        // Crear objeto temporal para la vista (simulando el modelo Comprobante)
+        $cpe = (object) [
+            'id_tipo_comprobante' => ($invoice->getTipoDoc() == '01' ? 1 : 2),
+            'serie' => $invoice->getSerie(),
+            'correlativo' => $invoice->getCorrelativo(),
+            'fecha_emision' => $invoice->getFechaEmision(),
+            'moneda' => 'PEN',
+            'receptor_razon_social' => $client->getRznSocial(),
+            'receptor_numero_doc' => $client->getNumDoc(),
+            'receptor_direccion' => $venta->cliente->direccion ?? '-',
+            'op_gravadas' => $invoice->getMtoOperGravadas(),
+            'monto_igv' => $invoice->getMtoIGV(),
+            'total' => $invoice->getMtoImpVenta(),
+            'leyenda_sunat' => $this->numeroALetras($invoice->getMtoImpVenta()),
+            'hash_cpe' => $hash,
+            'estado_sunat' => 'aceptado'
+        ];
+
+        $qr = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->generate(
+            $this->negocio->ruc . '|' . $invoice->getTipoDoc() . '|' . $invoice->getSerie() . '|' . 
+            $invoice->getCorrelativo() . '|0|' . $invoice->getMtoImpVenta() . '|' . 
+            $invoice->getFechaEmision()->format('Y-m-d') . '|' . $client->getTipoDoc() . '|' . 
+            $client->getNumDoc() . '|' . $hash
+        ));
+
+        $html = view('admin.pdf.ticket-cpe', [
+            'cpe' => $cpe,
+            'venta' => $venta,
+            'negocio' => $this->negocio,
+            'qr' => $qr
+        ])->render();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper([0, 0, 226.77, 841.89], 'portrait');
+        return $pdf->output();
+    }
+
+    // ==========================================
+    // GENERAR PDF DE NOTA DE CRÉDITO
+    // ==========================================
+    private function generarPDFNotaCredito($note, $company, $client, $venta, $cpeOriginal, $hash)
+    {
+        $cpe = (object) [
+            'id_tipo_comprobante' => 3,
+            'serie' => $note->getSerie(),
+            'correlativo' => $note->getCorrelativo(),
+            'fecha_emision' => $note->getFechaEmision(),
+            'moneda' => 'PEN',
+            'receptor_razon_social' => $client->getRznSocial(),
+            'receptor_numero_doc' => $client->getNumDoc(),
+            'receptor_direccion' => $venta->cliente->direccion ?? '-',
+            'op_gravadas' => $note->getMtoOperGravadas(),
+            'monto_igv' => $note->getMtoIGV(),
+            'total' => $note->getMtoImpVenta(),
+            'leyenda_sunat' => $this->numeroALetras($note->getMtoImpVenta()),
+            'hash_cpe' => $hash,
+            'estado_sunat' => 'aceptado',
+            'cod_motivo_nc' => $note->getCodMotivo(),
+            'descripcion_motivo_nc' => $note->getDesMotivo(),
+            'comprobanteReferencia' => $cpeOriginal
+        ];
+
+        $qr = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->generate(
+            $this->negocio->ruc . '|07|' . $note->getSerie() . '|' . 
+            $note->getCorrelativo() . '|0|' . $note->getMtoImpVenta() . '|' . 
+            $note->getFechaEmision()->format('Y-m-d') . '|' . $client->getTipoDoc() . '|' . 
+            $client->getNumDoc() . '|' . $hash
+        ));
+
+        $html = view('admin.pdf.ticket-cpe', [
+            'cpe' => $cpe,
+            'venta' => $venta,
+            'negocio' => $this->negocio,
+            'qr' => $qr
+        ])->render();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper([0, 0, 226.77, 841.89], 'portrait');
+        return $pdf->output();
     }
 }
