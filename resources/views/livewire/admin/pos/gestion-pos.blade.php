@@ -13,6 +13,17 @@
         </div>
     @endif
 
+    {{-- HEADER CON ACCESO RÁPIDO A HISTORIAL --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-cart4 me-2"></i> Punto de Venta</h4>
+            <small class="text-muted">Registra ventas rápidas de productos y servicios</small>
+        </div>
+        <a href="{{ route('admin.ventas.historial') }}" class="btn btn-outline-primary shadow-sm">
+            <i class="bi bi-clock-history me-1"></i> Ver Historial de Ventas
+        </a>
+    </div>
+
     <div class="row g-3">
         {{-- COLUMNA IZQUIERDA: PRODUCTOS Y TURNOS --}}
         <div class="col-md-7 col-lg-8">
@@ -400,6 +411,10 @@
                                 <i class="bi bi-whatsapp me-2"></i> Enviar Comprobante
                             </a>
                         @endif
+
+                        <a href="{{ route('admin.ventas.historial') }}" class="btn btn-outline-primary border-2">
+                            <i class="bi bi-receipt me-2"></i> Ver Todas las Ventas
+                        </a>
 
                         <button wire:click="cerrarSuccessModal" class="btn btn-outline-secondary border-0">
                             Cerrar y Nueva Venta

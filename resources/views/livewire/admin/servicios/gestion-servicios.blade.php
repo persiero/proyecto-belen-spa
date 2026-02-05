@@ -157,12 +157,14 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Duración Estimada</label>
+                                <label class="form-label">Duración Estimada <small class="text-muted">(Opcional)</small></label>
                                 <div class="input-group shadow-sm">
                                     <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-clock"></i></span>
-                                    <input type="number" wire:model="duracion_minutos" class="form-control border-start-0" placeholder="0">
+                                    <input type="number" wire:model="duracion_minutos" class="form-control border-start-0 @error('duracion_minutos') is-invalid @enderror" placeholder="30">
                                     <span class="input-group-text bg-white text-muted">min</span>
                                 </div>
+                                @error('duracion_minutos') <span class="text-danger small d-block mt-1"><i class="bi bi-exclamation-circle"></i> {{ $message }}</span> @enderror
+                                <small class="text-muted d-block mt-1">Si no se especifica, se usarán 30 minutos por defecto</small>
                             </div>
 
                             <div class="col-12 mt-4">

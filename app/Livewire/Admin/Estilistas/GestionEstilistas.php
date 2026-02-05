@@ -59,7 +59,7 @@ class GestionEstilistas extends Component
         $this->nombre = $estilista->nombre;
         $this->especialidad = $estilista->especialidad;
         $this->telefono = $estilista->telefono;
-        $this->activo = $estilista->activo;
+        $this->activo = $estilista->activo ? 1 : 0; // Convertir a 1 o 0
     
         $this->openModal();
     }

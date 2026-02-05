@@ -167,11 +167,25 @@
 
                             {{-- ESTADO --}}
                             <div class="col-md-5">
-                                <label class="form-label">Estado Actual</label>
-                                <select wire:model="activo" class="form-select shadow-sm">
-                                    <option value="1">🟢 Activo</option>
-                                    <option value="0">🔴 Inactivo</option>
-                                </select>
+                                <label class="form-label d-block">Estado Actual</label>
+                                <div class="btn-group w-100 shadow-sm" role="group">
+                                    <input type="radio" class="btn-check" wire:model="activo" value="1" id="activo_si" autocomplete="off">
+                                    <label class="btn btn-outline-success" for="activo_si">
+                                        <i class="bi bi-check-circle"></i> Activo
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" wire:model="activo" value="0" id="activo_no" autocomplete="off">
+                                    <label class="btn btn-outline-secondary" for="activo_no">
+                                        <i class="bi bi-dash-circle"></i> Inactivo
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    @if($activo)
+                                        <i class="bi bi-info-circle"></i> Disponible para asignar servicios
+                                    @else
+                                        <i class="bi bi-info-circle"></i> No aparecerá en el sistema
+                                    @endif
+                                </small>
                             </div>
 
                         </div>

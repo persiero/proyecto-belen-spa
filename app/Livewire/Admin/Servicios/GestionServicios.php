@@ -26,15 +26,20 @@ class GestionServicios extends Component
     public $id_categoria, $id_unidad, $id_afectacion;
     public $activo = true;
 
-    // Reglas (Categoría ahora es nullable)
+    // Reglas de validación
     protected $rules = [
         'nombre' => 'required|string|max:150',
         'precio' => 'required|numeric|min:0',
-        'duracion_minutos' => 'nullable|integer|min:0',
+        'duracion_minutos' => 'nullable|integer|min:5|max:480',
         'id_categoria' => 'nullable|exists:categorias_servicio,id',
         'id_unidad' => 'required|exists:unidades_sunat,id',
         'id_afectacion' => 'required|exists:afectaciones_igv,id',
         'activo' => 'boolean'
+    ];
+
+    protected $messages = [
+        'duracion_minutos.min' => 'La duración mínima es de 5 minutos',
+        'duracion_minutos.max' => 'La duración máxima es de 8 horas (480 minutos)',
     ];
 
     #[Layout('layouts.admin')]
@@ -82,8 +87,7 @@ class GestionServicios extends Component
         Servicio::updateOrCreate(['id' => $this->servicio_id], [
             'nombre' => $this->nombre,
             'precio' => $this->precio,
-            'duracion_minutos' => $this->duracion_minutos,
-            // Importante: Si viene vacío, guardamos NULL
+            'duracion_minutos' => $this->duracion_minutos ?: 30, // Valor por defecto: 30 min
             'id_categoria' => $this->id_categoria == "" ? null : $this->id_categoria,
             'id_unidad' => $this->id_unidad,
             'id_afectacion' => $this->id_afectacion,

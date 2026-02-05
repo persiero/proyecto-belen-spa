@@ -55,9 +55,9 @@
                 
                 <li class="nav-header mt-2">GESTIÓN ADMINISTRATIVA</li>
 
-                {{-- GRUPO: CATÁLOGOS --}}
-                <li class="nav-item {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*') ? 'active' : '' }}">
+                {{-- GRUPO: CATÁLOGOS (Datos Maestros) --}}
+                <li class="nav-item {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*', 'admin.productos*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*', 'admin.productos*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-collection"></i>
                         <p>
                             Catálogos
@@ -83,30 +83,29 @@
                                 <p>Servicios</p>
                             </a>
                         </li>
-                    </ul>
-                </li>
-
-                {{-- GRUPO: LOGÍSTICA --}}
-                <li class="nav-item {{ request()->routeIs('admin.productos*', 'admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->routeIs('admin.productos*', 'admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-box-seam"></i>
-                        <p>
-                            Logística
-                            <i class="nav-arrow bi bi-chevron-right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('admin.productos') }}" class="nav-link {{ request()->routeIs('admin.productos') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-tags"></i>
                                 <p>Productos</p>
                             </a>
                         </li>
-                        {{-- Kardex: Ver movimientos de stock --}}
+                    </ul>
+                </li>
+
+                {{-- GRUPO: INVENTARIO & COMPRAS --}}
+                <li class="nav-item {{ request()->routeIs('admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-box-seam"></i>
+                        <p>
+                            Inventario & Compras
+                            <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ route('admin.inventario') }}" class="nav-link {{ request()->routeIs('admin.inventario') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-clipboard-data"></i>
-                                <p>Kardex / Stock</p>
+                                <p>Control de Stock</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -130,7 +129,7 @@
                      Aquí van las métricas solicitadas
                      ========================================================= --}}
                 
-                <li class="nav-header mt-2">INTELIGENCIA DE NEGOCIO</li>
+                <li class="nav-header mt-2">REPORTES & ANÁLISIS</li>
 
                 <li class="nav-item {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'active' : '' }}">
@@ -141,25 +140,18 @@
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
-                        {{-- 1. ANALÍTICA GENERAL (RF-AN-04 al 12) --}}
-                        {{-- Aquí verán: Rankings, Ticket Promedio, Márgenes, Procedencia --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-pie-chart-fill"></i>
-                                <p>Analítica Gerencial</p>
+                                <p>Resúmen General</p>
                             </a>
                         </li>
-
-                        {{-- 2. HISTORIAL DE VENTAS (RF-AN-01 al 03) --}}
-                        {{-- Consultas por fecha, estilista, cliente --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-receipt"></i>
-                                <p>Historial Ventas</p>
+                                <p>Historial de Ventas</p>
                             </a>
                         </li>
-
-                        {{-- 3. COMISIONES (Financiera Interna) --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.comisiones') }}" class="nav-link {{ request()->routeIs('admin.reportes.comisiones') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-currency-exchange"></i>
