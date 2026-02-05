@@ -76,20 +76,20 @@ class GestionConfiguracion extends Component
         $this->validate([
             'igv_porcentaje' => 'required|numeric|min:0|max:100',
             'modo' => 'required|in:beta,produccion',
-            // CAMBIO AQUÍ: Usamos 'extensions' en lugar de 'mimes'
-            'certificado_file' => 'nullable|file|extensions:pem,txt,pfx,cer|max:2048',
+            'certificado_file' => 'nullable|file|max:2048',
         ]);
 
-        // LÓGICA DE SUBIDA DE ARCHIVO
-        $rutaFinal = $this->certificado_path; // Mantener el anterior por defecto
+        $rutaFinal = $this->certificado_path;
 
         if ($this->certificado_file) {
-            // Guardar en storage/app/certificados
-            // Store devuelve el path con hash, pero queremos nombre limpio o controlado
-            $nombreArchivo = 'certificado_' . time() . '.' . $this->certificado_file->getClientOriginalExtension();
-            
-            $this->certificado_file->storeAs('certificados', $nombreArchivo); // Guardar físico
-            $rutaFinal = $nombreArchivo; // Guardar nombre en BD
+            try {
+                $nombreArchivo = 'certificado_' . time() . '.' . $this->certificado_file->getClientOriginalExtension();
+                $this->certificado_file->storeAs('certificados', $nombreArchivo);
+                $rutaFinal = $nombreArchivo;
+            } catch (\Exception $e) {
+                session()->flash('error_tributaria', 'Error al subir certificado: ' . $e->getMessage());
+                return;
+            }
         }
 
         ConfigTributaria::updateOrCreate(['id' => 1], [
@@ -98,16 +98,13 @@ class GestionConfiguracion extends Component
             'modo' => $this->modo,
             'usuario_sol' => $this->usuario_sol,
             'clave_sol' => $this->clave_sol,
-            'certificado_path' => $rutaFinal, // <--- Guardamos la ruta nueva
+            'certificado_path' => $rutaFinal,
         ]);
 
-        // 1. Actualizamos la variable visual para que el mensaje amarillo cambie a verde
-        $this->certificado_path = $rutaFinal; 
-        
-        // 2. Limpiamos el input del archivo para que quede listo por si quieres subir otro
-        $this->reset('certificado_file'); 
+        $this->certificado_path = $rutaFinal;
+        $this->reset('certificado_file');
 
-        session()->flash('message_tributaria', 'Configuración SUNAT actualizada y certificado subido.');
+        session()->flash('message_tributaria', 'Configuración SUNAT actualizada correctamente.');
     }
 
     #[Layout('layouts.admin')]

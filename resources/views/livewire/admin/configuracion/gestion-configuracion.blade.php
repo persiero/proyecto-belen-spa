@@ -68,6 +68,9 @@
                     @if (session()->has('message_tributaria'))
                         <div class="alert alert-success py-2 shadow-sm border-0 mb-3"><i class="bi bi-check-circle"></i> {{ session('message_tributaria') }}</div>
                     @endif
+                    @if (session()->has('error_tributaria'))
+                        <div class="alert alert-danger py-2 shadow-sm border-0 mb-3"><i class="bi bi-x-circle"></i> {{ session('error_tributaria') }}</div>
+                    @endif
 
                     <form wire:submit.prevent="guardarTributaria">
                         <div class="row">
