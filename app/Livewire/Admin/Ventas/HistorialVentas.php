@@ -132,16 +132,12 @@ class HistorialVentas extends Component
         $sunatService = new SunatService();
         $resultado = $sunatService->generarNotaCredito($venta);
 
-        // --- AGREGA ESTO AQUÍ ---
-        //dd($resultado); 
-        //
-
         if ($resultado['success']) {
-            // 1. Restaurar el Stock (NUEVO)
+            // 1. Restaurar el Stock
             $this->restaurarStock($venta);
 
-            // 2. Cambiar estado
-            $venta->estado = 'anulado';
+            // 2. Cambiar estado (CORREGIDO: 'anulada' con 'a')
+            $venta->estado = 'anulada';
             $venta->save();
             
             session()->flash('message', 'Nota de Crédito emitida y Stock restaurado correctamente.');

@@ -95,7 +95,7 @@
                             </td>
                             
                             <td class="text-center">
-                                @if($venta->estado == 'anulado')
+                                @if($venta->estado == 'anulada')
                                     <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2">ANULADO</span>
                                 @else
                                     <span class="badge bg-success bg-opacity-10 text-success border border-success px-2">PAGADO</span>
@@ -106,7 +106,7 @@
                             <td class="text-center pe-4">
                                 
                                 {{-- CASO 1: VENTA ANULADA (CON DOCS FISCALES) --}}
-                                @if($venta->estado == 'anulado')
+                                @if($venta->estado == 'anulada')
                                     <div class="btn-group btn-group-sm shadow-sm" role="group">
                                         
                                         {{-- BOTÓN DINÁMICO CORREGIDO: FAC o BOL (Tachado/Referencia) --}}
