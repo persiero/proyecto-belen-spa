@@ -48,6 +48,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-receipt"></i>
+                        <p>Historial de Ventas</p>
+                    </a>
+                </li>
+
                 {{-- =========================================================
                      BLOQUE 2: GESTIÓN & LOGÍSTICA
                      ROLES: Admin, Encargado (Cajero NO debería ver esto)
@@ -146,18 +153,12 @@
                                 <p>Resúmen General</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-receipt"></i>
-                                <p>Historial de Ventas</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
+                        {{--<li class="nav-item">
                             <a href="{{ route('admin.reportes.comisiones') }}" class="nav-link {{ request()->routeIs('admin.reportes.comisiones') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-currency-exchange"></i>
                                 <p>Comisiones</p>
                             </a>
-                        </li>
+                        </li>--}}
                     </ul>
                 </li>
 
@@ -172,6 +173,13 @@
                     <a href="{{ route('admin.configuracion') }}" class="nav-link {{ request()->routeIs('admin.configuracion') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-gear"></i>
                         <p>Configuración</p>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('admin.usuarios') }}" class="nav-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}">
+                        <i class="nav-icon bi bi-person-badge-fill"></i>
+                        <p>Usuarios / Roles</p>
                     </a>
                 </li>
 

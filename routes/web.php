@@ -17,6 +17,10 @@ use App\Livewire\Admin\Inventario\GestionInventario;
 use App\Livewire\Admin\Reportes\ReporteComisiones;
 use App\Livewire\Admin\Ventas\HistorialVentas;
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\Configuracion\GestionConfiguracion;
+use App\Livewire\Admin\Perfil\MiPerfil;
+use App\Livewire\Admin\Reportes\ReportesPrincipal;
+use App\Livewire\Admin\Usuarios\GestionUsuarios;
 // Importaciones de Modelos
 use App\Models\Venta;
 use App\Models\ConfigNegocio;
@@ -64,14 +68,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/proveedores', GestionProveedores::class)->name('proveedores');
     Route::get('/inventario', GestionInventario::class)->name('inventario');
     Route::get('/ventas/historial', HistorialVentas::class)->name('ventas.historial');
-    Route::get('/configuracion', \App\Livewire\Admin\Configuracion\GestionConfiguracion::class)->name('configuracion');
-    Route::get('/perfil', App\Livewire\Admin\Perfil\MiPerfil::class)->name('perfil');
+    Route::get('/configuracion', GestionConfiguracion::class)->name('configuracion');
+    Route::get('/perfil', MiPerfil::class)->name('perfil');
+    Route::get('/usuarios', GestionUsuarios::class)->name('usuarios');
 
     // ========================
     // MÓDULO DE REPORTES
     // ========================
     // 1. Panel Principal de Analítica (EL NUEVO)
-    Route::get('/reportes/analitica', \App\Livewire\Admin\Reportes\ReportesPrincipal::class)->name('reportes.analitica');
+    Route::get('/reportes/analitica', ReportesPrincipal::class)->name('reportes.analitica');
     
     Route::get('/reportes/comisiones', ReporteComisiones::class)->name('reportes.comisiones');
 

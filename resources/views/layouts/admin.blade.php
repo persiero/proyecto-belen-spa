@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <div class="app-content">
+            <div class="app-content" style="padding-bottom: 250px;">
                 <div class="container-fluid">
                     {{-- Lógica Híbrida: Soporta Livewire ($slot) y Blade Normal (@yield) --}}
                     @if(isset($slot))

@@ -30,12 +30,12 @@
     @endif
 
     {{-- TABLA DE RESULTADOS --}}
-    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+    <div class="card shadow-sm border-0 rounded-3 mb-5">
         <div class="card-header bg-white py-3 border-bottom">
             <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-receipt me-2"></i> Historial de Operaciones</h5>
         </div>
         
-        <div class="table-responsive">
+        <div class="table-responsive" style="overflow: visible;">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light text-secondary text-uppercase small">
                     <tr>
@@ -51,7 +51,7 @@
                 <tbody>
                     @forelse($ventas as $venta)
                         {{-- Fila con estilo tenue si está anulada --}}
-                        <tr class="{{ $venta->estado == 'anulado' ? 'bg-light text-muted' : '' }}">
+                        <tr class="{{ $venta->estado == 'anulado' ? 'bg-light text-muted' : '' }}" style="position: static;">
                             
                             <td class="ps-4 font-monospace fw-bold text-secondary">
                                 #{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}
@@ -133,17 +133,14 @@
                                 @elseif($venta->comprobante)
                                     <div class="btn-group btn-group-sm shadow-sm" role="group">
                                         
-                                        {{-- CÓDIGO CORREGIDO PARA EL BOTÓN --}}
                                         <button type="button" class="btn btn-success fw-bold px-3">
-                                            {{-- LÓGICA INFALIBLE: Si la serie empieza con 'F', es Factura. --}}
                                             {{ Str::startsWith($venta->comprobante->serie, 'F') ? 'Fac.' : 'Bol.' }}
-                                            
                                             {{ substr($venta->comprobante->serie, -3) }}-{{ $venta->comprobante->correlativo }}
                                         </button>
                                         
                                         {{-- MENÚ DESPLEGABLE --}}
-                                        <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
-                                        <ul class="dropdown-menu">
+                                        <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-bs-auto-close="true"></button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow">
                                             <li><a class="dropdown-item" href="{{ route('comprobante.ticket', $venta->comprobante->id) }}" target="_blank"><i class="bi bi-file-pdf text-danger me-2"></i> Ver PDF</a></li>
                                             <li><a class="dropdown-item" href="{{ route('comprobante.xml', $venta->comprobante->id) }}"><i class="bi bi-code-slash text-primary me-2"></i> XML</a></li>
                                             <li><a class="dropdown-item" href="{{ route('comprobante.cdr', $venta->comprobante->id) }}"><i class="bi bi-file-zip text-success me-2"></i> CDR</a></li>
