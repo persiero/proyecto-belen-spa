@@ -97,7 +97,7 @@
 
                                 <td class="text-end pe-4">
                                     <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm me-1"><i class="bi bi-pencil-square text-primary"></i></button>
-                                    <button wire:confirm="¿Eliminar producto?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-trash text-danger"></i></button>
+                                    <button wire:confirm="¿Deseas eliminar este producto del catálogo?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-trash text-danger"></i></button>
                                 </td>
                             </tr>
                         @empty

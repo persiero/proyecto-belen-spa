@@ -2,12 +2,12 @@
     {{-- 1. HEADER DE BIENVENIDA (NUEVO) --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="mb-1 fw-bold text-dark">Panel de Control</h4>
+            <h4 class="mb-1 fw-bold text-dark">Panel Principal</h4>
             <p class="text-muted small mb-0">Resumen general del negocio al {{ now()->format('d/m/Y') }}</p>
         </div>
         <div>
             <a href="{{ route('admin.pos') }}" class="btn btn-primary shadow-sm">
-                <i class="bi bi-cart-plus me-1"></i> Nueva Venta
+                <i class="bi bi-cash-coin me-1"></i>Nuevo Cobro/Venta
             </a>
         </div>
     </div>
@@ -32,7 +32,7 @@
                         </div>
                     </div>
                     {{-- Enlace invisible que cubre toda la tarjeta --}}
-                    <a href="{{ route('admin.caja') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.ventas.historial') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -151,7 +151,7 @@
                                     <tr>
                                         <td colspan="4" class="text-center py-5 text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
-                                            No hay ventas hoy
+                                            No hay cobros hoy
                                         </td>
                                     </tr>
                                 @endforelse
@@ -181,7 +181,7 @@
                                     <small class="text-muted">Mín: {{ $prod->stock_minimo }}</small>
                                 </div>
                                 <a href="{{ route('admin.compras') }}" class="btn btn-sm btn-light text-muted">
-                                    <i class="bi bi-cart-plus"></i>
+                                    <i class="bi bi-bag-plus"></i>
                                 </a>
                             </li>
                         @empty
@@ -197,8 +197,8 @@
                 </div>
                 @if($productosBajoStock->count() > 0)
                     <div class="card-footer bg-white border-0 text-center pb-3">
-                        <a href="{{ route('admin.productos') }}" class="btn btn-outline-danger btn-sm w-100">
-                            Gestionar Inventario
+                        <a href="{{ route('admin.inventario') }}" class="btn btn-outline-danger btn-sm w-100">
+                            Ver Inventario
                         </a>
                     </div>
                 @endif

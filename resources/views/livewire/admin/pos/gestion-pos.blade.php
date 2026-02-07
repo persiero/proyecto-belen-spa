@@ -16,11 +16,11 @@
     {{-- HEADER CON ACCESO RÁPIDO A HISTORIAL --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-cart4 me-2"></i> Punto de Venta</h4>
-            <small class="text-muted">Registra ventas rápidas de productos y servicios</small>
+            <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-cash-coin me-2"></i> Cobros & Ventas</h4>
+            <small class="text-muted">Finaliza atenciones, agrega productos y registra el pago</small>
         </div>
         <a href="{{ route('admin.ventas.historial') }}" class="btn btn-outline-primary shadow-sm">
-            <i class="bi bi-clock-history me-1"></i> Ver Historial de Ventas
+            <i class="bi bi-clock-history me-1"></i> Ver Historial de Cobros
         </a>
     </div>
 
@@ -61,7 +61,7 @@
                                     </td>
                                     <td class="text-end pe-3">
                                         <button wire:click="cargarTurno({{ $t->id }})" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                            <i class="bi bi-arrow-right-short"></i> Cargar
+                                            <i class="bi bi-arrow-right-short"></i> Cobrar
                                         </button>
                                     </td>
                                 </tr>
@@ -77,7 +77,7 @@
                 <div class="card-header bg-white py-3">
                     <div class="input-group input-group-lg">
                         <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" wire:model.live="searchProducto" class="form-control bg-light border-0" placeholder="Buscar productos para venta rápida (Shampoo, cremas, etc)...">
+                        <input type="text" wire:model.live="searchProducto" class="form-control bg-light border-0" placeholder="Buscar productos para agregar al cobro (shampoo, cremas, etc.)">
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -115,7 +115,7 @@
         <div class="col-md-5 col-lg-4">
             <div class="card shadow border-0 h-100">
                 <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-cart4 me-2"></i> Venta Actual</h5>
+                    <h5 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i> Cobro Actual</h5>
                     @if(count($cart) > 0)
                         <span class="badge bg-danger rounded-pill">{{ count($cart) }} items</span>
                     @endif
@@ -125,7 +125,7 @@
                     
                     {{-- SELECCIÓN DE CLIENTE --}}
                     <div class="mb-3 bg-white p-2 rounded border">
-                        <label class="form-label small text-muted text-uppercase fw-bold mb-1 ps-1">Cliente</label>
+                        <label class="form-label small text-muted text-uppercase fw-bold mb-1 ps-1">Cliente a Facturar</label>
                         {{-- 1. ESTADO: CLIENTE YA SELECCIONADO --}}
                         @if($cliente_id && $cliente_seleccionado_nombre)
                             <div class="input-group" wire:key="cliente-seleccionado">
@@ -278,7 +278,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-success text-white border-0">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-wallet2 me-2"></i> Finalizar Venta</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-wallet2 me-2"></i> Finalizar Cobro</h5>
                     <button wire:click="closePaymentModal" class="btn-close btn-close-white"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
@@ -290,11 +290,23 @@
                     <div class="card border-0 shadow-sm p-3 mb-3">
                         <label class="form-label fw-bold mb-2">Método de Pago</label>
                         <div class="d-flex gap-2 mb-3">
+                            @php
+                                $iconosMetodo = [
+                                    'efectivo' => 'bi-cash-stack',
+                                    'tarjeta' => 'bi-credit-card',
+                                    'yape' => 'bi-qr-code',
+                                    'plin' => 'bi-qr-code',
+                                    'transferencia' => 'bi-bank',
+                                ];
+                            @endphp
                             @foreach($metodos as $m)
-                                <button type="button" class="btn flex-grow-1 {{ $metodo_pago_id == $m->id ? 'btn-primary' : 'btn-outline-secondary' }}" 
+                                <button type="button"
+                                    class="btn flex-grow-1 {{ $metodo_pago_id == $m->id ? 'btn-primary' : 'btn-outline-secondary' }}"
                                     wire:click="cambiarMetodoPago({{ $m->id }})">
-                                    <i class="bi {{ $m->nombre == 'efectivo' ? 'bi-cash-stack' : ($m->nombre == 'yape' ? 'bi-qr-code' : 'bi-credit-card') }}"></i>
-                                    <br><small>{{ ucfirst($m->nombre) }}</small>
+
+                                    <i class="bi {{ $iconosMetodo[$m->nombre] ?? 'bi-wallet2' }} fs-4"></i>
+                                    <br>
+                                    <small class="fw-bold">{{ ucfirst($m->nombre) }}</small>
                                 </button>
                             @endforeach
                         </div>
@@ -365,7 +377,7 @@
                             <i class="bi bi-check-lg display-5"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold mb-1">¡Venta Exitosa!</h5>
+                    <h5 class="fw-bold mb-1">¡Pago Registrado!</h5>
                     <p class="text-muted small">La operación se registró correctamente.</p>
                     
                     {{-- TICKET VIRTUAL --}}
@@ -417,7 +429,7 @@
                         </a>
 
                         <button wire:click="cerrarSuccessModal" class="btn btn-outline-secondary border-0">
-                            Cerrar y Nueva Venta
+                            Cerrar y Nuevo Cobro
                         </button>
                     </div>
 

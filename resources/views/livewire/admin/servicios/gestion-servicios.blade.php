@@ -83,7 +83,7 @@
                                     <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm me-1" title="Editar">
                                         <i class="bi bi-pencil-square text-primary"></i>
                                     </button>
-                                    <button wire:confirm="¿Seguro que deseas eliminar este servicio?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm" title="Eliminar">
+                                    <button wire:confirm="¿Deseas eliminar este servicio?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm" title="Eliminar">
                                         <i class="bi bi-trash text-danger"></i>
                                     </button>
                                 </td>

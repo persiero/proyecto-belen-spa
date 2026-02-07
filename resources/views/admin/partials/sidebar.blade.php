@@ -14,29 +14,27 @@
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" aria-label="Main navigation">
                 
-                {{-- =========================================================
-                     BLOQUE 1: OPERACIÓN DIARIA
-                     ROLES: Admin, Encargado, Cajero
-                     ========================================================= --}}
+                {{-- BLOQUE 1: RECEPCIÓN Y CAJA --}}
                 
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-speedometer2"></i>
-                        <p>Dashboard</p>
+                        <p>Panel Principal</p> {{-- "Dashboard" está bien, pero Panel Principal es más formal --}}
                     </a>
                 </li>
                 
-                {{-- BOTÓN POS (ACCESO RÁPIDO VENTA) --}}
+                {{-- BOTÓN POS DESTACADO --}}
+                {{-- CAMBIO UX: "Punto de Venta" engloba Servicios y Productos sin discriminar --}}
                 <li class="nav-item my-2 px-2">
                     <a href="{{ route('admin.pos') }}" class="nav-link nav-link-pos {{ request()->routeIs('admin.pos') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-cart4"></i>
-                        <p>PUNTO DE VENTA</p>
+                        <i class="nav-icon bi bi-cash-coin"></i>
+                        <p>COBROS & VENTAS</p>
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{{ route('admin.turnos') }}" class="nav-link {{ request()->routeIs('admin.turnos') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-people"></i>
+                        <i class="nav-icon bi bi-calendar-check"></i> {{-- Icono de calendario check es más semántico para citas --}}
                         <p>Atenciones</p>
                     </a>
                 </li>
@@ -44,30 +42,27 @@
                 <li class="nav-item">
                     <a href="{{ route('admin.caja') }}" class="nav-link {{ request()->routeIs('admin.caja') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-wallet2"></i>
-                        <p>Caja Chica</p>
+                        <p>Caja</p> {{-- "Caja Chica" suena a gastos menores. Esto da más autoridad --}}
                     </a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{{ route('admin.ventas.historial') }}" class="nav-link {{ request()->routeIs('admin.ventas.historial') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-receipt"></i>
-                        <p>Historial de Ventas</p>
+                        <p>Tickets & Facturación</p> {{-- Más claro que solo "Historial" --}}
                     </a>
                 </li>
 
-                {{-- =========================================================
-                     BLOQUE 2: GESTIÓN & LOGÍSTICA
-                     ROLES: Admin, Encargado (Cajero NO debería ver esto)
-                     ========================================================= --}}
+                {{-- BLOQUE 2: ADMINISTRACIÓN --}}
                 
-                <li class="nav-header mt-2">GESTIÓN ADMINISTRATIVA</li>
+                <li class="nav-header mt-2">ADMINISTRACIÓN</li>
 
-                {{-- GRUPO: CATÁLOGOS (Datos Maestros) --}}
+                {{-- CAMBIO UX: "Catálogos" es más entendible para dueños de negocio que "Datos Maestros" --}}
                 <li class="nav-item {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*', 'admin.productos*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->routeIs('admin.clientes*', 'admin.estilistas*', 'admin.servicios*', 'admin.productos*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-collection"></i>
                         <p>
-                            Catálogos
+                            Catálogos del Spa
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                     </a>
@@ -99,12 +94,12 @@
                     </ul>
                 </li>
 
-                {{-- GRUPO: INVENTARIO & COMPRAS --}}
+                {{-- BLOQUE 3: ALMACÉN --}}
                 <li class="nav-item {{ request()->routeIs('admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->routeIs('admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-box-seam"></i>
                         <p>
-                            Inventario & Compras
+                            Almacén & Stock
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                     </a>
@@ -112,13 +107,13 @@
                         <li class="nav-item">
                             <a href="{{ route('admin.inventario') }}" class="nav-link {{ request()->routeIs('admin.inventario') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-clipboard-data"></i>
-                                <p>Control de Stock</p>
+                                <p>Inventario</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('admin.compras') }}" class="nav-link {{ request()->routeIs('admin.compras') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-bag-plus"></i>
-                                <p>Compras</p>
+                                <p>Ingreso Mercadería</p>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -130,19 +125,15 @@
                     </ul>
                 </li>
 
-                {{-- =========================================================
-                     BLOQUE 3: INTELIGENCIA DE NEGOCIO (EL REQUERIMIENTO NUEVO)
-                     ROLES: Admin, Encargado (Cajero NO)
-                     Aquí van las métricas solicitadas
-                     ========================================================= --}}
+                {{-- BLOQUE 4: INTELIGENCIA --}}
                 
-                <li class="nav-header mt-2">REPORTES & ANÁLISIS</li>
+                <li class="nav-header mt-2">ESTADÍSTICAS</li>
 
                 <li class="nav-item {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-graph-up-arrow"></i>
                         <p>
-                            Reportes
+                            Analítica de Negocio
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                     </a>
@@ -150,22 +141,13 @@
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-pie-chart-fill"></i>
-                                <p>Resúmen General</p>
+                                <p>Indicadores</p> {{-- Suena profesional para el dueño --}}
                             </a>
                         </li>
-                        {{--<li class="nav-item">
-                            <a href="{{ route('admin.reportes.comisiones') }}" class="nav-link {{ request()->routeIs('admin.reportes.comisiones') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-currency-exchange"></i>
-                                <p>Comisiones</p>
-                            </a>
-                        </li>--}}
                     </ul>
                 </li>
 
-                {{-- =========================================================
-                     BLOQUE 4: SISTEMA
-                     ROLES: Solo Admin
-                     ========================================================= --}}
+                {{-- BLOQUE 5: SEGURIDAD --}}
                 
                 <li class="nav-header mt-2">SISTEMA</li>
 
@@ -178,8 +160,8 @@
 
                 <li class="nav-item">
                     <a href="{{ route('admin.usuarios') }}" class="nav-link {{ request()->routeIs('admin.usuarios') ? 'active' : '' }}">
-                        <i class="nav-icon bi bi-person-badge-fill"></i>
-                        <p>Usuarios / Roles</p>
+                        <i class="nav-icon bi bi-shield-lock"></i>
+                        <p>Control de Acceso</p> {{-- Más específico que "Usuarios" --}}
                     </a>
                 </li>
 

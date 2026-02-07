@@ -89,7 +89,7 @@
                         {{-- CORRECCIÓN: Quitamos 'border-4' y agregamos style para el grosor izquierdo --}}
                         <div class="card border-0 shadow-sm h-100 bg-white border-start border-primary" style="border-left-width: 5px !important;">
                             <div class="card-body">
-                                <small class="text-uppercase text-muted fw-bold ls-1" style="font-size: 0.7rem;">Ventas Totales</small>
+                                <small class="text-uppercase text-muted fw-bold ls-1" style="font-size: 0.7rem;">Ingresos del Día</small>
                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                     <h3 class="fw-bold text-primary mb-0">+{{ number_format($totalVentas, 2) }}</h3>
                                     <i class="bi bi-graph-up-arrow text-primary fs-3 opacity-25"></i>

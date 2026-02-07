@@ -18,7 +18,7 @@
                 <div class="card-tools">
                     <div class="input-group" style="width: 280px;">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input wire:model.live="search" type="text" class="form-control bg-light border-start-0 ps-0" placeholder="Buscar cliente...">
+                        <input wire:model.live="search" type="text" class="form-control bg-light border-start-0 ps-0" placeholder="Buscar por nombre, dni o teléfono...">
                     </div>
                 </div>
             </div>
@@ -79,8 +79,8 @@
                                     @if($item->fecha_nacimiento)<small class="text-muted"><i class="bi bi-cake2 me-1"></i> {{ $item->fecha_nacimiento->format('d/m/Y') }}</small>@endif
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm me-1"><i class="bi bi-pencil-square text-primary"></i></button>
-                                    <button wire:confirm="¿Seguro?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-trash text-danger"></i></button>
+                                    <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm me-1" title="Editar cliente"><i class="bi bi-pencil-square text-primary"></i></button>
+                                    <button wire:confirm="¿Seguro que desea eliminar este cliente?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-trash text-danger" title="Eliminar cliente"></i></button>
                                 </td>
                             </tr>
                         @empty
@@ -110,7 +110,7 @@
                         <div class="row g-3">
                             
                             {{-- SECCIÓN DE BÚSQUEDA --}}
-                            <div class="col-12"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Identificación (API)</label></div>
+                            <div class="col-12"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Búsqueda por Documento</label></div>
 
                             <div class="col-md-3">
                                 <label class="form-label">Tipo Doc.</label>

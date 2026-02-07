@@ -11,7 +11,7 @@
     {{-- 1. MONITOR DE ESTILISTAS (Auto-refresco cada 30s) --}}
     <div wire:poll.30s>
         <h5 class="fw-bold text-dark mb-3 ps-1">
-            <i class="bi bi-person-workspace text-primary me-2"></i> Monitor de Personal
+            <i class="bi bi-person-workspace text-primary me-2"></i> Monitor de Estilistas
         </h5>
         
         <div class="row g-3 mb-4">
@@ -75,7 +75,7 @@
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-header bg-white py-3 border-top border-4" style="border-color: var(--belen-cream) !important;">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-event me-2"></i> Recepción: Turnos Activos</h5>
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-event me-2"></i> Recepción: Atenciones en Curso</h5>
                 <button wire:click="create()" class="btn btn-primary shadow-sm text-dark fw-bold">
                     <i class="bi bi-plus-lg me-1"></i> Nueva Atención
                 </button>
@@ -118,7 +118,7 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">
-                                    En Proceso
+                                    En Atención
                                 </span>
                             </td>
                             <td class="text-end pe-4">
@@ -126,7 +126,7 @@
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
                                 
-                                <a href="{{ route('admin.pos', $turno->id) }}" class="btn btn-sm btn-success text-white shadow-sm fw-bold me-1" title="Ir a Caja">
+                                <a href="{{ route('admin.pos', $turno->id) }}" class="btn btn-sm btn-success text-white shadow-sm fw-bold me-1" title="Ir a Cobros">
                                     <i class="bi bi-cash-coin me-1"></i> Cobrar
                                 </a>
 
@@ -158,7 +158,7 @@
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
                 <div class="modal-header px-4 py-3" style="background-color: var(--belen-dark); color: white;">
                     <h5 class="modal-title fw-light text-uppercase" style="letter-spacing: 1px;">
-                        {{ $turno_id ? 'Editar Atención' : 'Nueva Entrada' }}
+                        {{ $turno_id ? 'Editar Atención' : 'Nueva Atención' }}
                     </h5>
                     <button wire:click="closeModal()" type="button" class="btn-close btn-close-white"></button>
                 </div>
@@ -234,7 +234,7 @@
                         {{-- 2. SERVICIOS --}}
                         <div class="p-3 bg-white rounded shadow-sm border mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                                <label class="form-label fw-bold text-primary mb-0 small text-uppercase">2. Servicios & Profesionales</label>
+                                <label class="form-label fw-bold text-primary mb-0 small text-uppercase">2. Servicios & Estilistas</label>
                                 <button wire:click="addItem()" type="button" class="btn btn-sm btn-outline-primary fw-bold">
                                     <i class="bi bi-plus-lg"></i> Agregar Servicio
                                 </button>

@@ -15,7 +15,7 @@
                     <label class="form-label small text-uppercase text-muted fw-bold">Buscar</label>
                     <div class="input-group shadow-sm">
                         <span class="input-group-text bg-white border-0"><i class="bi bi-search text-secondary"></i></span>
-                        <input type="text" wire:model.live="search" class="form-control border-0" placeholder="Nro. Ticket, Cliente o DNI...">
+                        <input type="text" wire:model.live="search" class="form-control border-0" placeholder="N° Ticket, Cliente o Documento...">
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
     {{-- TABLA DE RESULTADOS --}}
     <div class="card shadow-sm border-0 rounded-3 mb-5">
         <div class="card-header bg-white py-3 border-bottom">
-            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-receipt me-2"></i> Historial de Operaciones</h5>
+            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-receipt me-2"></i> Historial de Tickets y Facturas</h5>
         </div>
         
         <div class="table-responsive" style="overflow: visible;">
@@ -76,9 +76,13 @@
                             <td>
                                 @foreach($venta->pagos as $pago)
                                     @php
-                                        $icon = 'bi-cash';
-                                        if($pago->metodoPago->nombre == 'yape') $icon = 'bi-phone';
-                                        if($pago->metodoPago->nombre == 'tarjeta') $icon = 'bi-credit-card';
+                                        switch($pago->metodoPago->nombre) {
+                                            case 'efectivo': $icon = 'bi-cash-stack'; break;
+                                            case 'yape': $icon = 'bi-qr-code'; break;
+                                            case 'plin': $icon = 'bi-qr-code'; break;
+                                            case 'tarjeta': $icon = 'bi-credit-card'; break;
+                                            default: $icon = 'bi-bank';
+                                        }
                                     @endphp
                                     <span class="badge bg-light text-dark border fw-normal">
                                         <i class="bi {{ $icon }} me-1"></i> {{ ucfirst($pago->metodoPago->nombre) }}
