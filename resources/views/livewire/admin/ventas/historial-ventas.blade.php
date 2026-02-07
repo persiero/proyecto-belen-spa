@@ -51,7 +51,7 @@
                 <tbody>
                     @forelse($ventas as $venta)
                         {{-- Fila con estilo tenue si está anulada --}}
-                        <tr class="{{ $venta->estado == 'anulado' ? 'bg-light text-muted' : '' }}" style="position: static;">
+                        <tr class="{{ $venta->estado == 'anulada' ? 'bg-light text-muted' : '' }}" style="position: static;">
                             
                             <td class="ps-4 font-monospace fw-bold text-secondary">
                                 #{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}
@@ -91,7 +91,7 @@
                             </td>
                             
                             <td class="text-end">
-                                @if($venta->estado == 'anulado')
+                                @if($venta->estado == 'anulada')
                                     <span class="text-decoration-line-through text-danger opacity-50">S/ {{ number_format($venta->total, 2) }}</span>
                                 @else
                                     <span class="fw-bold text-dark fs-6">S/ {{ number_format($venta->total, 2) }}</span>
