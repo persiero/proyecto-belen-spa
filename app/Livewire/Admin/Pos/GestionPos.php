@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\Producto;
 use App\Models\Cliente;
+use App\Models\Estilista;
 use App\Models\Turno;
 use App\Models\Venta;
 use App\Models\DetalleVenta;
@@ -33,6 +34,9 @@ class GestionPos extends Component
     public $buscar_cliente = ''; 
     public $clientes_encontrados = []; 
     public $cliente_seleccionado_nombre = null;
+    
+    // Estilista temporal por producto (para ventas directas)
+    public $estilista_temp = [];
     
     // Modal de Pago
     public $isPaymentModalOpen = false;
@@ -118,21 +122,17 @@ class GestionPos extends Component
                 })
                 ->take(10)
                 ->get();
-        } else {
-            // Sugerencias iniciales (los más vendidos o recientes)
-            $productos = Producto::where('activo', true)
-                ->where('tipo', '!=', 'insumo')
-                ->latest()
-                ->take(6)
-                ->get();
         }
 
-        $turnosPendientes = Turno::where('estado', 'activo')->with('cliente')->get();
+        $turnosPendientes = Turno::where('estado', 'activo')
+            ->with(['cliente', 'servicios.servicio', 'productos.producto'])
+            ->get();
         $clientes = Cliente::orderBy('nombre')->take(50)->get(); // Limitar carga
+        $estilistas = Estilista::where('activo', true)->orderBy('nombre')->get();
         $metodos = MetodoPago::where('activo', true)->get();
 
         return view('livewire.admin.pos.gestion-pos', 
-            compact('productos', 'turnosPendientes', 'clientes', 'metodos'));
+            compact('productos', 'turnosPendientes', 'clientes', 'estilistas', 'metodos'));
     }
 
     // ==========================================
@@ -140,7 +140,7 @@ class GestionPos extends Component
     // ==========================================
     public function cargarTurno($idTurno)
     {
-        $turno = Turno::with(['servicios.servicio', 'cliente'])->find($idTurno);
+        $turno = Turno::with(['servicios.servicio', 'productos.producto', 'cliente'])->find($idTurno);
         
         if (!$turno) return;
 
@@ -159,6 +159,20 @@ class GestionPos extends Component
                 'subtotal' => $detalle->precio_aplicado,
                 'estilista_id' => $detalle->id_estilista, // Guardamos quién lo hizo
                 'stock_check' => false // Servicios no validan stock
+            ];
+        }
+
+        // NUEVO: Importar productos del turno al carrito
+        foreach ($turno->productos as $detalle) {
+            $this->cart[] = [
+                'tipo' => 'producto',
+                'id' => $detalle->producto->id,
+                'nombre' => $detalle->producto->nombre,
+                'precio' => $detalle->precio / $detalle->cantidad, // Precio unitario
+                'cantidad' => $detalle->cantidad,
+                'subtotal' => $detalle->precio, // Precio total
+                'estilista_id' => $detalle->id_estilista, // Quién vendió
+                'stock_check' => true // Productos validan stock
             ];
         }
 
@@ -185,6 +199,9 @@ class GestionPos extends Component
             return;
         }
 
+        // Obtener estilista seleccionado (si hay)
+        $estilistaId = $this->estilista_temp[$idProducto] ?? null;
+
         // Buscar si ya está en el carrito para sumar cantidad
         $found = false;
         foreach ($this->cart as $key => $item) {
@@ -208,13 +225,14 @@ class GestionPos extends Component
                 'precio' => $prod->precio_venta,
                 'cantidad' => 1,
                 'subtotal' => $prod->precio_venta,
-                'estilista_id' => null, // Opcional en productos
+                'estilista_id' => $estilistaId, // Asignar vendedor
                 'stock_check' => true
             ];
         }
 
         $this->calculateTotal();
-        $this->searchProducto = ''; // Limpiar buscador
+        // Limpiar selección de estilista después de agregar
+        unset($this->estilista_temp[$idProducto]);
     }
 
     // Quitar item del carrito

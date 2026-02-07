@@ -76,9 +76,17 @@
         <div class="card-header bg-white py-3 border-top border-4" style="border-color: var(--belen-cream) !important;">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-event me-2"></i> Recepción: Atenciones en Curso</h5>
-                <button wire:click="create()" class="btn btn-primary shadow-sm text-dark fw-bold">
-                    <i class="bi bi-plus-lg me-1"></i> Nueva Atención
-                </button>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('admin.clientes') }}" 
+                       target="_blank" 
+                       class="btn btn-outline-secondary shadow-sm"
+                       title="Abrir módulo de clientes">
+                        <i class="bi bi-person-plus me-1"></i> Nuevo Cliente
+                    </a>
+                    <button wire:click="create()" class="btn btn-primary shadow-sm text-dark fw-bold">
+                        <i class="bi bi-plus-lg me-1"></i> Nueva Atención
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -217,12 +225,21 @@
                                         @endforeach
                                     </div>
                                 
-                                {{-- MENSAJE SI NO ENCUENTRA NADA (Opcional) --}}
+                                {{-- MENSAJE SI NO ENCUENTRA NADA --}}
                                 @elseif(strlen($buscar_cliente) > 2)
-                                    <div class="position-absolute w-100 mt-1" style="z-index: 1050;">
-                                        <div class="alert alert-warning p-2 small shadow-sm border-warning">
-                                            <i class="bi bi-exclamation-circle me-1"></i> No se encontró el cliente.
-                                            {{-- Aquí podrías poner un botón para abrir modal de crear cliente --}}
+                                    <div class="position-absolute mt-1" style="z-index: 1050; left: 0; right: 0;">
+                                        <div class="alert alert-warning p-2 mb-0 shadow-sm">
+                                            <div class="d-flex flex-column gap-1">
+                                                <small class="text-dark fw-medium">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>Cliente no encontrado
+                                                </small>
+                                                <a href="{{ route('admin.clientes') }}" 
+                                                   target="_blank" 
+                                                   class="btn btn-sm btn-dark fw-bold"
+                                                   style="font-size: 0.75rem;">
+                                                    <i class="bi bi-person-plus-fill me-1"></i> Registrar Cliente
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 @endif
@@ -234,7 +251,7 @@
                         {{-- 2. SERVICIOS --}}
                         <div class="p-3 bg-white rounded shadow-sm border mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                                <label class="form-label fw-bold text-primary mb-0 small text-uppercase">2. Servicios & Estilistas</label>
+                                <label class="form-label fw-bold text-primary mb-0 small text-uppercase">2. Servicios</label>
                                 <button wire:click="addItem()" type="button" class="btn btn-sm btn-outline-primary fw-bold">
                                     <i class="bi bi-plus-lg"></i> Agregar Servicio
                                 </button>
@@ -288,7 +305,134 @@
                             @error('items') <div class="text-danger small mt-2 text-center">{{ $message }}</div> @enderror
                         </div>
 
-                        {{-- 3. OBSERVACIONES --}}
+                        {{-- NUEVO: 3. PRODUCTOS SUGERIDOS --}}
+                        <div class="p-3 bg-white rounded shadow-sm border mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <label class="form-label fw-bold text-success mb-0 small text-uppercase">
+                                    <i class="bi bi-bag-heart-fill me-1"></i> 3. Productos
+                                </label>
+                                <button wire:click="addProducto()" type="button" class="btn btn-sm btn-outline-success fw-bold">
+                                    <i class="bi bi-plus-lg"></i> Agregar Producto
+                                </button>
+                            </div>
+
+                            @if(empty($items_productos))
+                                <div class="text-center text-muted py-2 small">
+                                    Sin productos agregados.
+                                </div>
+                            @else
+                                @foreach($items_productos as $index => $prod)
+                                    <div class="row g-2 align-items-center mb-3 p-2 bg-light rounded position-relative" wire:key="producto-{{ $index }}-{{ $prod['producto_id'] ?? 'new' }}">
+                                        {{-- BUSCADOR DE PRODUCTO --}}
+                                        <div class="col-md-4">
+                                            @if(isset($prod['producto_id']) && $prod['producto_id'] && isset($prod['producto_nombre']) && $prod['producto_nombre'])
+                                                {{-- PRODUCTO YA SELECCIONADO --}}
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-success text-white border-0">
+                                                        <i class="bi bi-check-circle-fill"></i>
+                                                    </span>
+                                                    <input type="text" class="form-control bg-white fw-bold text-success border" 
+                                                        value="{{ $prod['producto_nombre'] }}" readonly>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                        wire:click="limpiarProducto({{ $index }})" title="Cambiar producto">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </div>
+                                            @else
+                                                {{-- BUSCADOR ACTIVO --}}
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-light border-end-0">
+                                                        <i class="bi bi-search text-secondary"></i>
+                                                    </span>
+                                                    <input type="text" 
+                                                        class="form-control border-start-0 ps-0" 
+                                                        wire:model.live.debounce.300ms="buscar_producto.{{ $index }}" 
+                                                        placeholder="Buscar producto..."
+                                                        autocomplete="off">
+                                                </div>
+
+                                                {{-- RESULTADOS DE BÚSQUEDA --}}
+                                                @if(isset($productos_encontrados[$index]) && count($productos_encontrados[$index]) > 0)
+                                                    <div class="list-group position-absolute w-100 shadow-lg mt-1" 
+                                                        style="z-index: 1050; max-height: 200px; overflow-y: auto;">
+                                                        @foreach($productos_encontrados[$index] as $p)
+                                                            <button type="button" 
+                                                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                                                wire:click="seleccionarProducto({{ $index }}, {{ $p->id }})">
+                                                                <div>
+                                                                    <span class="fw-bold">{{ $p->nombre }}</span><br>
+                                                                    <small class="text-muted">
+                                                                        <i class="bi bi-box-seam"></i> Stock: {{ $p->stock_actual }} | 
+                                                                        S/ {{ number_format($p->precio_venta, 2) }}
+                                                                    </small>
+                                                                </div>
+                                                                <i class="bi bi-chevron-right text-muted small"></i>
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                @elseif(isset($buscar_producto[$index]) && strlen($buscar_producto[$index]) > 2)
+                                                    <div class="position-absolute mt-1" style="z-index: 1050; left: 0; right: 0;">
+                                                        <div class="alert alert-warning p-2 mb-0 shadow-sm small">
+                                                            <i class="bi bi-exclamation-triangle me-1"></i>Producto no encontrado o sin stock
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                        </div>
+                                        
+                                        {{-- SELECT ESTILISTA (QUIÉN VENDIÓ) --}}
+                                        <div class="col-md-3">
+                                            <select wire:model="items_productos.{{ $index }}.estilista_id" class="form-select form-select-sm bg-white border">
+                                                <option value="">-- Vendedor --</option>
+                                                @foreach($estilistas as $e)
+                                                    <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        {{-- CANTIDAD CON BOTONES +/- --}}
+                                        <div class="col-md-2">
+                                            <div class="input-group input-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary" 
+                                                    wire:click="$set('items_productos.{{ $index }}.cantidad', {{ max(1, ($prod['cantidad'] ?? 1) - 1) }})">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <input type="number" min="1" 
+                                                    wire:model.live="items_productos.{{ $index }}.cantidad" 
+                                                    class="form-control text-center bg-white border" 
+                                                    style="max-width: 60px;">
+                                                <button type="button" class="btn btn-outline-secondary" 
+                                                    wire:click="$set('items_productos.{{ $index }}.cantidad', {{ ($prod['cantidad'] ?? 1) + 1 }})">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {{-- PRECIO TOTAL (NO EDITABLE) --}}
+                                        <div class="col-md-2">
+                                            <div class="text-end">
+                                                @if(isset($prod['precio_unitario']) && $prod['precio_unitario'] > 0)
+                                                    <small class="text-muted d-block">S/ {{ number_format($prod['precio_unitario'], 2) }} c/u</small>
+                                                @endif
+                                                <div class="fw-bold text-success">
+                                                    S/ {{ number_format($prod['precio'] ?? 0, 2) }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- BORRAR --}}
+                                        <div class="col-md-1 text-center">
+                                            <button wire:click="removeProducto({{ $index }})" type="button" class="btn btn-sm text-danger hover-bg-danger rounded-circle">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                            @error('items_productos') <div class="text-danger small mt-2 text-center">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- 4. OBSERVACIONES --}}
                         <div class="mb-3">
                             <label class="form-label fw-bold text-secondary small text-uppercase">Observaciones (Opcional)</label>
                             <textarea wire:model="observaciones" class="form-control border-0 shadow-sm" rows="2" placeholder="Notas internas..."></textarea>

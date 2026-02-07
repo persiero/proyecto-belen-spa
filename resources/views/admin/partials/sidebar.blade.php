@@ -35,7 +35,7 @@
                 <li class="nav-item">
                     <a href="{{ route('admin.turnos') }}" class="nav-link {{ request()->routeIs('admin.turnos') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-calendar-check"></i> {{-- Icono de calendario check es más semántico para citas --}}
-                        <p>Atenciones</p>
+                        <p>ATENCIONES</p>
                     </a>
                 </li>
 

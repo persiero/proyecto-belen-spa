@@ -31,4 +31,9 @@ class Turno extends Model
     public function servicios() {
         return $this->hasMany(TurnoServicio::class, 'id_turno');
     }
+
+    public function productos()
+    {
+        return $this->hasMany(TurnoProducto::class, 'id_turno');
+    }
 }

@@ -40,7 +40,7 @@
                             <tr>
                                 <th class="ps-3">Turno</th>
                                 <th>Cliente</th>
-                                <th>Servicios</th>
+                                <th>Servicios/Productos</th>
                                 <th class="text-end pe-3">Acción</th>
                             </tr>
                         </thead>
@@ -55,7 +55,10 @@
                                     <td>
                                         <small class="text-truncate d-block" style="max-width: 200px;">
                                             @foreach($t->servicios as $s)
-                                                {{ $s->servicio->nombre }}, 
+                                                <span class="badge bg-info text-dark bg-opacity-10 border border-info me-1">{{ $s->servicio->nombre }}</span>
+                                            @endforeach
+                                            @foreach($t->productos as $p)
+                                                <span class="badge bg-warning text-dark bg-opacity-10 border border-warning me-1">{{ $p->producto->nombre }} (x{{ $p->cantidad }})</span>
                                             @endforeach
                                         </small>
                                     </td>
@@ -77,32 +80,58 @@
                 <div class="card-header bg-white py-3">
                     <div class="input-group input-group-lg">
                         <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" wire:model.live="searchProducto" class="form-control bg-light border-0" placeholder="Buscar productos para agregar al cobro (shampoo, cremas, etc.)">
+                        <input type="text" wire:model.live.debounce.500ms="searchProducto" class="form-control bg-light border-0" placeholder="Buscar productos para agregar al cobro (shampoo, cremas, etc.)">
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         @forelse($productos as $p)
-                            <button wire:click="addProducto({{ $p->id }})" class="list-group-item list-group-item-action py-3 px-4 d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-light rounded p-2 me-3 text-secondary">
-                                        <i class="bi bi-box-seam fs-4"></i>
+                            <div class="list-group-item py-3 px-4">
+                                <div class="row align-items-center g-3">
+                                    {{-- INFO DEL PRODUCTO --}}
+                                    <div class="col-md-5">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded p-2 me-3 text-secondary">
+                                                <i class="bi bi-box-seam fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold text-dark">{{ $p->nombre }}</h6>
+                                                <small class="text-muted">Stock: {{ $p->stock_actual }} un. | S/ {{ number_format($p->precio_venta, 2) }}</small>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold text-dark">{{ $p->nombre }}</h6>
-                                        <small class="text-muted">Stock Disponible: {{ $p->stock_actual }} un.</small>
+                                    
+                                    {{-- SELECT ESTILISTA (VENDEDOR) --}}
+                                    <div class="col-md-5">
+                                        <select wire:model="estilista_temp.{{ $p->id }}" class="form-select form-select-sm">
+                                            <option value="">Sin vendedor asignado</option>
+                                            @foreach($estilistas as $e)
+                                                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    
+                                    {{-- BOTÓN AGREGAR --}}
+                                    <div class="col-md-2 text-end">
+                                        <button wire:click="addProducto({{ $p->id }})" 
+                                            class="btn btn-primary rounded-circle shadow-sm" 
+                                            style="width: 45px; height: 45px;"
+                                            title="Agregar al carrito">
+                                            <i class="bi bi-plus-lg fs-5"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="text-end">
-                                    <span class="fs-5 fw-bold text-success">S/ {{ number_format($p->precio_venta, 2) }}</span>
-                                    <i class="bi bi-plus-circle-fill text-primary ms-2 fs-5"></i>
-                                </div>
-                            </button>
+                            </div>
                         @empty
                             @if(strlen($searchProducto) > 0)
                                 <div class="text-center py-4 text-muted">
                                     <i class="bi bi-emoji-frown fs-4"></i><br>
                                     No encontramos productos con ese nombre.
+                                </div>
+                            @else
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-search fs-4"></i><br>
+                                    Busca productos para agregar al cobro
                                 </div>
                             @endif
                         @endforelse

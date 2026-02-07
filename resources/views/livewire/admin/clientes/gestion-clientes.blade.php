@@ -75,8 +75,26 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($item->procedencia)<small class="d-block text-secondary"><i class="bi bi-geo-alt me-1"></i> {{ $item->procedencia }}</small>@endif
-                                    @if($item->fecha_nacimiento)<small class="text-muted"><i class="bi bi-cake2 me-1"></i> {{ $item->fecha_nacimiento->format('d/m/Y') }}</small>@endif
+                                    @if($item->procedencia)
+                                        @if($item->procedencia == 'Cliente Antiguo' || $item->procedencia == 'Sistema Anterior')
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning mb-1">
+                                                <i class="bi bi-star-fill me-1"></i>Cliente Antiguo
+                                            </span>
+                                        @else
+                                            @php
+                                                $iconos = [
+                                                    'Redes Sociales' => 'bi-instagram',
+                                                    'Referencia' => 'bi-person-hearts',
+                                                    'Volanteo' => 'bi-megaphone',
+                                                    'Ubicacion' => 'bi-geo-alt',
+                                                    'Google' => 'bi-google'
+                                                ];
+                                                $icono = $iconos[$item->procedencia] ?? 'bi-info-circle';
+                                            @endphp
+                                            <small class="d-block text-secondary"><i class="bi {{ $icono }} me-1"></i> {{ $item->procedencia }}</small>
+                                        @endif
+                                    @endif
+                                    @if($item->fecha_nacimiento)<small class="text-muted d-block"><i class="bi bi-cake2 me-1"></i> {{ $item->fecha_nacimiento->format('d/m/Y') }}</small>@endif
                                 </td>
                                 <td class="text-end pe-4">
                                     <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm me-1" title="Editar cliente"><i class="bi bi-pencil-square text-primary"></i></button>
@@ -201,11 +219,12 @@
                             <div class="col-md-4">
                                 <label class="form-label">¿Cómo nos conoció?</label>
                                 <select wire:model="procedencia" class="form-select shadow-sm bg-white">
-                                    <option value="">-- Origen --</option>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="Cliente Antiguo">⭐ Cliente Antiguo</option>
                                     <option value="Redes Sociales">Redes Sociales</option>
-                                    <option value="Referencia">Referencia</option>
+                                    <option value="Referencia">Referido</option>
                                     <option value="Volanteo">Volanteo</option>
-                                    <option value="Ubicacion">Pasaba x aquí</option>
+                                    <option value="Ubicacion">Pasaba por aquí</option>
                                     <option value="Google">Google / Web</option>
                                 </select>
                             </div>
