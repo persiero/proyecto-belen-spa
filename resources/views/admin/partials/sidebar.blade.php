@@ -129,11 +129,11 @@
                 
                 <li class="nav-header mt-2">ESTADÍSTICAS</li>
 
-                <li class="nav-item {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'menu-open' : '' }}">
-                    <a href="#" class="nav-link {{ request()->routeIs('admin.ventas*', 'admin.reportes*') ? 'active' : '' }}">
+                <li class="nav-item {{ request()->routeIs('admin.reportes*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->routeIs('admin.reportes*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-graph-up-arrow"></i>
                         <p>
-                            Analítica de Negocio
+                            Reportes & Analítica
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                     </a>
@@ -141,7 +141,13 @@
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-pie-chart-fill"></i>
-                                <p>Indicadores</p> {{-- Suena profesional para el dueño --}}
+                                <p>Indicadores</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reportes.descargables') }}" class="nav-link {{ request()->routeIs('admin.reportes.descargables') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-file-earmark-pdf"></i>
+                                <p>Reportes PDF/Excel</p>
                             </a>
                         </li>
                     </ul>

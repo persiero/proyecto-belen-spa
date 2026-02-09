@@ -75,8 +75,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // ========================
     // MÓDULO DE REPORTES
     // ========================
-    // 1. Panel Principal de Analítica (EL NUEVO)
+    // 1. Panel Principal de Analítica (Con gráficos)
     Route::get('/reportes/analitica', ReportesPrincipal::class)->name('reportes.analitica');
+    
+    // 2. Reportes Descargables (PDF/Excel)
+    Route::get('/reportes/descargables', \App\Livewire\Admin\Reportes\ReportesDescargables::class)->name('reportes.descargables');
     
     Route::get('/reportes/comisiones', ReporteComisiones::class)->name('reportes.comisiones');
 

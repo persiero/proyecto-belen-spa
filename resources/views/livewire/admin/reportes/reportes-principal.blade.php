@@ -27,17 +27,17 @@
     <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active fw-bold px-4" id="tab-general" data-bs-toggle="pill" data-bs-target="#content-general" type="button">
-                <i class="bi bi-speedometer2 me-2"></i>General
+                <i class="bi bi-cash-coin me-2"></i>Ventas
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link fw-bold px-4" id="tab-marketing" data-bs-toggle="pill" data-bs-target="#content-marketing" type="button">
-                <i class="bi bi-people-fill me-2"></i>Marketing
+                <i class="bi bi-people-fill me-2"></i>Clientes
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link fw-bold px-4" id="tab-finanzas" data-bs-toggle="pill" data-bs-target="#content-finanzas" type="button">
-                <i class="bi bi-graph-up-arrow me-2"></i>Inventario & Finanzas
+                <i class="bi bi-graph-up-arrow me-2"></i>Rentabilidad
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -82,9 +82,9 @@
             </div>
         </div>
 
-        {{-- PESTAÑA 2: MARKETING --}}
+        {{-- PESTAÑA 2: CLIENTES --}}
         <div class="tab-pane fade" id="content-marketing" role="tabpanel" wire:ignore.self>
-            <div class="row">
+            <div class="row mb-4">
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white"><h5 class="card-title mb-0">Procedencia de Clientes</h5></div>
@@ -106,50 +106,215 @@
                     </div>
                 </div>
             </div>
+            
+            {{-- TABLA: TOP 10 CLIENTES FRECUENTES (NUEVO) --}}
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-star-fill text-warning me-2"></i>Top 10 Clientes Más Frecuentes
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">#</th>
+                                    <th>Cliente</th>
+                                    <th class="text-center">Edad</th>
+                                    <th class="text-center">Visitas</th>
+                                    <th class="text-end pe-4">Total Gastado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($topClientesFrecuentes as $index => $cliente)
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-muted">{{ $index + 1 }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                                    <i class="bi bi-person-fill text-primary"></i>
+                                                </div>
+                                                <span class="fw-medium">{{ $cliente->nombre }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                {{ $cliente->edad ?? 'N/A' }} años
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                                                {{ $cliente->visitas }} visitas
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-4 fw-bold text-success">
+                                            S/ {{ number_format($cliente->total_gastado, 2) }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-5">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+                                            No hay datos de clientes en este periodo
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        {{-- PESTAÑA 3: INVENTARIO & FINANZAS --}}
+        {{-- PESTAÑA 3: RENTABILIDAD --}}
         <div class="tab-pane fade" id="content-finanzas" role="tabpanel" wire:ignore.self>
-            <div class="row">
-                <div class="col-md-8">
+            
+            {{-- FILA 1: RESUMEN SERVICIOS --}}
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-scissors text-info me-2"></i>Rentabilidad de Servicios</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                                <h6 class="text-muted text-uppercase small mb-2">Venta de Servicios</h6>
+                                <h3 class="fw-bold text-success mb-0">S/ {{ number_format($totalServicios, 2) }}</h3>
+                                <small class="text-muted">Ingresos brutos</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-danger bg-opacity-10 rounded">
+                                <h6 class="text-muted text-uppercase small mb-2">Costo de Insumos</h6>
+                                <h3 class="fw-bold text-danger mb-0">S/ {{ number_format($costoInsumosPeriodo, 2) }}</h3>
+                                <small class="text-muted">Consumidos en el periodo</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                <h6 class="text-muted text-uppercase small mb-2">Ganancia Neta</h6>
+                                <h3 class="fw-bold text-primary mb-0">S/ {{ number_format($gananciaNetaServicios, 2) }}</h3>
+                                <small class="text-muted">Servicios - Insumos</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- FILA 2: RESUMEN PRODUCTOS --}}
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-bag-fill text-warning me-2"></i>Rentabilidad de Productos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                                <h6 class="text-muted text-uppercase small mb-2">Venta de Productos</h6>
+                                <h3 class="fw-bold text-success mb-0">S/ {{ number_format($totalVentaProductos, 2) }}</h3>
+                                <small class="text-muted">Ingresos brutos</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-danger bg-opacity-10 rounded">
+                                <h6 class="text-muted text-uppercase small mb-2">Costo de Productos</h6>
+                                <h3 class="fw-bold text-danger mb-0">S/ {{ number_format($costoProductosVendidos, 2) }}</h3>
+                                <small class="text-muted">Costo de lo vendido</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                <h6 class="text-muted text-uppercase small mb-2">Ganancia Neta</h6>
+                                <h3 class="fw-bold text-primary mb-0">S/ {{ number_format($gananciaNetaProductos, 2) }}</h3>
+                                <small class="text-muted">Venta - Costo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- FILA 3: RANKING SERVICIOS Y PRODUCTOS --}}
+            <div class="row mb-4">
+                <div class="col-md-6">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white"><h5 class="card-title mb-0">Top 5 Productos Más Rentables</h5></div>
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-trophy-fill text-info me-2"></i>Top 5 Servicios
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Servicio</th>
+                                        <th class="text-center">Veces</th>
+                                        <th class="text-end pe-4">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($rankingServicios as $servicio)
+                                        <tr>
+                                            <td class="ps-4">{{ Str::limit($servicio->nombre, 30) }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info bg-opacity-10 text-info">{{ $servicio->veces_realizado }}</span>
+                                            </td>
+                                            <td class="text-end pe-4 fw-bold text-success">
+                                                S/ {{ number_format($servicio->total_generado, 2) }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="3" class="text-center text-muted py-4">Sin datos</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-trophy-fill text-warning me-2"></i>Top 5 Productos
+                            </h5>
+                        </div>
                         <div class="card-body p-0">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-4">Producto</th>
                                         <th class="text-center">Uds.</th>
-                                        <th class="text-end">Venta Total</th>
-                                        <th class="text-end pe-4">Ganancia Neta</th>
+                                        <th class="text-end pe-4">Ganancia</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($topProductosRentables as $prod)
                                         <tr>
                                             <td class="ps-4">{{ Str::limit($prod->nombre, 30) }}</td>
-                                            <td class="text-center">{{ $prod->cantidad_vendida }}</td>
-                                            <td class="text-end">S/ {{ number_format($prod->total_venta, 2) }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-warning bg-opacity-10 text-warning">{{ $prod->cantidad_vendida }}</span>
+                                            </td>
                                             <td class="text-end pe-4 fw-bold text-success">
                                                 S/ {{ number_format($prod->ganancia_neta, 2) }}
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="4" class="text-center text-muted py-4">Sin datos en este periodo</td></tr>
+                                        <tr><td colspan="3" class="text-center text-muted py-4">Sin datos</td></tr>
                                     @endforelse
                                 </tbody>
                             </table>
-                            <div class="card-footer bg-white small text-muted">
-                                * Ganancia Neta = Precio Venta - Costo Compra
-                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0 h-100">
+            </div>
+
+            {{-- FILA 4: MÉTODOS DE PAGO --}}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card shadow-sm border-0">
                         <div class="card-header bg-white"><h5 class="card-title mb-0">Métodos de Pago</h5></div>
                         <div class="card-body" wire:ignore>
-                            <div style="height: 250px; position: relative;">
+                            <div style="height: 300px; position: relative;">
                                 <canvas id="chartPagos"></canvas>
                             </div>
                         </div>

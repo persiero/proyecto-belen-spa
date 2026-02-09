@@ -8,6 +8,9 @@ use App\Models\Venta;
 use App\Models\Turno;
 use App\Models\Producto;
 use App\Models\Cliente;
+use App\Models\DetalleVenta;
+use App\Models\MovimientoCaja;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class Dashboard extends Component
@@ -16,6 +19,7 @@ class Dashboard extends Component
     public function render()
     {
         $hoy = Carbon::today();
+        $hace7Dias = Carbon::now()->subDays(7);
 
         // 1. Total Vendido Hoy (Dinero)
         $totalVentasHoy = Venta::whereDate('fecha', $hoy)
@@ -30,32 +34,96 @@ class Dashboard extends Component
         // 3. Turnos Activos (Clientes atendiéndose ahora mismo)
         $turnosActivos = Turno::where('estado', 'activo')->count();
 
-        // 4. Clientes Nuevos este Mes
-        $clientesNuevos = Cliente::whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->count();
+        // 4. Clientes Atendidos Hoy (CAMBIO: antes era nuevos del mes)
+        $clientesAtendidosHoy = Turno::whereDate('created_at', $hoy)
+            ->distinct('id_cliente')
+            ->count('id_cliente');
 
         // 5. Alerta de Stock Bajo (Productos que necesitan reposición)
         $productosBajoStock = Producto::where('activo', true)
-            ->where('tipo', '!=', 'insumo') // Opcional: si quieres ver insumos quita esto
+            ->where('tipo', '!=', 'insumo')
             ->whereColumn('stock_actual', '<=', 'stock_minimo')
-            ->take(5) // Solo mostramos los 5 primeros para no saturar
-            ->get();
-
-        // 6. Últimas 5 Ventas (Para historial rápido)
-        $ultimasVentas = Venta::with('cliente')
-            ->where('estado', 'pagada')
-            ->latest()
             ->take(5)
             ->get();
+
+        // 6. Últimas 10 Ventas (Para historial rápido)
+        $ultimasVentas = Venta::with(['cliente', 'detalles.servicio', 'detalles.producto'])
+            ->whereDate('fecha', $hoy)
+            ->where('estado', 'pagada')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        // 7. Movimientos de Caja Hoy
+        $ingresosCajaHoy = MovimientoCaja::whereDate('created_at', $hoy)
+            ->where('tipo', 'ingreso')
+            ->sum('monto');
+        
+        $egresosCajaHoy = MovimientoCaja::whereDate('created_at', $hoy)
+            ->where('tipo', 'egreso')
+            ->sum('monto');
+        
+        $saldoCajaHoy = $ingresosCajaHoy - $egresosCajaHoy;
+
+        // 8. Top Estilistas Hoy (por cantidad de servicios)
+        $topEstilistasHoy = DB::table('turno_servicios')
+            ->join('turnos', 'turno_servicios.id_turno', '=', 'turnos.id')
+            ->join('estilistas', 'turno_servicios.id_estilista', '=', 'estilistas.id')
+            ->whereDate('turnos.created_at', $hoy)
+            ->whereNull('turnos.deleted_at')
+            ->select('estilistas.nombre', DB::raw('COUNT(*) as total_servicios'))
+            ->groupBy('estilistas.id', 'estilistas.nombre')
+            ->orderByDesc('total_servicios')
+            ->take(5)
+            ->get();
+
+        // 9. Top Servicio (últimos 7 días)
+        $topServicio = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->join('servicios', 'detalles_venta.id_servicio', '=', 'servicios.id')
+            ->where('detalles_venta.tipo_item', 'servicio')
+            ->where('ventas.estado', 'pagada')
+            ->where('ventas.created_at', '>=', $hace7Dias)
+            ->whereNull('ventas.deleted_at')
+            ->select(
+                'servicios.nombre',
+                DB::raw('SUM(detalles_venta.cantidad) as total_veces'),
+                DB::raw('SUM(detalles_venta.subtotal) as total_ingresos')
+            )
+            ->groupBy('servicios.id', 'servicios.nombre')
+            ->orderByDesc('total_veces')
+            ->first();
+
+        // 10. Top Producto (últimos 7 días)
+        $topProducto = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->join('productos', 'detalles_venta.id_producto', '=', 'productos.id')
+            ->where('detalles_venta.tipo_item', 'producto')
+            ->where('ventas.estado', 'pagada')
+            ->where('ventas.created_at', '>=', $hace7Dias)
+            ->whereNull('ventas.deleted_at')
+            ->select(
+                'productos.nombre',
+                DB::raw('SUM(detalles_venta.cantidad) as total_ventas'),
+                DB::raw('SUM(detalles_venta.subtotal) as total_ingresos')
+            )
+            ->groupBy('productos.id', 'productos.nombre')
+            ->orderByDesc('total_ventas')
+            ->first();
 
         return view('livewire.admin.dashboard', compact(
             'totalVentasHoy', 
             'cantidadVentas', 
             'turnosActivos', 
-            'clientesNuevos',
+            'clientesAtendidosHoy',
             'productosBajoStock',
-            'ultimasVentas'
+            'ultimasVentas',
+            'ingresosCajaHoy',
+            'egresosCajaHoy',
+            'saldoCajaHoy',
+            'topEstilistasHoy',
+            'topServicio',
+            'topProducto'
         ))->with('titulo', 'Panel de Control');
     }
 }

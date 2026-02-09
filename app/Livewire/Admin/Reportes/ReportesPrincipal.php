@@ -112,7 +112,6 @@ class ReportesPrincipal extends Component
             ->leftJoin('estilistas', 'detalles_venta.id_estilista', '=', 'estilistas.id')
             ->whereBetween('ventas.fecha', [$start, $end])
             ->where('ventas.estado', 'pagada')
-            //->whereNotNull('detalles_venta.id_estilista')
             ->select(
                 DB::raw("COALESCE(estilistas.nombre, 'Sin Asignar / Venta Antigua') as nombre"), 
                 DB::raw('SUM(detalles_venta.subtotal) as total_vendido')
@@ -121,10 +120,84 @@ class ReportesPrincipal extends Component
             ->orderByDesc('total_vendido')
             ->get();
 
+        // 8. CLIENTES: Top 10 Clientes Frecuentes (NUEVO)
+        $topClientesFrecuentes = DB::table('ventas')
+            ->join('clientes', 'ventas.id_cliente', '=', 'clientes.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->whereNotNull('ventas.id_cliente')
+            ->select(
+                'clientes.nombre',
+                DB::raw('TIMESTAMPDIFF(YEAR, clientes.fecha_nacimiento, CURDATE()) as edad'),
+                DB::raw('COUNT(ventas.id) as visitas'),
+                DB::raw('SUM(ventas.total) as total_gastado')
+            )
+            ->groupBy('clientes.id', 'clientes.nombre', 'clientes.fecha_nacimiento')
+            ->orderByDesc('visitas')
+            ->take(10)
+            ->get();
+
+        // 9. RENTABILIDAD: Ranking de Servicios (NUEVO)
+        $rankingServicios = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->join('servicios', 'detalles_venta.id_servicio', '=', 'servicios.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->where('detalles_venta.tipo_item', 'servicio')
+            ->select(
+                'servicios.nombre',
+                DB::raw('COUNT(*) as veces_realizado'),
+                DB::raw('SUM(detalles_venta.subtotal) as total_generado')
+            )
+            ->groupBy('servicios.id', 'servicios.nombre')
+            ->orderByDesc('total_generado')
+            ->take(5)
+            ->get();
+
+        // 10. RENTABILIDAD: Costo de Insumos Consumidos (NUEVO)
+        // Suma de movimientos de salida tipo 'salida_insumo'
+        $costoInsumosPeriodo = DB::table('movimientos_inventario')
+            ->join('productos', 'movimientos_inventario.id_producto', '=', 'productos.id')
+            ->whereBetween('movimientos_inventario.fecha', [$start, $end])
+            ->where('movimientos_inventario.tipo', 'salida_insumo')
+            ->whereIn('productos.tipo', ['insumo', 'mixto'])
+            ->select(
+                DB::raw('ABS(SUM(movimientos_inventario.cantidad * productos.costo_compra)) as costo_total')
+            )
+            ->value('costo_total') ?? 0;
+
+        // 11. RENTABILIDAD: Totales de Productos Vendidos (NUEVO)
+        $totalVentaProductos = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->where('detalles_venta.tipo_item', 'producto')
+            ->sum('detalles_venta.subtotal');
+
+        $costoProductosVendidos = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->join('productos', 'detalles_venta.id_producto', '=', 'productos.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->where('detalles_venta.tipo_item', 'producto')
+            ->select(
+                DB::raw('SUM(productos.costo_compra * detalles_venta.cantidad) as costo_total')
+            )
+            ->value('costo_total') ?? 0;
+
+        $gananciaNetaProductos = $totalVentaProductos - $costoProductosVendidos;
+
+        // Totales para cálculo de ganancia neta de servicios
+        $totalServicios = $rankingServicios->sum('total_generado');
+        $gananciaNetaServicios = $totalServicios - $costoInsumosPeriodo;
+
         return compact(
             'totalIngresos', 'cantidadTickets', 'ticketPromedio', 
             'ventasDiarias', 'metodosPago', 'procedencia', 
-            'rangosEdad', 'topProductosRentables', 'rankingEstilistas'
+            'rangosEdad', 'topProductosRentables', 'rankingEstilistas',
+            'topClientesFrecuentes', 'rankingServicios', 
+            'costoInsumosPeriodo', 'totalServicios', 'gananciaNetaServicios',
+            'totalVentaProductos', 'costoProductosVendidos', 'gananciaNetaProductos'
         );
     }
 

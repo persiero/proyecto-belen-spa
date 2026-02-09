@@ -56,21 +56,21 @@
             </div>
         </div>
 
-        {{-- Tarjeta: CLIENTES NUEVOS --}}
+        {{-- Tarjeta: CLIENTES ATENDIDOS HOY --}}
         <div class="col-lg-3 col-6">
             <div class="card border-0 shadow-sm h-100 overflow-hidden card-hover">
                 <div class="card-body position-relative">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <p class="text-uppercase text-muted small fw-bold mb-1">Nuevos (Mes)</p>
-                            <h3 class="fw-bold text-dark mb-0">{{ $clientesNuevos }}</h3>
-                            <span class="text-muted small mt-2 d-block">Registrados</span>
+                            <p class="text-uppercase text-muted small fw-bold mb-1">Clientes Hoy</p>
+                            <h3 class="fw-bold text-dark mb-0">{{ $clientesAtendidosHoy }}</h3>
+                            <span class="text-muted small mt-2 d-block">Atendidos</span>
                         </div>
                         <div class="icon-square bg-warning bg-opacity-10 text-warning rounded-3">
-                            <i class="bi bi-person-plus-fill fs-4"></i>
+                            <i class="bi bi-people-fill fs-4"></i>
                         </div>
                     </div>
-                    <a href="{{ route('admin.clientes') }}" class="stretched-link"></a>
+                    <a href="{{ route('admin.turnos') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
@@ -116,8 +116,8 @@
                                 <tr class="text-muted small text-uppercase">
                                     <th class="ps-4">Hora</th>
                                     <th>Cliente</th>
+                                    <th>Tipo</th>
                                     <th>Total</th>
-                                    <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody class="border-top-0">
@@ -138,13 +138,21 @@
                                                 <span class="text-muted fst-italic">Público General</span>
                                             @endif
                                         </td>
+                                        <td>
+                                            @php
+                                                $tieneServicios = $venta->detalles->where('tipo_item', 'servicio')->count() > 0;
+                                                $tieneProductos = $venta->detalles->where('tipo_item', 'producto')->count() > 0;
+                                            @endphp
+                                            @if($tieneServicios && $tieneProductos)
+                                                <span class="badge bg-purple bg-opacity-10 text-purple">Mixto</span>
+                                            @elseif($tieneServicios)
+                                                <span class="badge bg-info bg-opacity-10 text-info">Servicio</span>
+                                            @else
+                                                <span class="badge bg-warning bg-opacity-10 text-warning">Producto</span>
+                                            @endif
+                                        </td>
                                         <td class="fw-bold text-dark">
                                             S/ {{ number_format($venta->total, 2) }}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-success bg-opacity-10 text-success px-2 py-1 rounded-pill">
-                                                Pagada
-                                            </span>
                                         </td>
                                     </tr>
                                 @empty
@@ -202,6 +210,135 @@
                         </a>
                     </div>
                 @endif
+            </div>
+        </div>
+
+    </div>
+
+    {{-- 4. FILA 3: RENDIMIENTO Y TENDENCIAS (NUEVA) --}}
+    <div class="row g-3">
+        
+        {{-- CAJA HOY --}}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="bi bi-wallet2 me-1"></i> Caja Hoy
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <div>
+                            <p class="text-muted small mb-1">💵 Ingresos</p>
+                            <h5 class="fw-bold text-success mb-0">S/ {{ number_format($ingresosCajaHoy, 2) }}</h5>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <div>
+                            <p class="text-muted small mb-1">💸 Egresos</p>
+                            <h5 class="fw-bold text-danger mb-0">S/ {{ number_format($egresosCajaHoy, 2) }}</h5>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">📊 Saldo</p>
+                            <h4 class="fw-bold text-dark mb-0">S/ {{ number_format($saldoCajaHoy, 2) }}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 text-center pb-3">
+                    <a href="{{ route('admin.caja') }}" class="btn btn-outline-primary btn-sm w-100">
+                        Ver Caja Completa
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- TOP ESTILISTAS HOY --}}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="bi bi-person-hearts me-1"></i> Estilistas Hoy
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @forelse($topEstilistasHoy as $estilista)
+                            <li class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-info bg-opacity-10 d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-person-fill text-info"></i>
+                                    </div>
+                                    <span class="fw-medium text-dark">{{ $estilista->nombre }}</span>
+                                </div>
+                                <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                                    {{ $estilista->total_servicios }} servicios
+                                </span>
+                            </li>
+                        @empty
+                            <li class="list-group-item text-center py-5">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25 text-muted"></i>
+                                <p class="text-muted small mb-0">No hay servicios hoy</p>
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- TOP SERVICIO Y PRODUCTO (7 DÍAS) --}}
+        <div class="col-lg-4 col-md-12 mb-4">
+            <div class="row g-3">
+                
+                {{-- TOP SERVICIO --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="card-title mb-0 fw-bold text-dark">
+                                <i class="bi bi-trophy-fill text-warning me-1"></i> Top Servicio (7d)
+                            </h6>
+                        </div>
+                        <div class="card-body text-center">
+                            @if($topServicio)
+                                <div class="mb-2">
+                                    <i class="bi bi-scissors fs-1 text-primary opacity-75"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">{{ $topServicio->nombre }}</h5>
+                                <p class="text-muted small mb-2">{{ $topServicio->total_veces }} veces realizado</p>
+                                <h6 class="text-success fw-bold">S/ {{ number_format($topServicio->total_ingresos, 2) }}</h6>
+                            @else
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25 text-muted"></i>
+                                <p class="text-muted small mb-0">Sin datos</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- TOP PRODUCTO --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="card-title mb-0 fw-bold text-dark">
+                                <i class="bi bi-trophy-fill text-warning me-1"></i> Top Producto (7d)
+                            </h6>
+                        </div>
+                        <div class="card-body text-center">
+                            @if($topProducto)
+                                <div class="mb-2">
+                                    <i class="bi bi-bag-fill fs-1 text-warning opacity-75"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-1">{{ $topProducto->nombre }}</h5>
+                                <p class="text-muted small mb-2">{{ $topProducto->total_ventas }} unidades vendidas</p>
+                                <h6 class="text-success fw-bold">S/ {{ number_format($topProducto->total_ingresos, 2) }}</h6>
+                            @else
+                                <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25 text-muted"></i>
+                                <p class="text-muted small mb-0">Sin datos</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 

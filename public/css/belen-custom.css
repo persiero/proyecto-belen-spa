@@ -275,3 +275,9 @@ button.btn.btn-outline-danger.btn-cierre:hover i {
     letter-spacing: 0.5px;
     border-bottom: 0;
 }
+
+/* =========================================
+   9. BADGES PERSONALIZADOS
+   ========================================= */
+.text-purple { color: #6f42c1 !important; }
+.bg-purple { background-color: #6f42c1 !important; }

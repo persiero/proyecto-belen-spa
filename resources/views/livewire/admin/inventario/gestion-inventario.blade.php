@@ -1,33 +1,41 @@
 <div>
+    {{-- HEADER CON TÍTULO --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-boxes me-2"></i> Gestión de Inventario</h4>
+            <small class="text-muted">Control de stock, movimientos y transferencias</small>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12 mb-4">
             
-            {{-- HEADER Y NAVEGACIÓN --}}
+            {{-- NAVEGACIÓN MEJORADA --}}
             <div class="card shadow-sm border-0">
                 <div class="card-body p-2">
                     <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light rounded-3" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ $tab == 'stock' ? 'active shadow-sm' : 'text-muted' }}" 
                                href="#" wire:click.prevent="cambiarTab('stock')" style="border-radius: 8px;">
-                                <i class="bi bi-box-seam me-2"></i> Stock Actual
+                                <i class="bi bi-box-seam me-1"></i> Stock Actual
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ $tab == 'kardex' ? 'active shadow-sm' : 'text-muted' }}" 
                                href="#" wire:click.prevent="cambiarTab('kardex')" style="border-radius: 8px;">
-                                <i class="bi bi-clock-history me-2"></i> Kardex (Movimientos)
+                                <i class="bi bi-clock-history me-1"></i> Kardex(Movimientos)
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ $tab == 'ajuste' ? 'active shadow-sm' : 'text-muted' }}" 
                                href="#" wire:click.prevent="cambiarTab('ajuste')" style="border-radius: 8px;">
-                                <i class="bi bi-sliders me-2"></i> Ajustes
+                                <i class="bi bi-sliders me-1"></i> Ajustes
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ $tab == 'transferencia' ? 'active shadow-sm' : 'text-muted' }}" 
                                href="#" wire:click.prevent="cambiarTab('transferencia')" style="border-radius: 8px;">
-                                <i class="bi bi-arrow-left-right me-2"></i> Transferencias
+                                <i class="bi bi-arrow-left-right me-1"></i> Transferencias
                             </a>
                         </li>
                     </ul>
@@ -48,10 +56,10 @@
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header bg-white py-3 border-top border-4" style="border-color: var(--belen-cream) !important;">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-boxes me-2"></i> Existencias</h5>
-                        <div class="input-group" style="width: 250px;">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-boxes me-2"></i> Existencias Actuales</h5>
+                        <div class="input-group" style="width: 300px;">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" wire:model.live="search" class="form-control bg-light border-start-0 ps-0" placeholder="Buscar...">
+                            <input type="text" wire:model.live.debounce.300ms="search" class="form-control bg-light border-start-0 ps-0" placeholder="Buscar producto...">
                         </div>
                     </div>
                 </div>
@@ -118,9 +126,9 @@
                 <div class="card-header bg-white py-3 border-top border-4" style="border-color: var(--belen-cream) !important;">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-columns-reverse me-2"></i> Historial de Movimientos</h5>
-                        <div class="input-group" style="width: 250px;">
+                        <div class="input-group" style="width: 300px;">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" wire:model.live="search" class="form-control bg-light border-start-0 ps-0" placeholder="Filtrar por producto...">
+                            <input type="text" wire:model.live.debounce.300ms="search" class="form-control bg-light border-start-0 ps-0" placeholder="Filtrar por producto...">
                         </div>
                     </div>
                 </div>
@@ -248,9 +256,9 @@
             <div class="row justify-content-center">
                 <div class="col-md-7">
                     <div class="card shadow-lg border-0 rounded-4">
-                        <div class="card-header bg-gradient bg-info text-white py-3 text-center border-bottom-0">
-                            <h5 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2"></i> Transferencia Interna</h5>
-                            <small class="text-white text-opacity-75">Mover productos entre Vitrina y Almacén Interno</small>
+                        <div class="card-header bg-white py-3 text-center border-bottom-0">
+                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-arrow-left-right text-info me-2"></i> Transferencia Interna</h5>
+                            <small class="text-muted">Mover productos entre Vitrina y Almacén Interno</small>
                         </div>
                         <div class="card-body px-4 pb-4">
                             <form wire:submit.prevent="guardarTransferencia">
