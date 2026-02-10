@@ -24,21 +24,21 @@
         
         {{-- REPORTE DIARIO DE CAJA (DESTACADO) --}}
         <div class="col-12">
-            <div class="card border-primary border-2 shadow-lg">
+            <div class="card border-2 shadow-lg" style="border-color: var(--belen-cream) !important;">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div class="d-flex align-items-center">
-                            <div class="icon-square bg-primary text-white rounded-3 me-3" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
+                            <div class="icon-square text-white rounded-3 me-3" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background-color: var(--belen-dark);">
                                 <i class="bi bi-calendar-day fs-3"></i>
                             </div>
-                            <h4 class="card-title mb-0 fw-bold text-primary">Reporte Diario de Caja</h4>
+                            <h4 class="card-title mb-0 fw-bold" style="color: var(--belen-dark);">Reporte Diario de Caja</h4>
                         </div>
-                        <button wire:click="descargarCajaDiariaPDF" class="btn btn-primary btn-lg">
+                        <button wire:click="descargarCajaDiariaPDF" class="btn btn-primary btn-lg text-dark fw-bold">
                             <i class="bi bi-download me-2"></i> Descargar Hoy
                         </button>
                     </div>
-                    <div class="alert alert-info mb-0" role="alert">
-                        <i class="bi bi-info-circle me-2"></i>
+                    <div class="alert alert-light border mb-0" role="alert">
+                        <i class="bi bi-info-circle me-2 text-dark"></i>
                         <strong>Uso diario:</strong> Descarga el resumen consolidado del día actual con todas las cajas.
                     </div>
                 </div>
@@ -50,8 +50,8 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-square bg-primary bg-opacity-10 text-primary rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-graph-up-arrow fs-4"></i>
+                        <div class="icon-square bg-dark bg-opacity-10 rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-graph-up-arrow fs-4" style="color: var(--belen-dark);"></i>
                         </div>
                         <h5 class="card-title mb-0 fw-bold">Reporte de Rentabilidad</h5>
                     </div>
@@ -134,8 +134,8 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-square bg-info bg-opacity-10 text-info rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-wallet2 fs-4"></i>
+                        <div class="icon-square bg-light rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-wallet2 fs-4 text-purple"></i>
                         </div>
                         <h5 class="card-title mb-0 fw-bold">Reporte Mensual de Caja</h5>
                     </div>

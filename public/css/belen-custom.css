@@ -254,8 +254,8 @@ button.btn.btn-outline-danger.btn-cierre:hover i {
    8. DASHBOARD CARDS
    ========================================= */
 .icon-square {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -281,3 +281,4 @@ button.btn.btn-outline-danger.btn-cierre:hover i {
    ========================================= */
 .text-purple { color: #6f42c1 !important; }
 .bg-purple { background-color: #6f42c1 !important; }
+.border-purple { border-color: #6f42c1 !important; }

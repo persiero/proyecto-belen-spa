@@ -137,6 +137,25 @@ class ReportesPrincipal extends Component
             ->take(10)
             ->get();
 
+        // 8.1 CLIENTES: Próximos Cumpleaños (1 mes incluyendo hoy)
+        $proximosCumpleanos = Cliente::whereNotNull('fecha_nacimiento')
+            ->select(
+                'nombre',
+                'fecha_nacimiento',
+                DB::raw('TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) as edad_actual'),
+                DB::raw("
+                    CASE 
+                        WHEN DATE_FORMAT(fecha_nacimiento, '%m-%d') >= DATE_FORMAT(CURDATE(), '%m-%d')
+                        THEN DATE_FORMAT(CONCAT(YEAR(CURDATE()), '-', DATE_FORMAT(fecha_nacimiento, '%m-%d')), '%Y-%m-%d')
+                        ELSE DATE_FORMAT(CONCAT(YEAR(CURDATE()) + 1, '-', DATE_FORMAT(fecha_nacimiento, '%m-%d')), '%Y-%m-%d')
+                    END as proximo_cumple
+                ")
+            )
+            ->havingRaw('DATEDIFF(proximo_cumple, CURDATE()) <= 30')
+            ->orderByRaw('proximo_cumple')
+            ->take(10)
+            ->get();
+
         // 9. RENTABILIDAD: Ranking de Servicios (NUEVO)
         $rankingServicios = DB::table('detalles_venta')
             ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
@@ -195,7 +214,7 @@ class ReportesPrincipal extends Component
             'totalIngresos', 'cantidadTickets', 'ticketPromedio', 
             'ventasDiarias', 'metodosPago', 'procedencia', 
             'rangosEdad', 'topProductosRentables', 'rankingEstilistas',
-            'topClientesFrecuentes', 'rankingServicios', 
+            'topClientesFrecuentes', 'proximosCumpleanos', 'rankingServicios', 
             'costoInsumosPeriodo', 'totalServicios', 'gananciaNetaServicios',
             'totalVentaProductos', 'costoProductosVendidos', 'gananciaNetaProductos'
         );

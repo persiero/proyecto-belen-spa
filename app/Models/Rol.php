@@ -12,8 +12,8 @@ class Rol extends Model
     protected $table = 'roles';
 
     protected $fillable = [
-        'name',
-        'description'
+        'nombre',
+        'descripcion'
     ];
 
     //Relación inversa (Opcional, pero util para el scope)

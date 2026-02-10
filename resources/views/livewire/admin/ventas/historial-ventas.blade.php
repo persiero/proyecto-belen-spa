@@ -1,4 +1,12 @@
 <div>
+    {{-- HEADER CON TÍTULO --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-receipt-cutoff me-2"></i> Tickets & Facturación</h4>
+            <small class="text-muted">Historial completo de ventas y comprobantes electrónicos</small>
+        </div>
+    </div>
+
     {{-- FILTROS DE BÚSQUEDA --}}
     <div class="card shadow-sm border-0 mb-4 bg-light">
         <div class="card-body py-3">
@@ -31,7 +39,7 @@
 
     {{-- TABLA DE RESULTADOS --}}
     <div class="card shadow-sm border-0 rounded-3 mb-5">
-        <div class="card-header bg-white py-3 border-bottom">
+        <div class="card-header bg-white py-3 border-top border-4" style="border-color: var(--belen-cream) !important;">
             <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-receipt me-2"></i> Historial de Tickets y Facturas</h5>
         </div>
         

@@ -29,7 +29,7 @@
                         <li class="nav-item">
                             <a class="nav-link fw-bold {{ $tab == 'ajuste' ? 'active shadow-sm' : 'text-muted' }}" 
                                href="#" wire:click.prevent="cambiarTab('ajuste')" style="border-radius: 8px;">
-                                <i class="bi bi-sliders me-1"></i> Ajustes
+                                <i class="bi bi-sliders me-1"></i> Ajustes de Inventario
                             </a>
                         </li>
                         <li class="nav-item">
@@ -149,7 +149,7 @@
                                     $color = 'secondary'; $icon = 'bi-circle';
                                     if($mov->cantidad > 0) { $color = 'success'; $icon = 'bi-arrow-down-circle-fill'; } // Entrada
                                     elseif($mov->cantidad < 0) { $color = 'danger'; $icon = 'bi-arrow-up-circle-fill'; } // Salida
-                                    else { $color = 'info'; $icon = 'bi-arrow-left-right'; } // Transferencia (neutro)
+                                    else { $color = 'purple'; $icon = 'bi-arrow-left-right'; } // Transferencia (neutro)
                                 @endphp
                                 <tr>
                                     <td class="ps-4">
@@ -157,13 +157,18 @@
                                         <small class="text-muted">{{ $mov->fecha->format('h:i A') }}</small>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $color }} bg-opacity-10 text-{{ $color }} border border-{{ $color }}">
-                                            @if($mov->tipo == 'entrada') Compra / Entrada
-                                            @elseif($mov->tipo == 'salida_venta') Venta
-                                            @elseif($mov->tipo == 'salida_insumo') Consumo Interno
-                                            @else Ajuste / Transf.
-                                            @endif
-                                        </span>
+                                        @if($color == 'purple')
+                                            <span class="badge bg-white text-purple border-1 border-purple">
+                                                Ajuste / Transf.
+                                            </span>
+                                        @else
+                                            <span class="badge bg-{{ $color }} bg-opacity-10 text-{{ $color }} border border-{{ $color }}">
+                                                @if($mov->tipo == 'entrada') Compra / Entrada
+                                                @elseif($mov->tipo == 'salida_venta') Venta
+                                                @elseif($mov->tipo == 'salida_insumo') Consumo Interno
+                                                @endif
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="fw-bold text-secondary">{{ $mov->producto->nombre ?? 'Eliminado' }}</td>
                                     <td><small class="text-muted">{{ $mov->motivo ?? $mov->referencia }}</small></td>
@@ -192,8 +197,8 @@
                 <div class="col-md-6">
                     <div class="card shadow-lg border-0 rounded-4">
                         <div class="card-header bg-white py-3 text-center border-bottom-0">
-                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-sliders text-warning me-2"></i> Ajuste Manual de Inventario</h5>
-                            <small class="text-muted">Uso para: Mermas, regalos, corrección de stock, etc.</small>
+                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-sliders text-warning me-2"></i> Registro de Movimientos de Inventario</h5>
+                            <small class="text-muted">Consumo interno, vencimientos, regalos, correcciones y entradas manuales</small>
                         </div>
                         <div class="card-body px-4 pb-4">
                             <form wire:submit.prevent="guardarAjuste">
@@ -215,16 +220,19 @@
                                             <span class="fs-4 fw-bold">{{ $producto_seleccionado->stock_actual }}</span>
                                         </div>
                                         <div class="text-center w-50">
-                                            <small class="text-warning fw-bold text-dark text-uppercase">Insumo</small><br>
+                                            <small class="text-purple fw-bold text-uppercase">Insumo</small><br>
                                             <span class="fs-4 fw-bold">{{ $producto_seleccionado->stock_insumo }}</span>
                                         </div>
                                     </div>
                                 @endif
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold small text-secondary">TIPO DE ACCIÓN</label>
-                                    <select wire:model="tipo_movimiento" class="form-select shadow-sm">
-                                        <option value="salida_insumo">📉 Consumo Interno (Resta de Insumo)</option>
+                                    <label class="form-label fw-bold small text-secondary">TIPO DE MOVIMIENTO</label>
+                                    <div class="alert alert-info border-info mb-2 py-2">
+                                        <small class="fw-bold"><i class="bi bi-info-circle me-1"></i>Acción más frecuente: Consumo Interno (Insumos)</small>
+                                    </div>
+                                    <select wire:model="tipo_movimiento" class="form-select shadow-sm" style="font-size: 1.05rem;">
+                                        <option value="salida_insumo" style="background-color: #d1ecf1; font-weight: bold;">📉 CONSUMO INTERNO (RESTA DE INSUMO) </option>
                                         <option value="ajuste_entrada">📈 Entrada Manual (Suma a Venta)</option>
                                         <option value="ajuste_salida">🗑️ Salida Manual (Resta de Venta)</option>
                                     </select>
@@ -257,7 +265,7 @@
                 <div class="col-md-7">
                     <div class="card shadow-lg border-0 rounded-4">
                         <div class="card-header bg-white py-3 text-center border-bottom-0">
-                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-arrow-left-right text-info me-2"></i> Transferencia Interna</h5>
+                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-arrow-left-right text-purple me-2"></i> Transferencia Interna</h5>
                             <small class="text-muted">Mover productos entre Vitrina y Almacén Interno</small>
                         </div>
                         <div class="card-body px-4 pb-4">
@@ -314,7 +322,7 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" class="btn btn-info text-white w-100 fw-bold py-2 shadow-sm" @if(!$producto_seleccionado || $origen == $destino) disabled @endif>
+                                <button type="submit" class="btn bg-purple text-white w-100 fw-bold py-2 shadow-sm" style="border: none;" @if(!$producto_seleccionado || $origen == $destino) disabled @endif>
                                     <i class="bi bi-arrow-left-right me-1"></i> Confirmar Transferencia
                                 </button>
                             </form>

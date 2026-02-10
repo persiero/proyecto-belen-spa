@@ -64,24 +64,26 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/turnos', GestionTurnos::class)->name('turnos');
     Route::get('/pos/{turno_id?}', GestionPos::class)->name('pos');
     Route::get('/caja', GestionCaja::class)->name('caja');
-    Route::get('/compras', GestionCompras::class)->name('compras');
-    Route::get('/proveedores', GestionProveedores::class)->name('proveedores');
-    Route::get('/inventario', GestionInventario::class)->name('inventario');
+    Route::get('/compras', GestionCompras::class)->name('compras')->middleware('role.access:almacen');
+    Route::get('/proveedores', GestionProveedores::class)->name('proveedores')->middleware('role.access:almacen');
+    Route::get('/inventario', GestionInventario::class)->name('inventario')->middleware('role.access:almacen');
     Route::get('/ventas/historial', HistorialVentas::class)->name('ventas.historial');
-    Route::get('/configuracion', GestionConfiguracion::class)->name('configuracion');
+    Route::get('/configuracion', GestionConfiguracion::class)->name('configuracion')->middleware('role.access:sistema');
     Route::get('/perfil', MiPerfil::class)->name('perfil');
-    Route::get('/usuarios', GestionUsuarios::class)->name('usuarios');
+    Route::get('/usuarios', GestionUsuarios::class)->name('usuarios')->middleware('role.access:sistema');
 
     // ========================
-    // MÓDULO DE REPORTES
+    // MÓDULO DE REPORTES (Solo Administrador)
     // ========================
-    // 1. Panel Principal de Analítica (Con gráficos)
-    Route::get('/reportes/analitica', ReportesPrincipal::class)->name('reportes.analitica');
-    
-    // 2. Reportes Descargables (PDF/Excel)
-    Route::get('/reportes/descargables', \App\Livewire\Admin\Reportes\ReportesDescargables::class)->name('reportes.descargables');
-    
-    Route::get('/reportes/comisiones', ReporteComisiones::class)->name('reportes.comisiones');
+    Route::middleware('role.access:estadisticas')->group(function () {
+        // 1. Panel Principal de Analítica (Con gráficos)
+        Route::get('/reportes/analitica', ReportesPrincipal::class)->name('reportes.analitica');
+        
+        // 2. Reportes Descargables (PDF/Excel)
+        Route::get('/reportes/descargables', \App\Livewire\Admin\Reportes\ReportesDescargables::class)->name('reportes.descargables');
+        
+        Route::get('/reportes/comisiones', ReporteComisiones::class)->name('reportes.comisiones');
+    });
 
 });
 

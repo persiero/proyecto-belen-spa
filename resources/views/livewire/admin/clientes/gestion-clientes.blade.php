@@ -1,4 +1,7 @@
 <div>
+    {{-- COMPONENTE HISTORIAL --}}
+    @livewire('admin.clientes.historial-cliente')
+
     {{-- ALERTAS --}}
     @if (session()->has('message'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" 
@@ -97,6 +100,9 @@
                                     @if($item->fecha_nacimiento)<small class="text-muted d-block"><i class="bi bi-cake2 me-1"></i> {{ $item->fecha_nacimiento->format('d/m/Y') }}</small>@endif
                                 </td>
                                 <td class="text-end pe-4">
+                                    <button wire:click="$dispatch('abrirHistorial', { clienteId: {{ $item->id }} })" class="btn btn-sm btn-light border shadow-sm me-1" title="Ver historial">
+                                        <i class="bi bi-clock-history text-purple"></i>
+                                    </button>
                                     <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm me-1" title="Editar cliente"><i class="bi bi-pencil-square text-primary"></i></button>
                                     <button wire:confirm="¿Seguro que desea eliminar este cliente?" wire:click="delete({{ $item->id }})" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-trash text-danger" title="Eliminar cliente"></i></button>
                                 </td>

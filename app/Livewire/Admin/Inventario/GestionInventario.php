@@ -34,6 +34,14 @@ class GestionInventario extends Component
     public $cant_transferencia = 1;
     public $motivo_transferencia = '';
 
+    public function mount()
+    {
+        // Detectar si viene con parámetro tab en la URL
+        if (request()->has('tab')) {
+            $this->tab = request()->get('tab');
+        }
+    }
+
     #[Layout('layouts.admin')]
     #[Title('Centro de Control de Stock')]
     public function render()

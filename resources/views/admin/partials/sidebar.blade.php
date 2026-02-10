@@ -94,7 +94,8 @@
                     </ul>
                 </li>
 
-                {{-- BLOQUE 3: ALMACÉN --}}
+                {{-- BLOQUE 3: ALMACÉN (Solo Administrador y Encargado) --}}
+                @if(auth()->user()->canAccessAlmacen())
                 <li class="nav-item {{ request()->routeIs('admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link {{ request()->routeIs('admin.inventario*', 'admin.compras*', 'admin.proveedores*') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-box-seam"></i>
@@ -124,9 +125,10 @@
                         </li>
                     </ul>
                 </li>
+                @endif
 
-                {{-- BLOQUE 4: INTELIGENCIA --}}
-                
+                {{-- BLOQUE 4: INTELIGENCIA (Solo Administrador) --}}
+                @if(auth()->user()->canAccessEstadisticas())
                 <li class="nav-header mt-2">ESTADÍSTICAS</li>
 
                 <li class="nav-item {{ request()->routeIs('admin.reportes*') ? 'menu-open' : '' }}">
@@ -152,9 +154,10 @@
                         </li>
                     </ul>
                 </li>
+                @endif
 
-                {{-- BLOQUE 5: SEGURIDAD --}}
-                
+                {{-- BLOQUE 5: SEGURIDAD (Solo Administrador) --}}
+                @if(auth()->user()->canAccessSistema())
                 <li class="nav-header mt-2">SISTEMA</li>
 
                 <li class="nav-item">
@@ -170,6 +173,7 @@
                         <p>Control de Acceso</p> {{-- Más específico que "Usuarios" --}}
                     </a>
                 </li>
+                @endif
 
             </ul>
         </nav>

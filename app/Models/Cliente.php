@@ -26,5 +26,14 @@ class Cliente extends Model
         'fecha_nacimiento' => 'date',
     ];
 
+    // Relaciones
+    public function turnos()
+    {
+        return $this->hasMany(Turno::class, 'id_cliente');
+    }
 
+    public function ventas()
+    {
+        return $this->hasMany(Venta::class, 'id_cliente');
+    }
 }

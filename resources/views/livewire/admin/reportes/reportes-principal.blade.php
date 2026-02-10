@@ -108,60 +108,126 @@
             </div>
             
             {{-- TABLA: TOP 10 CLIENTES FRECUENTES (NUEVO) --}}
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-star-fill text-warning me-2"></i>Top 10 Clientes Más Frecuentes
-                    </h5>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-star-fill text-warning me-2"></i>Top 10 Clientes Más Frecuentes
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">#</th>
+                                            <th>Cliente</th>
+                                            <th class="text-center">Edad</th>
+                                            <th class="text-center">Visitas</th>
+                                            <th class="text-end pe-4">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($topClientesFrecuentes as $index => $cliente)
+                                            <tr>
+                                                <td class="ps-4 fw-bold text-muted">{{ $index + 1 }}</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                                            <i class="bi bi-person-fill text-primary"></i>
+                                                        </div>
+                                                        <span class="fw-medium">{{ $cliente->nombre }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                        {{ $cliente->edad ?? 'N/A' }} años
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                                                        {{ $cliente->visitas }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end pe-4 fw-bold text-success">
+                                                    S/ {{ number_format($cliente->total_gastado, 2) }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-5">
+                                                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+                                                    No hay datos de clientes en este periodo
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4">#</th>
-                                    <th>Cliente</th>
-                                    <th class="text-center">Edad</th>
-                                    <th class="text-center">Visitas</th>
-                                    <th class="text-end pe-4">Total Gastado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($topClientesFrecuentes as $index => $cliente)
-                                    <tr>
-                                        <td class="ps-4 fw-bold text-muted">{{ $index + 1 }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
-                                                    <i class="bi bi-person-fill text-primary"></i>
-                                                </div>
-                                                <span class="fw-medium">{{ $cliente->nombre }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                                {{ $cliente->edad ?? 'N/A' }} años
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
-                                                {{ $cliente->visitas }} visitas
-                                            </span>
-                                        </td>
-                                        <td class="text-end pe-4 fw-bold text-success">
-                                            S/ {{ number_format($cliente->total_gastado, 2) }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-5">
-                                            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
-                                            No hay datos de clientes en este periodo
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-cake2-fill text-danger me-2"></i>Próximos Cumpleaños
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Cliente</th>
+                                            <th class="text-center">Edad</th>
+                                            <th class="text-end pe-4">Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($proximosCumpleanos as $cliente)
+                                            @php
+                                                $esHoy = \Carbon\Carbon::parse($cliente->proximo_cumple)->isToday();
+                                            @endphp
+                                            <tr class="{{ $esHoy ? 'table-warning' : '' }}">
+                                                <td class="ps-4">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="rounded-circle {{ $esHoy ? 'bg-warning' : 'bg-danger bg-opacity-10' }} d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                                            <i class="bi bi-{{ $esHoy ? 'cake2-fill text-white' : 'gift-fill text-danger' }}"></i>
+                                                        </div>
+                                                        <div>
+                                                            <span class="fw-medium">{{ $cliente->nombre }}</span>
+                                                            @if($esHoy)
+                                                                <span class="badge bg-warning text-dark ms-2">🎉 ¡HOY!</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                        {{ $cliente->edad_actual + 1 }} años
+                                                    </span>
+                                                </td>
+                                                <td class="text-end pe-4">
+                                                    <span class="badge {{ $esHoy ? 'bg-warning text-dark' : 'bg-danger bg-opacity-10 text-danger' }} px-3 py-2">
+                                                        {{ \Carbon\Carbon::parse($cliente->proximo_cumple)->format('d/m/Y') }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-5">
+                                                    <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
+                                                    No hay cumpleaños próximos
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -440,6 +506,15 @@
                 });
             });
         });
+
+        // Abrir automáticamente la pestaña de Clientes si viene desde el ancla
+        if (window.location.hash === '#content-marketing') {
+            const tabButton = document.getElementById('tab-marketing');
+            if (tabButton) {
+                const tab = new bootstrap.Tab(tabButton);
+                tab.show();
+            }
+        }
     </script>
     @endscript
 

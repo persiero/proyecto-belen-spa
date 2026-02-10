@@ -55,9 +55,12 @@ class Dashboard extends Component
             ->get();
 
         // 7. Movimientos de Caja Hoy
-        $ingresosCajaHoy = MovimientoCaja::whereDate('created_at', $hoy)
+        // Ingresos = Ventas del día + Ingresos adicionales (movimientos_caja)
+        $ingresosAdicionalesCaja = MovimientoCaja::whereDate('created_at', $hoy)
             ->where('tipo', 'ingreso')
             ->sum('monto');
+        
+        $ingresosCajaHoy = $totalVentasHoy + $ingresosAdicionalesCaja;
         
         $egresosCajaHoy = MovimientoCaja::whereDate('created_at', $hoy)
             ->where('tipo', 'egreso')
@@ -111,6 +114,29 @@ class Dashboard extends Component
             ->orderByDesc('total_ventas')
             ->first();
 
+        // 11. Cumpleaños del Día
+        $cumpleanosHoy = Cliente::whereNotNull('fecha_nacimiento')
+            ->whereRaw('DAY(fecha_nacimiento) = DAY(CURDATE())')
+            ->whereRaw('MONTH(fecha_nacimiento) = MONTH(CURDATE())')
+            ->select('nombre', 'fecha_nacimiento', DB::raw('TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) as edad'))
+            ->get();
+
+        // 12. Salidas de Insumos (últimos 7 días)
+        $salidasInsumos = DB::table('movimientos_inventario')
+            ->join('productos', 'movimientos_inventario.id_producto', '=', 'productos.id')
+            ->where('movimientos_inventario.tipo', 'salida_insumo')
+            ->whereIn('productos.tipo', ['insumo', 'mixto'])
+            ->where('movimientos_inventario.fecha', '>=', Carbon::now()->subDays(7))
+            ->select(
+                'productos.nombre',
+                'movimientos_inventario.cantidad',
+                'movimientos_inventario.fecha',
+                'movimientos_inventario.motivo'
+            )
+            ->orderByDesc('movimientos_inventario.fecha')
+            ->take(5)
+            ->get();
+
         return view('livewire.admin.dashboard', compact(
             'totalVentasHoy', 
             'cantidadVentas', 
@@ -123,7 +149,9 @@ class Dashboard extends Component
             'saldoCajaHoy',
             'topEstilistasHoy',
             'topServicio',
-            'topProducto'
+            'topProducto',
+            'cumpleanosHoy',
+            'salidasInsumos'
         ))->with('titulo', 'Panel de Control');
     }
 }

@@ -36,6 +36,7 @@
                         <tr>
                             <th class="py-3 ps-4">Producto / Código</th>
                             <th class="py-3 text-center">Tipo</th>
+                            <th class="py-3 text-center">Estado</th>
                             <th class="py-3 text-center">Stock Venta</th>
                             <th class="py-3 text-center">Stock Interno</th>
                             <th class="py-3 text-end">Precio</th>
@@ -60,6 +61,19 @@
                                         <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">Insumo</span>
                                     @else
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Mixto</span>
+                                    @endif
+                                </td>
+                                
+                                {{-- ESTADO --}}
+                                <td class="text-center">
+                                    @if($item->activo)
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
+                                            <i class="bi bi-check-circle me-1"></i> Activo
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill">
+                                            <i class="bi bi-dash-circle me-1"></i> Inactivo
+                                        </span>
                                     @endif
                                 </td>
                                 
@@ -102,7 +116,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <div class="text-muted">
                                         <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
                                         No hay productos registrados.
@@ -209,6 +223,21 @@
                                 <select wire:model="id_afectacion" class="form-select form-select-sm bg-white shadow-sm">
                                     @foreach($afectaciones as $a) <option value="{{ $a->id }}">{{ $a->codigo }} - {{ Str::limit($a->descripcion, 30) }}</option> @endforeach
                                 </select>
+                            </div>
+
+                            {{-- ESTADO --}}
+                            <div class="col-12 mt-3"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Estado del Producto</label></div>
+                            
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input wire:model="activo" class="form-check-input" type="checkbox" id="switchActivo" style="cursor: pointer;">
+                                    <label class="form-check-label" for="switchActivo" style="cursor: pointer;">
+                                        <span class="badge {{ $activo ? 'bg-success' : 'bg-danger' }}">
+                                            <i class="bi {{ $activo ? 'bi-check-circle' : 'bi-x-circle' }}"></i> 
+                                            {{ $activo ? 'Activo' : 'Inactivo' }}
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
 
                         </div>

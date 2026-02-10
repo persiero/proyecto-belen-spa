@@ -41,4 +41,32 @@ class User extends Authenticatable
     public function rol(){
         return $this->belongsTo(Rol::class, 'id_rol');
     }
+
+    // Métodos helper para verificar roles
+    public function isAdministrador(){
+        return $this->rol && strtolower($this->rol->nombre) === 'administrador';
+    }
+
+    public function isCajero(){
+        return $this->rol && strtolower($this->rol->nombre) === 'cajero';
+    }
+
+    public function isEncargado(){
+        return $this->rol && strtolower($this->rol->nombre) === 'encargado';
+    }
+
+    // Método para verificar si tiene acceso a módulos de sistema
+    public function canAccessSistema(){
+        return $this->isAdministrador();
+    }
+
+    // Método para verificar si tiene acceso a estadísticas
+    public function canAccessEstadisticas(){
+        return $this->isAdministrador();
+    }
+
+    // Método para verificar si tiene acceso a almacén
+    public function canAccessAlmacen(){
+        return $this->isAdministrador() || $this->isEncargado();
+    }
 }

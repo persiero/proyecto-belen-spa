@@ -1,4 +1,7 @@
 <div>
+    {{-- COMPONENTE HISTORIAL --}}
+    @livewire('admin.clientes.historial-cliente')
+
     {{-- MENSAJES DE ALERTA --}}
     @if (session()->has('message'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert" 
@@ -178,6 +181,13 @@
                             <label class="form-label fw-bold text-secondary small text-uppercase">1. Cliente</label>
                             {{-- 1. ESTADO: CLIENTE YA SELECCIONADO --}}
                             @if($id_cliente && $cliente_seleccionado_nombre)
+                                <div class="d-flex gap-2 mb-2">
+                                    <button type="button" wire:click="$dispatch('abrirHistorial', { clienteId: {{ $id_cliente }} })" 
+                                        class="btn btn-sm btn-light border w-100 shadow-sm">
+                                        <i class="bi bi-clock-history text-purple me-1"></i>
+                                        <span class="text-purple fw-bold">Ver Historial del Cliente</span>
+                                    </button>
+                                </div>
                                 <div class="input-group" wire:key="turno-cliente-selected">
                                     <span class="input-group-text bg-success text-white border-0">
                                         <i class="bi bi-person-check-fill"></i>
@@ -260,13 +270,15 @@
                             @foreach($items as $index => $item)
                                 <div class="row g-2 align-items-center mb-2">
                                     <div class="col-md-5">
-                                        <select wire:model.live="items.{{ $index }}.servicio_id" class="form-select form-select-sm bg-light border-0">
+                                        <select wire:model.live="items.{{ $index }}.servicio_id" 
+                                            class="form-select form-select-sm border-0 fw-bold {{ !empty($item['servicio_id']) ? 'bg-white text-primary' : 'bg-light' }}">
                                             <option value="">-- Servicio --</option>
                                             @foreach($servicios as $s) <option value="{{ $s->id }}">{{ $s->nombre }}</option> @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <select wire:model="items.{{ $index }}.estilista_id" class="form-select form-select-sm bg-light border-0">
+                                        <select wire:model.live="items.{{ $index }}.estilista_id" 
+                                            class="form-select form-select-sm border-0 fw-bold {{ !empty($item['estilista_id']) ? 'bg-white text-primary' : 'bg-light' }}">
                                             <option value="">-- Profesional --</option>
                                             @foreach($estilistas as $e)
                                                 @php
@@ -292,7 +304,8 @@
                                     <div class="col-md-2">
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text border-0 bg-transparent text-muted">S/</span>
-                                            <input type="number" step="0.01" wire:model="items.{{ $index }}.precio" class="form-control border-0 bg-light fw-bold text-end">
+                                            <input type="number" step="0.01" wire:model="items.{{ $index }}.precio" 
+                                                class="form-control border-0 fw-bold text-end {{ !empty($item['precio']) && $item['precio'] > 0 ? 'bg-white text-primary' : 'bg-light' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-1 text-center">
@@ -382,7 +395,8 @@
                                         
                                         {{-- SELECT ESTILISTA (QUIÉN VENDIÓ) --}}
                                         <div class="col-md-3">
-                                            <select wire:model="items_productos.{{ $index }}.estilista_id" class="form-select form-select-sm bg-white border">
+                                            <select wire:model.live="items_productos.{{ $index }}.estilista_id" 
+                                                class="form-select form-select-sm border fw-bold {{ !empty($prod['estilista_id']) ? 'bg-white text-success' : 'bg-white' }}">
                                                 <option value="">-- Vendedor --</option>
                                                 @foreach($estilistas as $e)
                                                     <option value="{{ $e->id }}">{{ $e->nombre }}</option>
