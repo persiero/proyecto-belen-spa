@@ -155,6 +155,15 @@
                     {{-- SELECCIÓN DE CLIENTE --}}
                     <div class="mb-3 bg-white p-2 rounded border">
                         <label class="form-label small text-muted text-uppercase fw-bold mb-1 ps-1">Cliente a Facturar</label>
+                        
+                        {{-- ALERTA: Venta mayor a 700 sin cliente válido --}}
+                        @if($this->requiereClienteValido)
+                            <div class="alert alert-danger border-danger bg-danger bg-opacity-10 p-2 mb-2 small">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                <strong>¡Atención!</strong> Para ventas mayores a S/ 700.00 debe seleccionar un cliente con DNI/RUC válido.
+                            </div>
+                        @endif
+                        
                         {{-- 1. ESTADO: CLIENTE YA SELECCIONADO --}}
                         @if($cliente_id && $cliente_seleccionado_nombre)
                             <div class="input-group" wire:key="cliente-seleccionado">
@@ -293,7 +302,10 @@
                         </div>
                     </div>
 
-                    <button wire:click="openPaymentModal" class="btn btn-success w-100 btn-lg fw-bold shadow-sm py-3" @if(empty($cart)) disabled @endif>
+                    <button wire:click="openPaymentModal" 
+                        class="btn btn-success w-100 btn-lg fw-bold shadow-sm py-3" 
+                        @if(empty($cart) || $this->requiereClienteValido) disabled @endif
+                        @if($this->requiereClienteValido) title="Debe seleccionar un cliente válido para ventas mayores a S/ 700" @endif>
                         <i class="bi bi-credit-card-2-front me-2"></i> COBRAR S/ {{ number_format($total, 2) }}
                     </button>
                 </div>

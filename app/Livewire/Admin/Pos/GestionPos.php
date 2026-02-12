@@ -329,6 +329,12 @@ class GestionPos extends Component
             return;
         }
 
+        // Validación: Si el total > 700, no permitir cliente genérico
+        if ($this->total > 700 && $this->esClienteGenerico()) {
+            session()->flash('error_pago', 'Para ventas mayores a S/ 700.00 debe seleccionar un cliente con DNI/RUC válido (no genérico).');
+            return;
+        }
+
         DB::beginTransaction();
 
         try {
@@ -434,6 +440,23 @@ class GestionPos extends Component
     }
 
     public function closePaymentModal() { $this->isPaymentModalOpen = false; }
+
+    // Método helper para validar si el cliente es genérico
+    public function esClienteGenerico()
+    {
+        if (!$this->cliente_id) return true;
+        
+        $cliente = Cliente::find($this->cliente_id);
+        if (!$cliente) return true;
+        
+        return in_array($cliente->numero_documento, ['00000000', '0', '-']);
+    }
+
+    // Método computed para verificar si debe bloquearse por el límite de 700
+    public function getRequiereClienteValidoProperty()
+    {
+        return $this->total > 700 && $this->esClienteGenerico();
+    }
 
     
 }

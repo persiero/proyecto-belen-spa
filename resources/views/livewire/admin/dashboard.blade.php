@@ -116,13 +116,20 @@
                                 </div>
                                 <div class="text-white">
                                     <h5 class="fw-bold mb-1">🎉 ¡Cumpleaños de Hoy!</h5>
-                                    <p class="mb-0 opacity-75 small">
-                                        @if($cumpleanosHoy->count() == 1)
+                                    @if($cumpleanosHoy->count() == 1)
+                                        <p class="mb-0 opacity-75 small">
                                             <strong>{{ $cumpleanosHoy->first()->nombre }}</strong> cumple <strong>{{ $cumpleanosHoy->first()->edad }} años</strong>
-                                        @else
-                                            <strong>{{ $cumpleanosHoy->count() }} clientes</strong> cumplen años hoy
-                                        @endif
-                                    </p>
+                                        </p>
+                                    @else
+                                        <p class="mb-2 opacity-75 small fw-bold">{{ $cumpleanosHoy->count() }} clientes cumplen años:</p>
+                                        <div class="d-flex flex-column gap-1">
+                                            @foreach($cumpleanosHoy as $cumpleanero)
+                                                <small class="opacity-90">
+                                                    🎂 <strong>{{ $cumpleanero->nombre }}</strong> ({{ $cumpleanero->edad }} años)
+                                                </small>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             <a href="{{ route('admin.reportes.analitica') }}#content-marketing" class="btn btn-light btn-sm fw-bold">

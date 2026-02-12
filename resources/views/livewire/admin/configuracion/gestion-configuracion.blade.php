@@ -127,12 +127,18 @@
                         <h6 class="text-dark fw-bold small text-uppercase mb-3"><i class="bi bi-file-earmark-lock me-1"></i> Certificado Digital</h6>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold small text-secondary">ARCHIVO (.pem / .pfx)</label>
+                            <label class="form-label fw-bold small text-secondary">ARCHIVO (.p12 / .pfx / .pem)</label>
                             <input type="file" wire:model="certificado_file" class="form-control shadow-sm">
                             <div wire:loading wire:target="certificado_file" class="text-primary small mt-2">
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Subiendo...
                             </div>
                             @error('certificado_file') <span class="text-danger small d-block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">CONTRASEÑA DEL CERTIFICADO</label>
+                            <input type="password" wire:model="certificado_password" class="form-control shadow-sm" placeholder="Contraseña del archivo .p12">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Solo necesario para archivos .p12 o .pfx protegidos</small>
                         </div>
 
                         @if($certificado_path)

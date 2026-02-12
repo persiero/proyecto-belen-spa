@@ -42,7 +42,7 @@ class GestionClientes extends Component
     {
         return [
             'nombre' => 'required|string|max:150',
-            'apellido' => $this->tipo_documento == 'RUC' ? 'nullable' : 'required|string|max:150',
+            'apellido' => 'nullable|string|max:150',
             'telefono' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:150',
             'tipo_documento' => 'required|in:DNI,RUC,CE,PAS,OTRO',

@@ -146,7 +146,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                                                    <span class="badge bg-info bg-opacity-10 text-purple px-3 py-2">
                                                         {{ $cliente->visitas }}
                                                     </span>
                                                 </td>

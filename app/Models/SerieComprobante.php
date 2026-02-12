@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class SerieComprobante extends Model
 {
@@ -24,5 +25,31 @@ class SerieComprobante extends Model
     public function tipoComprobante()
     {
         return $this->belongsTo(TipoComprobante::class, 'id_tipo_comprobante');
+    }
+
+    /**
+     * Obtiene el siguiente correlativo y actualiza el registro
+     * Usa lockForUpdate para evitar duplicados en concurrencia
+     */
+    public function obtenerSiguienteCorrelativo()
+    {
+        DB::beginTransaction();
+        try {
+            // Bloquear el registro para evitar race conditions
+            $serie = self::where('id', $this->id)->lockForUpdate()->first();
+            
+            // Incrementar
+            $nuevoCorrelativo = $serie->correlativo_actual + 1;
+            
+            // Actualizar
+            $serie->correlativo_actual = $nuevoCorrelativo;
+            $serie->save();
+            
+            DB::commit();
+            return $nuevoCorrelativo;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

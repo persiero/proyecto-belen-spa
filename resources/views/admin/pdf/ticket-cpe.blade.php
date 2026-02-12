@@ -20,19 +20,17 @@
         .tabla th { text-align: left; font-size: 9px; border-bottom: 1px solid #000; padding-bottom: 2px;}
         .tabla td { font-size: 10px; vertical-align: top; padding-top: 2px;}
         
-        /* CORRECCIÓN MARCA DE AGUA: Usamos fixed para centrar en la "hoja" */
-        .anulado-watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 40px;
-            color: rgba(255, 0, 0, 0.15);
+        /* Banner de anulado - Más visible y compatible con PDF */
+        .anulado-banner {
+            background-color: #ff0000;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 16px;
             font-weight: bold;
-            border: 4px solid rgba(255, 0, 0, 0.15);
-            padding: 10px 20px;
-            z-index: -1;
-            white-space: nowrap;
+            margin-bottom: 10px;
+            border: 3px solid #cc0000;
+            letter-spacing: 3px;
         }
         
         .logo { max-width: 150px; height: auto; margin-bottom: 8px; }
@@ -40,9 +38,9 @@
 </head>
 <body>
 
-    {{-- MARCA DE AGUA --}}
-    @if($cpe->estado_sunat == 'anulado' || (isset($venta) && $venta->estado == 'anulado'))
-        <div class="anulado-watermark">ANULADO</div>
+    {{-- BANNER DE ANULADO: Solo para Boletas/Facturas anuladas, NO para Notas de Crédito --}}
+    @if($cpe->id_tipo_comprobante != 3 && ($cpe->estado_sunat == 'anulado' || (isset($venta) && $venta->estado == 'anulado')))
+        <div class="anulado-banner">*** DOCUMENTO ANULADO ***</div>
     @endif
 
     <div class="text-center">                
@@ -77,10 +75,7 @@
         <div class="line" style="margin: 2px 0; border-bottom: 1px dotted #ccc;"></div>
 
         <strong>CLIENTE:</strong> {{ $cpe->receptor_razon_social ?: 'PÚBLICO GENERAL' }}<br>
-        
-        @if($cpe->receptor_numero_doc && $cpe->receptor_numero_doc != '00000000')
-            <strong>{{ strlen($cpe->receptor_numero_doc) == 11 ? 'RUC' : 'DNI' }}:</strong> {{ $cpe->receptor_numero_doc }}<br>
-        @endif
+        <strong>{{ strlen($cpe->receptor_numero_doc ?? '') == 11 ? 'RUC' : 'DNI' }}:</strong> {{ $cpe->receptor_numero_doc ?: '00000000' }}<br>
 
         @if( ($cpe->id_tipo_comprobante == 1 || ($cpe->receptor_direccion && $cpe->receptor_direccion != '-')) )
             <strong>DIR:</strong> {{ Str::limit($cpe->receptor_direccion, 40) }}
@@ -132,19 +127,20 @@
         <strong>{{ $cpe->leyenda_sunat }}</strong>
     </div>
 
-    {{-- BLOQUE NOTA DE CRÉDITO CORREGIDO --}}
-    {{-- Verificamos por ID (3) o por Serie que empiece con F/B seguido de C --}}
-    @if($cpe->id_tipo_comprobante == 3 || str_contains($cpe->serie, 'C')) 
-        @if($cpe->cod_motivo_nc)
-            <div class="text-center" style="margin-top: 5px; border: 1px dashed #000; padding: 4px;">
-                <strong style="text-decoration: underline;">NOTA DE CRÉDITO</strong><br>
-                <span style="font-size: 9px">
-                    <strong>Motivo:</strong> {{ $cpe->descripcion_motivo_nc }}<br>
-                    <strong>Doc. Afectado:</strong> 
-                    {{ $cpe->comprobanteReferencia ? ($cpe->comprobanteReferencia->serie.'-'.$cpe->comprobanteReferencia->correlativo) : 'REF NO ENC.' }}
-                </span>
+    {{-- BLOQUE NOTA DE CRÉDITO --}}
+    @if($cpe->id_tipo_comprobante == 3)
+        <div style="margin-top: 8px; border: 2px solid #000; padding: 6px; background-color: #f9f9f9;">
+            <div class="text-center bold" style="font-size: 11px; text-decoration: underline;">NOTA DE CRÉDITO</div>
+            <div style="font-size: 10px; margin-top: 4px;">
+                <strong>Motivo:</strong> {{ $cpe->descripcion_motivo_nc ?? 'Anulación de la operación' }}<br>
+                <strong>Doc. Afectado:</strong> 
+                @if(isset($cpe->comprobanteReferencia))
+                    {{ $cpe->comprobanteReferencia->serie }}-{{ str_pad($cpe->comprobanteReferencia->correlativo, 8, '0', STR_PAD_LEFT) }}
+                @else
+                    N/A
+                @endif
             </div>
-        @endif
+        </div>
     @endif
 
     <div class="text-center" style="margin-top: 10px">
@@ -159,5 +155,15 @@
         <span style="font-size: 9px">Autorizado por la SUNAT</span><br>
         <span style="font-size: 9px">Consulte en: portal.sunat.gob.pe</span>
     </div>
+
+    {{-- INDICADOR FINAL DE ANULADO --}}
+    @if($cpe->id_tipo_comprobante != 3 && ($cpe->estado_sunat == 'anulado' || (isset($venta) && $venta->estado == 'anulado')))
+        <div style="margin-top: 10px; border: 2px solid #ff0000; padding: 5px; text-align: center; background-color: #ffe6e6;">
+            <span style="color: #ff0000; font-weight: bold; font-size: 10px;">
+                ⚠ ESTE DOCUMENTO HA SIDO ANULADO ⚠<br>
+                <span style="font-size: 9px;">No tiene validez tributaria</span>
+            </span>
+        </div>
+    @endif
 </body>
 </html>

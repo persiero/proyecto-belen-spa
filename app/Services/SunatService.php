@@ -8,6 +8,7 @@ use App\Models\ConfigNegocio;
 use App\Models\Comprobante; 
 use App\Models\ComprobanteDetalle;
 use App\Models\TipoComprobante;
+use App\Models\SerieComprobante;
 use Greenter\See;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Company;
@@ -34,17 +35,24 @@ class SunatService
         $this->see = new See();
         $this->see->setService($this->config->modo == 'produccion' ? SunatEndpoints::FE_PRODUCCION : SunatEndpoints::FE_BETA);
         
-        // --- CAMBIO DE RUTA AQUÍ ---
-        // Intentamos buscar primero en la ruta segura (private)
-        if (Storage::exists('certificados/' . $this->config->certificado_path)) {
-            $path = Storage::path('certificados/' . $this->config->certificado_path);
-        } else {
-            // Si no está ahí, buscamos en la ruta antigua manual
-            $path = storage_path('app/certificados/' . $this->config->certificado_path);
-        }
-        
-        if($this->config->certificado_path && file_exists($path)) {
-            $this->see->setCertificate(file_get_contents($path));
+        // Configurar certificado
+        if($this->config->certificado_path) {
+            if (Storage::exists('certificados/' . $this->config->certificado_path)) {
+                $path = Storage::path('certificados/' . $this->config->certificado_path);
+            } else {
+                $path = storage_path('app/certificados/' . $this->config->certificado_path);
+            }
+            
+            if(file_exists($path)) {
+                $certificadoContent = file_get_contents($path);
+                
+                // Si tiene contraseña (archivos .p12 o .pfx)
+                if($this->config->certificado_password) {
+                    $this->see->setCertificate($certificadoContent, $this->config->certificado_password);
+                } else {
+                    $this->see->setCertificate($certificadoContent);
+                }
+            }
         }
 
         // Corrección de credenciales (Separación RUC/Usuario)
@@ -100,8 +108,11 @@ class SunatService
         $tipoComprobante = ($tipoDocCliente == '6') ? '01' : '03';
         $serie = ($tipoComprobante == '01') ? 'F001' : 'B001';
         
-        $ultimoCorrelativo = Comprobante::where('serie', $serie)->max('correlativo');
-        $correlativo = $ultimoCorrelativo ? $ultimoCorrelativo + 1 : 1;
+        // Obtener el objeto SerieComprobante
+        $serieObj = SerieComprobante::where('serie', $serie)->where('activo', true)->firstOrFail();
+        
+        // Obtener y actualizar el correlativo de forma segura
+        $correlativo = $serieObj->obtenerSiguienteCorrelativo();
 
         // ============================================================
         // 4A. CÁLCULOS MATEMÁTICOS (CRÍTICO PARA BD)
@@ -199,7 +210,7 @@ class SunatService
             $comprobante = Comprobante::create([
                 'id_venta' => $venta->id,
                 'id_tipo_comprobante' => ($tipoComprobante == '01' ? 1 : 2),
-                'id_serie_comprobante' => ($serie == 'F001' ? 1 : 2),
+                'id_serie_comprobante' => $serieObj->id,
                 'serie' => $serie,
                 'correlativo' => $correlativo,
                 'fecha_emision' => Carbon::now(),
@@ -317,14 +328,12 @@ class SunatService
             $esFactura = ($cpeOriginal->id_tipo_comprobante == 1); 
             $serieNota = $esFactura ? 'FC01' : 'BC01';
 
-            // --- NUEVO: BUSCAMOS EL ID DE LA SERIE EN LA BASE DE DATOS ---
-            $serieObj = \App\Models\SerieComprobante::where('serie', $serieNota)->first();
-            $idSerieNota = $serieObj ? $serieObj->id : 3; // Si no encuentra, usa 3 (BC01) por defecto
-            // -------------------------------------------------------------
+            // Obtener el objeto SerieComprobante para la Nota de Crédito
+            $serieObj = SerieComprobante::where('serie', $serieNota)->where('activo', true)->firstOrFail();
+            $idSerieNota = $serieObj->id;
 
-            // Correlativo
-            $ultimoCorrelativo = Comprobante::where('serie', $serieNota)->max('correlativo');
-            $correlativoNota = $ultimoCorrelativo ? $ultimoCorrelativo + 1 : 1;
+            // Obtener y actualizar el correlativo de forma segura
+            $correlativoNota = $serieObj->obtenerSiguienteCorrelativo();
 
             // 5. CREAR LA NOTA (OBJETO NOTE)
             /** @var Note $note */ 
@@ -500,6 +509,20 @@ class SunatService
                     'igv_total'      => $igvItem,
                     'total'          => $det->subtotal
                 ]);
+            }
+
+            // 10. REGENERAR PDF DEL COMPROBANTE ORIGINAL CON BANNER DE ANULADO
+            if ($result->isSuccess()) {
+                // Actualizar estado del comprobante original
+                $cpeOriginal->estado_sunat = 'anulado';
+                $cpeOriginal->save();
+
+                // Regenerar PDF con banner de anulado
+                $cpeOriginal->refresh(); // Refrescar para obtener el estado actualizado
+                $venta->refresh(); // Refrescar venta también
+                
+                $pdfAnuladoContent = $this->generarPDFAnulado($cpeOriginal, $venta);
+                Storage::put('comprobantes/pdf/' . $cpeOriginal->nombre_xml . '.pdf', $pdfAnuladoContent);
             }
 
             return ['success' => $result->isSuccess(), 'message' => $mensaje];
@@ -691,6 +714,30 @@ class SunatService
 
         $html = view('admin.pdf.ticket-cpe', [
             'cpe' => $cpe,
+            'venta' => $venta,
+            'negocio' => $this->negocio,
+            'qr' => $qr
+        ])->render();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper([0, 0, 226.77, 841.89], 'portrait');
+        return $pdf->output();
+    }
+
+    // ==========================================
+    // GENERAR PDF DE COMPROBANTE ANULADO
+    // ==========================================
+    private function generarPDFAnulado($comprobante, $venta)
+    {
+        // Generar QR
+        $qr = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(100)->generate(
+            $this->negocio->ruc . '|' . ($comprobante->id_tipo_comprobante == 1 ? '01' : '03') . '|' . 
+            $comprobante->serie . '|' . $comprobante->correlativo . '|0|' . $comprobante->total . '|' . 
+            $comprobante->fecha_emision->format('Y-m-d') . '|' . $comprobante->receptor_tipo_doc . '|' . 
+            $comprobante->receptor_numero_doc . '|' . $comprobante->hash_cpe
+        ));
+
+        $html = view('admin.pdf.ticket-cpe', [
+            'cpe' => $comprobante,
             'venta' => $venta,
             'negocio' => $this->negocio,
             'qr' => $qr

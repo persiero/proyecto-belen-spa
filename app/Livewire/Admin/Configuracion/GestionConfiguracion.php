@@ -21,7 +21,8 @@ class GestionConfiguracion extends Component
     public $emision_automatica_cpe = false;
 
     public $certificado_path; // Ruta string (BD)
-    public $certificado_file; // Archivo temporal (Input) <--- NUEVO
+    public $certificado_file; // Archivo temporal (Input)
+    public $certificado_password; // Contraseña del certificado
     
     public function mount()
     {
@@ -47,6 +48,7 @@ class GestionConfiguracion extends Component
 
             // ¡ESTA LÍNEA FALTABA! 👇
             $this->certificado_path = $tributaria->certificado_path;
+            $this->certificado_password = $tributaria->certificado_password;
         }
     }
 
@@ -99,6 +101,7 @@ class GestionConfiguracion extends Component
             'usuario_sol' => $this->usuario_sol,
             'clave_sol' => $this->clave_sol,
             'certificado_path' => $rutaFinal,
+            'certificado_password' => $this->certificado_password,
         ]);
 
         $this->certificado_path = $rutaFinal;
