@@ -33,33 +33,42 @@ class HistorialVentas extends Component
     // ==========================================
     public function emitirComprobante($ventaId)
     {
-        // 1. Verificar si ya existe comprobante
-        if (Comprobante::where('id_venta', $ventaId)->exists()) {
-            $this->dispatch('alert', ['type' => 'warning', 'message' => 'Esta venta ya tiene un comprobante emitido.']);
-            return;
-        }
+        try {
+            // 1. Verificar si ya existe comprobante
+            if (Comprobante::where('id_venta', $ventaId)->exists()) {
+                session()->flash('message', 'Esta venta ya tiene un comprobante emitido.');
+                return;
+            }
 
-        $venta = Venta::with(['cliente', 'detalles'])->find($ventaId);
-
-        // 2. Instanciar el Servicio (Manualmente o por Inyección)
-        $sunatService = new SunatService();
-        
-        // 3. Llamar a la función de generar
-        $resultado = $sunatService->generarComprobante($venta);
-
-        // --- AGREGA ESTO TEMPORALMENTE ---
-        //dd($resultado); // <--- ESTO DETENDRÁ TODO Y MOSTRARÁ EL MENSAJE
-        // ---------------------------------
-
-        // 4. Notificar al usuario
-        
-        if ($resultado['success']) {
-            session()->flash('message', '¡ÉXITO SUNAT! Comprobante emitido y aceptado. ' . $resultado['message']);
-        } else {
-            // Usamos session flash error o un dispatch de alerta
-            $this->dispatch('alert', ['type' => 'error', 'message' => 'ERROR SUNAT: ' . $resultado['message']]);
-        }
+            $venta = Venta::with(['cliente', 'detalles'])->find($ventaId);
             
+            if (!$venta) {
+                session()->flash('message', 'ERROR: Venta no encontrada.');
+                return;
+            }
+
+            // 2. Instanciar el Servicio
+            $sunatService = new SunatService();
+            
+            // 3. Llamar a la función de generar
+            $resultado = $sunatService->generarComprobante($venta);
+
+            // 4. Notificar al usuario
+            if ($resultado['success']) {
+                session()->flash('message', '¡ÉXITO SUNAT! Comprobante emitido y aceptado. ' . $resultado['message']);
+            } else {
+                session()->flash('message', 'ERROR SUNAT: ' . $resultado['message']);
+            }
+            
+        } catch (\Exception $e) {
+            // Capturar cualquier error y mostrarlo
+            \Log::error('Error al emitir comprobante: ' . $e->getMessage(), [
+                'venta_id' => $ventaId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            session()->flash('message', 'ERROR SISTEMA: ' . $e->getMessage());
+        }
     }
 
     #[Layout('layouts.admin')]

@@ -71,6 +71,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/configuracion', GestionConfiguracion::class)->name('configuracion')->middleware('role.access:sistema');
     Route::get('/perfil', MiPerfil::class)->name('perfil');
     Route::get('/usuarios', GestionUsuarios::class)->name('usuarios')->middleware('role.access:sistema');
+    
+    // Ruta de Diagnóstico (Temporal - Solo para administradores)
+    Route::get('/diagnostico', [\App\Http\Controllers\Admin\DiagnosticoController::class, 'index'])
+        ->name('diagnostico')
+        ->middleware('role.access:sistema');
 
     // ========================
     // MÓDULO DE REPORTES (Solo Administrador)

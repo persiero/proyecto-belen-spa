@@ -69,7 +69,14 @@ class SunatService
 
     public function generarComprobante(Venta $venta)
     {
-        // 1. DEFINIR EMPRESA (EMISOR)
+        try {
+            \Log::info('Iniciando generación de comprobante', [
+                'venta_id' => $venta->id,
+                'modo' => $this->config->modo,
+                'certificado_existe' => !empty($this->config->certificado_path)
+            ]);
+            
+            // 1. DEFINIR EMPRESA (EMISOR)
         $company = new Company();
         $company->setRuc($this->negocio->ruc)
             ->setRazonSocial($this->negocio->nombre_comercial)
@@ -174,6 +181,12 @@ class SunatService
 
         // 6. ENVIAR A SUNAT
         try {
+            \Log::info('Enviando comprobante a SUNAT', [
+                'serie' => $invoice->getSerie(),
+                'correlativo' => $invoice->getCorrelativo(),
+                'cliente_doc' => $client->getNumDoc()
+            ]);
+            
             $result = $this->see->send($invoice);
             
             $nombreArchivo = $invoice->getName();
@@ -262,6 +275,12 @@ class SunatService
             return ['success' => $result->isSuccess(), 'message' => $mensaje];
 
         } catch (\Exception $e) {
+            \Log::error('Error al generar comprobante', [
+                'venta_id' => $venta->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return ['success' => false, 'message' => 'Error interno: ' . $e->getMessage()];
         }
     }
