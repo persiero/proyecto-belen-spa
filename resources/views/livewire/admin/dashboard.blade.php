@@ -242,7 +242,7 @@
                                                 $tieneProductos = $venta->detalles->where('tipo_item', 'producto')->count() > 0;
                                             @endphp
                                             @if($tieneServicios && $tieneProductos)
-                                                <span class="badge bg-purple bg-opacity-10 text-purple">Mixto</span>
+                                                <span class="badge bg-info bg-opacity-10 text-purple">Mixto</span>
                                             @elseif($tieneServicios)
                                                 <span class="badge bg-primary bg-opacity-10 text-primary">Servicio</span>
                                             @else
@@ -365,12 +365,12 @@
                         @forelse($topEstilistasHoy as $estilista)
                             <li class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center border-0">
                                 <div class="d-flex align-items-center">
-                                    <div class="rounded-circle bg-purple bg-opacity-10 d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
+                                    <div class="rounded-circle bg-info bg-opacity-10 d-flex justify-content-center align-items-center me-2" style="width: 36px; height: 36px;">
                                         <i class="bi bi-person-fill text-purple"></i>
                                     </div>
                                     <span class="fw-medium text-dark">{{ $estilista->nombre }}</span>
                                 </div>
-                                <span class="badge bg-purple bg-opacity-10 text-purple px-3 py-2">
+                                <span class="badge bg-info bg-opacity-10 text-purple px-3 py-2">
                                     {{ $estilista->total_servicios }} servicios
                                 </span>
                             </li>
