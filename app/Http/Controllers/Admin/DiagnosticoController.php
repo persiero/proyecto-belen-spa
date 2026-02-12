@@ -99,15 +99,25 @@ class DiagnosticoController extends Controller
         try {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
             curl_close($ch);
             
-            if ($httpCode == 200 || $httpCode == 405) {
-                return '✅ Conexión exitosa (HTTP ' . $httpCode . ')';
+            if ($error) {
+                return '❌ Error CURL: ' . $error;
+            }
+            
+            // HTTP 200, 405, 500 son respuestas válidas de SUNAT
+            // 405 = Método no permitido (normal para GET en un servicio SOAP)
+            // 500 = Error interno pero el servidor responde (conexión OK)
+            if (in_array($httpCode, [200, 405, 500])) {
+                return '✅ Conexión exitosa (HTTP ' . $httpCode . ' - Servidor responde)';
             } else {
                 return '⚠️ Respuesta inesperada (HTTP ' . $httpCode . ')';
             }
