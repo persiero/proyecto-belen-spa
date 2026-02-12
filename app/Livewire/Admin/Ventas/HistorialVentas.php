@@ -23,9 +23,9 @@ class HistorialVentas extends Component
 
     public function mount()
     {
-        // Por defecto mostramos ventas de hoy
-        $this->fecha_inicio = date('Y-m-d');
-        $this->fecha_fin = date('Y-m-d');
+        // Mostrar ventas del último mes por defecto
+        $this->fecha_inicio = date('Y-m-01'); // Primer día del mes actual
+        $this->fecha_fin = date('Y-m-d'); // Hoy
     }
 
     // ==========================================

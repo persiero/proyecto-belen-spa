@@ -283,9 +283,14 @@ class SunatService
             
             return ['success' => false, 'message' => 'Error interno: ' . $e->getMessage()];
         }
+        } catch (\Exception $e) {
+            \Log::error('Error general en generarComprobante', [
+                'venta_id' => $venta->id,
+                'error' => $e->getMessage()
+            ]);
+            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
     }
-
-    public function generarNotaCredito(Venta $venta, $motivo = "Anulación de la operación")
     {
         try {
             // 1. OBTENER EL COMPROBANTE ORIGINAL QUE VAMOS A ANULAR
