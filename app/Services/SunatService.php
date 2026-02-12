@@ -291,18 +291,8 @@ class SunatService
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
     }
-    {
-        try {
-            // 1. OBTENER EL COMPROBANTE ORIGINAL QUE VAMOS A ANULAR
-            $cpeOriginal = $venta->comprobante; // Relación hasOne en Venta
-            
-            if (!$cpeOriginal) {
-                return ['success' => false, 'message' => 'No existe comprobante para esta venta.'];
-            }
 
-            // 2. CONFIGURAR EMPRESA (Igual que antes)
-            $company = new Company();
-            $company->setRuc($this->negocio->ruc)
+    public function generarNotaCredito(Venta $venta, $motivo = "Anulación de la operación")
                 ->setRazonSocial($this->negocio->nombre_comercial)
                 ->setAddress((new Address())
                     ->setUbigueo('130101')
