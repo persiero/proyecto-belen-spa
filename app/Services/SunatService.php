@@ -19,6 +19,7 @@ use Greenter\Model\Sale\Legend;
 use Greenter\Ws\Services\SunatEndpoints;
 use Greenter\Model\Sale\Note;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class SunatService
@@ -68,9 +69,8 @@ class SunatService
     }
 
     public function generarComprobante(Venta $venta)
-    {
-        try {
-            \Log::info('Iniciando generación de comprobante', [
+    {        
+            Log::info('Iniciando generación de comprobante', [
                 'venta_id' => $venta->id,
                 'modo' => $this->config->modo,
                 'certificado_existe' => !empty($this->config->certificado_path)
@@ -181,7 +181,7 @@ class SunatService
 
         // 6. ENVIAR A SUNAT
         try {
-            \Log::info('Enviando comprobante a SUNAT', [
+            Log::info('Enviando comprobante a SUNAT', [
                 'serie' => $invoice->getSerie(),
                 'correlativo' => $invoice->getCorrelativo(),
                 'cliente_doc' => $client->getNumDoc()
@@ -275,7 +275,7 @@ class SunatService
             return ['success' => $result->isSuccess(), 'message' => $mensaje];
 
         } catch (\Exception $e) {
-            \Log::error('Error al generar comprobante', [
+            Log::error('Error al generar comprobante', [
                 'venta_id' => $venta->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -283,23 +283,29 @@ class SunatService
             
             return ['success' => false, 'message' => 'Error interno: ' . $e->getMessage()];
         }
-        } catch (\Exception $e) {
-            \Log::error('Error general en generarComprobante', [
-                'venta_id' => $venta->id,
-                'error' => $e->getMessage()
-            ]);
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
-        }
     }
 
     public function generarNotaCredito(Venta $venta, $motivo = "Anulación de la operación")
+    {
+        try {
+            // 1. OBTENER EL COMPROBANTE ORIGINAL QUE VAMOS A ANULAR
+            $cpeOriginal = $venta->comprobante;
+            
+            if (!$cpeOriginal) {
+                return ['success' => false, 'message' => 'No existe comprobante para esta venta.'];
+            }
+
+            // 2. CONFIGURAR EMPRESA (Igual que antes)
+            $company = (new Company())
+                ->setRuc($this->negocio->ruc)
                 ->setRazonSocial($this->negocio->nombre_comercial)
-                ->setAddress((new Address())
-                    ->setUbigueo('130101')
-                    ->setDepartamento('LA LIBERTAD')
-                    ->setProvincia('TRUJILLO')
-                    ->setDistrito('TRUJILLO')
-                    ->setDireccion($this->negocio->direccion));
+                ->setAddress(
+                    (new Address())
+                        ->setUbigueo('130101')
+                        ->setDepartamento('LA LIBERTAD')
+                        ->setProvincia('TRUJILLO')
+                        ->setDistrito('TRUJILLO')
+                        ->setDireccion($this->negocio->direccion));
 
             // 3. CONFIGURAR CLIENTE (Igual que el original)
             $client = new Client();
