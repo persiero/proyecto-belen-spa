@@ -272,6 +272,14 @@ class GestionPos extends Component
         }
     }
 
+    // ACTUALIZAR PRECIO UNITARIO
+    public function updatePrice($index, $newPrice)
+    {
+        $this->cart[$index]['precio'] = $newPrice;
+        $this->cart[$index]['subtotal'] = $this->cart[$index]['cantidad'] * $newPrice;
+        $this->calculateTotal();
+    }
+
     public function cambiarMetodoPago($id)
     {
         $this->metodo_pago_id = $id;
@@ -326,6 +334,12 @@ class GestionPos extends Component
     {
         if ($this->monto_recibido < $this->total) {
             session()->flash('error_pago', 'El monto recibido es menor al total.');
+            return;
+        }
+
+        // NUEVA VALIDACIÓN: Si NO es efectivo, la referencia es obligatoria
+        if ($this->metodo_pago_id != 1 && empty(trim($this->referencia_pago))) {
+            session()->flash('error_pago', 'Debe ingresar el número de operación o referencia del pago.');
             return;
         }
 

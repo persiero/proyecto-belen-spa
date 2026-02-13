@@ -11,6 +11,7 @@ use App\Models\Turno;
 use App\Services\SunatService;
 use App\Models\Comprobante;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class HistorialVentas extends Component
 {
@@ -62,7 +63,7 @@ class HistorialVentas extends Component
             
         } catch (\Exception $e) {
             // Capturar cualquier error y mostrarlo
-            \Log::error('Error al emitir comprobante: ' . $e->getMessage(), [
+            Log::error('Error al emitir comprobante: ' . $e->getMessage(), [
                 'venta_id' => $ventaId,
                 'trace' => $e->getTraceAsString()
             ]);

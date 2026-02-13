@@ -64,6 +64,16 @@ class SunatService
         if(empty($usuarioSolo)) {
              $usuarioSolo = $usuarioSolCompleto;
         }
+        
+        // Log para debug de credenciales
+        Log::info('Configurando credenciales SUNAT', [
+            'modo' => $this->config->modo,
+            'ruc' => $ruc,
+            'usuario_sol_completo' => $usuarioSolCompleto,
+            'usuario_solo' => $usuarioSolo,
+            'clave_sol_length' => strlen($this->config->clave_sol ?? ''),
+            'tiene_certificado' => !empty($this->config->certificado_path)
+        ]);
 
         $this->see->setClaveSOL($ruc, $usuarioSolo, $this->config->clave_sol);
     }

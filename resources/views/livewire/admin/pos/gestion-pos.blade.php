@@ -233,8 +233,9 @@
                             <thead class="bg-light sticky-top border-bottom">
                                 <tr class="small text-muted text-uppercase">
                                     <th class="ps-3 py-2">Producto/Servicio</th>
-                                    <th class="text-center py-2" width="25%">Cant.</th>
-                                    <th class="text-end pe-3 py-2" width="25%">Subtotal</th>
+                                    <th class="text-center py-2" width="20%">Cant.</th>
+                                    <th class="text-center py-2" width="20%">Precio</th>
+                                    <th class="text-end pe-3 py-2" width="20%">Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -248,32 +249,42 @@
                                                 @else
                                                     <span class="badge bg-warning text-dark bg-opacity-10 border border-warning px-1">Producto</span>
                                                 @endif
-                                                <span class="ms-1">x S/ {{ number_format($item['precio'], 2) }}</span>
                                             </div>
                                         </td>
                                         <td class="text-center py-3">
                                             {{-- CONTROLES DE CANTIDAD --}}
-                                            <div class="input-group input-group-sm justify-content-center" style="width: 80px; margin: 0 auto;">
+                                            <div class="input-group input-group-sm justify-content-center" style="width: 70px; margin: 0 auto;">
                                                 <button wire:click="decrementQuantity({{ $index }})" class="btn btn-outline-secondary px-1" type="button" 
                                                     @if($item['cantidad'] <= 1) disabled @endif>
                                                     <i class="bi bi-dash"></i>
                                                 </button>
-                                                <input type="text" class="form-control text-center px-0 bg-white" value="{{ $item['cantidad'] }}" readonly style="font-size: 0.9rem;">
+                                                <input type="text" class="form-control text-center px-0 bg-white" value="{{ $item['cantidad'] }}" readonly style="font-size: 0.85rem;">
                                                 <button wire:click="incrementQuantity({{ $index }})" class="btn btn-outline-secondary px-1" type="button">
                                                     <i class="bi bi-plus"></i>
                                                 </button>
                                             </div>
                                         </td>
+                                        <td class="text-center py-3">
+                                            {{-- PRECIO UNITARIO EDITABLE --}}
+                                            <div class="input-group input-group-sm" style="width: 90px; margin: 0 auto;">
+                                                <span class="input-group-text bg-transparent border-0 px-1">S/</span>
+                                                <input type="number" step="0.01" 
+                                                    wire:model.blur="cart.{{ $index }}.precio"
+                                                    wire:change="updatePrice({{ $index }}, $event.target.value)"
+                                                    class="form-control text-center border fw-bold" 
+                                                    style="font-size: 0.85rem;">
+                                            </div>
+                                        </td>
                                         <td class="text-end pe-3 py-3">
                                             <div class="fw-bold text-dark">S/ {{ number_format($item['subtotal'], 2) }}</div>
-                                            <button wire:click="removeItem({{ $index }})" class="btn btn-link text-danger p-0 small text-decoration-none mt-1" style="font-size: 0.8rem;">
-                                                <i class="bi bi-trash"></i> Eliminar
+                                            <button wire:click="removeItem({{ $index }})" class="btn btn-link text-danger p-0 small text-decoration-none mt-1" style="font-size: 0.75rem;">
+                                                <i class="bi bi-trash"></i> Quitar
                                             </button>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="text-center py-5">
+                                        <td colspan="4" class="text-center py-5">
                                             <div class="text-muted opacity-50">
                                                 <i class="bi bi-cart-x display-4"></i><br>
                                                 <span class="mt-2 d-block">El carrito está vacío</span>
@@ -357,10 +368,14 @@
                         @if($metodo_pago_id != 1) 
                             <div class="mb-3 text-start bg-light p-3 rounded border">
                                 <label class="form-label small fw-bold text-secondary">
-                                    <i class="bi bi-hash"></i> Nro. Operación / Referencia
+                                    <i class="bi bi-hash"></i> Nro. Operación / Referencia <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" wire:model.live="referencia_pago" class="form-control" 
-                                    placeholder="Ej: 987654 (Yape) o 4 últimos dígitos tarjeta">
+                                <input type="text" wire:model.blur="referencia_pago" class="form-control" 
+                                    placeholder="Ej: 987654 (Yape/Plin) o últimos 4 dígitos tarjeta"
+                                    required>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle"></i> Campo obligatorio para pagos digitales
+                                </small>
                             </div>
                         @endif
 

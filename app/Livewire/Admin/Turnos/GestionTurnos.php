@@ -55,7 +55,7 @@ class GestionTurnos extends Component
         // Productos
         'items_productos' => 'nullable|array',
         'items_productos.*.producto_id' => 'required|exists:productos,id',
-        'items_productos.*.estilista_id' => 'required|exists:estilistas,id',
+        'items_productos.*.estilista_id' => 'nullable|exists:estilistas,id',
         'items_productos.*.cantidad' => 'required|integer|min:1',
         'items_productos.*.precio' => 'required|numeric|min:0',
         
@@ -338,7 +338,7 @@ class GestionTurnos extends Component
                     TurnoProducto::create([
                         'id_turno' => $turno->id,
                         'id_producto' => $prod['producto_id'],
-                        'id_estilista' => $prod['estilista_id'],
+                        'id_estilista' => !empty($prod['estilista_id']) ? $prod['estilista_id'] : null,
                         'cantidad' => $prod['cantidad'],
                         'precio' => $prod['precio']
                     ]);

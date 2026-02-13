@@ -393,11 +393,11 @@
                                             @endif
                                         </div>
                                         
-                                        {{-- SELECT ESTILISTA (QUIÉN VENDIÓ) --}}
+                                        {{-- SELECT ESTILISTA (QUIÉN VENDIÓ) - OPCIONAL --}}
                                         <div class="col-md-3">
                                             <select wire:model.live="items_productos.{{ $index }}.estilista_id" 
                                                 class="form-select form-select-sm border fw-bold {{ !empty($prod['estilista_id']) ? 'bg-white text-success' : 'bg-white' }}">
-                                                <option value="">-- Vendedor --</option>
+                                                <option value="">-- Sin vendedor --</option>
                                                 @foreach($estilistas as $e)
                                                     <option value="{{ $e->id }}">{{ $e->nombre }}</option>
                                                 @endforeach
@@ -422,15 +422,16 @@
                                             </div>
                                         </div>
 
-                                        {{-- PRECIO TOTAL (NO EDITABLE) --}}
+                                        {{-- PRECIO TOTAL (EDITABLE) --}}
                                         <div class="col-md-2">
-                                            <div class="text-end">
-                                                @if(isset($prod['precio_unitario']) && $prod['precio_unitario'] > 0)
-                                                    <small class="text-muted d-block">S/ {{ number_format($prod['precio_unitario'], 2) }} c/u</small>
-                                                @endif
-                                                <div class="fw-bold text-success">
-                                                    S/ {{ number_format($prod['precio'] ?? 0, 2) }}
-                                                </div>
+                                            @if(isset($prod['precio_unitario']) && $prod['precio_unitario'] > 0)
+                                                <small class="text-muted d-block text-end">S/ {{ number_format($prod['precio_unitario'], 2) }} c/u</small>
+                                            @endif
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text border-0 bg-transparent text-muted">S/</span>
+                                                <input type="number" step="0.01" 
+                                                    wire:model="items_productos.{{ $index }}.precio" 
+                                                    class="form-control border fw-bold text-end {{ !empty($prod['precio']) && $prod['precio'] > 0 ? 'bg-white text-success' : 'bg-light' }}">
                                             </div>
                                         </div>
 
