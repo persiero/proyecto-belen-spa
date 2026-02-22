@@ -54,7 +54,12 @@
                                         {{ $atencion->servicio->nombre ?? 'Servicio' }}
                                     </div>
                                     <div class="text-muted text-truncate mb-2">
-                                        <i class="bi bi-person-fill me-1"></i> {{ $atencion->turno->cliente->nombre ?? 'Cliente' }}
+                                        <i class="bi bi-person-fill me-1"></i> 
+                                        @if($atencion->turno && $atencion->turno->cliente)
+                                            {{ $atencion->turno->cliente->nombre }}
+                                        @else
+                                            [Cliente no disponible]
+                                        @endif
                                     </div>
                                     <div class="d-flex justify-content-between text-secondary border-top pt-2 mt-1">
                                         <span><i class="bi bi-clock me-1"></i> {{ $atencion->created_at->format('H:i') }}</span>
@@ -108,7 +113,11 @@
                     @forelse($turnos as $turno)
                         <tr>
                             <td class="ps-4">
-                                <div class="fw-bold text-dark fs-6">{{ $turno->cliente->nombre }} {{ $turno->cliente->apellido }}</div>
+                                @if($turno->cliente)
+                                    <div class="fw-bold text-dark fs-6">{{ $turno->cliente->nombre }} {{ $turno->cliente->apellido }}</div>
+                                @else
+                                    <div class="fw-bold text-danger fs-6">[Cliente Eliminado]</div>
+                                @endif
                                 <small class="text-muted fw-bold">#{{ str_pad($turno->id, 5, '0', STR_PAD_LEFT) }}</small>
                             </td>
                             <td>
