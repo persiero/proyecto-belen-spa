@@ -18,7 +18,7 @@
             </li>
 
             <li class="nav-item dropdown user-menu">
-                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown">
                     
                     {{-- FOTO PEQUEÑA (Barra) --}}
                     @if(Auth::user()->foto_perfil)
@@ -34,7 +34,7 @@
                         </div>
                     @endif
 
-                    <span class="d-none d-md-inline fw-bold ms-1">{{ Auth::user()->nombre }}</span>
+                    <span class="d-none d-md-inline fw-bold ms-2">{{ Auth::user()->nombre }}</span>
                 </a>
                 
                 <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end border-2 shadow">
