@@ -16,7 +16,7 @@ class ReportesPrincipal extends Component
 {
     public $fechaInicio;
     public $fechaFin;
-    
+
     public function mount()
     {
         $this->fechaInicio = Carbon::now()->startOfMonth()->format('Y-m-d');
@@ -63,18 +63,74 @@ class ReportesPrincipal extends Component
         // 4. MARKETING: Procedencia (Usando tu campo 'procedencia')
         // Filtramos solo clientes que han comprado en este periodo o general (según prefieras)
         // Aquí analizo la base de datos completa de clientes para ver el perfil general
-        $procedencia = Cliente::select('procedencia', DB::raw('count(*) as total'))
+        $procedencia = DB::table('ventas')
+            ->join('clientes', 'ventas.id_cliente', '=', 'clientes.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->whereNotNull('clientes.procedencia')
+            ->select(
+                'clientes.procedencia',
+                DB::raw('COUNT(DISTINCT clientes.id) as total')
+            )
+            ->groupBy('clientes.procedencia')
+            ->orderByDesc('total')
+            ->get();
+
+
+        // CLIENTES NUEVOS EN EL PERIODO
+        $clientesNuevos = DB::table('ventas')
+            ->select('id_cliente', DB::raw('MIN(fecha) as primera_compra'))
+            ->whereNotNull('id_cliente')
+            ->where('estado', 'pagada')
+            ->groupBy('id_cliente')
+            ->havingBetween('primera_compra', [$start, $end])
+            ->pluck('id_cliente');
+
+        $totalClientesNuevos = $clientesNuevos->count();
+
+        $procedenciaNuevos = DB::table('clientes')
+            ->whereIn('id', $clientesNuevos)
             ->whereNotNull('procedencia')
+            ->where('procedencia', '!=', 'Cliente Antiguo') // 🔥 excluir
+            ->select('procedencia', DB::raw('COUNT(*) as total'))
             ->groupBy('procedencia')
             ->orderByDesc('total')
             ->get();
 
+        $totalClientesPeriodo = DB::table('ventas')
+            ->whereBetween('fecha', [$start, $end])
+            ->where('estado', 'pagada')
+            ->whereNotNull('id_cliente')
+            ->distinct()
+            ->count('id_cliente');
+
+        $totalClientesNuevos = DB::table('clientes')
+            ->whereIn('id', $clientesNuevos)
+            ->where('procedencia', '!=', 'Cliente Antiguo')
+            ->count();
+
+        $totalRecurrentes = $totalClientesPeriodo - $totalClientesNuevos;
+
+        $tasaCaptacion = $totalClientesPeriodo > 0
+            ? ($totalClientesNuevos / $totalClientesPeriodo) * 100
+            : 0;
+
         // 5. MARKETING: Edades (Usando 'fecha_nacimiento')
         // Calculamos la edad usando SQL puro para mayor rendimiento
-        $edadesRaw = Cliente::select(DB::raw('TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) as edad'))
-            ->whereNotNull('fecha_nacimiento')
+        $edadesRaw = DB::table('ventas')
+            ->join('clientes', 'ventas.id_cliente', '=', 'clientes.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->whereNotNull('clientes.fecha_nacimiento')
+            ->select(
+                DB::raw('TIMESTAMPDIFF(YEAR, clientes.fecha_nacimiento, CURDATE()) as edad'),
+                DB::raw('clientes.id')
+            )
+            ->groupBy('clientes.id', 'clientes.fecha_nacimiento')
             ->get();
-        
+
+        $edadPromedio = $edadesRaw->avg('edad') ?? 0;
+
         // Agrupamos en rangos usando PHP (Más fácil de mantener)
         $rangosEdad = [
             '18-25' => 0, '26-35' => 0, '36-50' => 0, '50+' => 0
@@ -85,6 +141,12 @@ class ReportesPrincipal extends Component
             elseif ($row->edad >= 36 && $row->edad <= 50) $rangosEdad['36-50']++;
             elseif ($row->edad > 50) $rangosEdad['50+']++;
         }
+
+        $rangoDominante = collect($rangosEdad)->sortDesc()->keys()->first();
+        $totalEdad = array_sum($rangosEdad);
+        $porcentajeDominante = $totalEdad > 0
+            ? ($rangosEdad[$rangoDominante] / $totalEdad) * 100
+            : 0;
 
         // 6. INVENTARIO & MARGEN (Usando 'costo_compra')
         // Rentabilidad = (Precio Venta - Costo Compra) * Cantidad Vendida
@@ -113,7 +175,7 @@ class ReportesPrincipal extends Component
             ->whereBetween('ventas.fecha', [$start, $end])
             ->where('ventas.estado', 'pagada')
             ->select(
-                DB::raw("COALESCE(estilistas.nombre, 'Sin Asignar / Venta Antigua') as nombre"), 
+                DB::raw("COALESCE(estilistas.nombre, 'Sin Asignar / Venta Antigua') as nombre"),
                 DB::raw('SUM(detalles_venta.subtotal) as total_vendido')
             )
             ->groupBy('nombre')
@@ -144,7 +206,7 @@ class ReportesPrincipal extends Component
                 'fecha_nacimiento',
                 DB::raw('TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) as edad_actual'),
                 DB::raw("
-                    CASE 
+                    CASE
                         WHEN DATE_FORMAT(fecha_nacimiento, '%m-%d') >= DATE_FORMAT(CURDATE(), '%m-%d')
                         THEN DATE_FORMAT(CONCAT(YEAR(CURDATE()), '-', DATE_FORMAT(fecha_nacimiento, '%m-%d')), '%Y-%m-%d')
                         ELSE DATE_FORMAT(CONCAT(YEAR(CURDATE()) + 1, '-', DATE_FORMAT(fecha_nacimiento, '%m-%d')), '%Y-%m-%d')
@@ -211,16 +273,18 @@ class ReportesPrincipal extends Component
         $gananciaNetaServicios = $totalServicios - $costoInsumosPeriodo;
 
         return compact(
-            'totalIngresos', 'cantidadTickets', 'ticketPromedio', 
-            'ventasDiarias', 'metodosPago', 'procedencia', 
-            'rangosEdad', 'topProductosRentables', 'rankingEstilistas',
-            'topClientesFrecuentes', 'proximosCumpleanos', 'rankingServicios', 
+            'totalIngresos', 'cantidadTickets', 'ticketPromedio',
+            'ventasDiarias', 'metodosPago', 'procedencia',
+            'rangosEdad', 'edadPromedio', 'topProductosRentables', 'rankingEstilistas',
+            'topClientesFrecuentes', 'proximosCumpleanos', 'rankingServicios',
             'costoInsumosPeriodo', 'totalServicios', 'gananciaNetaServicios',
-            'totalVentaProductos', 'costoProductosVendidos', 'gananciaNetaProductos'
+            'totalVentaProductos', 'costoProductosVendidos', 'gananciaNetaProductos',
+            'totalClientesPeriodo', 'totalClientesNuevos', 'totalRecurrentes',
+            'tasaCaptacion', 'procedenciaNuevos'
         );
     }
 
-    private function actualizarGraficos() 
+    private function actualizarGraficos()
     {
         $data = $this->calcularDatos();
 
@@ -228,7 +292,7 @@ class ReportesPrincipal extends Component
         $payload = [
             'ventasLabels' => $data['ventasDiarias']->pluck('fecha')->map(fn($d) => Carbon::parse($d)->format('d/m')),
             'ventasValues' => $data['ventasDiarias']->pluck('total'),
-            
+
             'pagosLabels' => $data['metodosPago']->pluck('nombre'),
             'pagosValues' => $data['metodosPago']->pluck('total'),
 

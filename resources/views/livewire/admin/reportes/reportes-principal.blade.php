@@ -49,7 +49,7 @@
 
     {{-- 3. CONTENIDO DE PESTAÑAS --}}
     <div class="tab-content" id="pills-tabContent">
-        
+
         {{-- PESTAÑA 1: GENERAL --}}
         <div class="tab-pane fade show active" id="content-general" role="tabpanel" wire:ignore.self>
             <div class="row mb-4">
@@ -80,33 +80,285 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        {{-- PESTAÑA 2: CLIENTES --}}
-        <div class="tab-pane fade" id="content-marketing" role="tabpanel" wire:ignore.self>
-            <div class="row mb-4">
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white"><h5 class="card-title mb-0">Procedencia de Clientes</h5></div>
-                        <div class="card-body d-flex justify-content-center align-items-center" wire:ignore>
-                            <div style="height: 250px; width: 100%; position: relative;">
-                                <canvas id="chartProcedencia"></canvas>
-                            </div>
-                        </div>
-                    </div>
+            {{-- MÉTODOS DE PAGO --}}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-credit-card-2-front-fill text-success me-2"></i>
+                        Métodos de Pago
+                    </h5>
                 </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-white"><h5 class="card-title mb-0">Rango de Edades</h5></div>
-                        <div class="card-body d-flex justify-content-center align-items-center" wire:ignore>
-                            <div style="height: 250px; width: 100%; position: relative;">
-                                <canvas id="chartEdades"></canvas>
+                <div class="card-body">
+                    <div class="row">
+
+                        {{-- GRÁFICO --}}
+                        <div class="col-md-6" wire:ignore>
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="chartPagos"></canvas>
                             </div>
                         </div>
+
+                        {{-- RESUMEN DETALLADO --}}
+                        <div class="col-md-6">
+                            @php
+                                $totalPagos = $metodosPago->sum('total') ?: 1;
+                            @endphp
+
+                            <div class="table-responsive">
+                                <table class="table align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Método</th>
+                                            <th class="text-end">Monto</th>
+                                            <th style="width: 40%;">Participación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($metodosPago as $metodo)
+                                            @php
+                                                $porcentaje = ($metodo->total / $totalPagos) * 100;
+                                            @endphp
+                                            <tr>
+                                                <td class="fw-medium">
+                                                    {{ $metodo->nombre }}
+                                                </td>
+
+                                                <td class="text-end fw-bold text-success">
+                                                    S/ {{ number_format($metodo->total, 2) }}
+                                                </td>
+
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                                            <div class="progress-bar bg-success"
+                                                                role="progressbar"
+                                                                style="width: {{ $porcentaje }}%"
+                                                                aria-valuenow="{{ $porcentaje }}"
+                                                                aria-valuemin="0"
+                                                                aria-valuemax="100">
+                                                            </div>
+                                                        </div>
+                                                        <small class="fw-bold text-muted">
+                                                            {{ number_format($porcentaje, 1) }}%
+                                                        </small>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-4">
+                                                    Sin datos en el periodo seleccionado
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
-            
+
+        </div>
+
+        {{-- PESTAÑA 2: CLIENTES (ENFOQUE MARKETING) --}}
+        <div class="tab-pane fade" id="content-marketing" role="tabpanel" wire:ignore.self>
+
+            {{-- ========================= --}}
+            {{-- 1️⃣ CAPTACIÓN DEL PERIODO --}}
+            {{-- ========================= --}}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-megaphone-fill text-primary me-2"></i>
+                        Captación de Clientes
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row text-center mb-4">
+
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Clientes del Periodo</h6>
+                            <h3 class="fw-bold text-dark">
+                                {{ $totalClientesPeriodo }}
+                            </h3>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Clientes Nuevos</h6>
+                            <h3 class="fw-bold text-success">
+                                {{ $totalClientesNuevos }}
+                            </h3>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Recurrentes</h6>
+                            <h3 class="fw-bold text-primary">
+                                {{ $totalRecurrentes }}
+                            </h3>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6 class="text-muted text-uppercase small">Tasa de Captación</h6>
+                            <h3 class="fw-bold text-warning">
+                                {{ number_format($tasaCaptacion,1) }}%
+                            </h3>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+            {{-- =============================== --}}
+            {{-- CANALES Y PERFIL (EN UNA FILA) --}}
+            {{-- =============================== --}}
+            <div class="row mb-4">
+
+                {{-- ===================================== --}}
+                {{-- 2️⃣ CANALES DE ADQUISICIÓN (NUEVOS) --}}
+                {{-- ===================================== --}}
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-share-fill text-success me-2"></i>
+                                Canal de Adquisición (Clientes Nuevos)
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            @php
+                                $totalNuevosCanal = $procedenciaNuevos->sum('total') ?: 1;
+                                $canalDominante = $procedenciaNuevos->first();
+                            @endphp
+
+                            {{-- GRÁFICO --}}
+                            <div class="mb-4" wire:ignore>
+                                <div style="height:250px;">
+                                    <canvas id="chartProcedencia"></canvas>
+                                </div>
+                            </div>
+
+                            {{-- RESUMEN --}}
+                            <div class="bg-light p-3 rounded mb-3">
+                                @if($canalDominante)
+                                    <p class="mb-0">
+                                        El principal canal de captación fue
+                                        <strong>{{ $canalDominante->procedencia }}</strong>,
+                                        representando aproximadamente
+                                        <strong>
+                                            {{ number_format(($canalDominante->total / $totalNuevosCanal) * 100,1) }}%
+                                        </strong>
+                                        de los nuevos clientes.
+                                    </p>
+                                @else
+                                    <p class="mb-0 text-muted">
+                                        No hay datos suficientes para analizar canales.
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- DETALLE --}}
+                            @foreach($procedenciaNuevos as $item)
+                                @php
+                                    $porcentaje = ($item->total / $totalNuevosCanal) * 100;
+                                @endphp
+
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ $item->procedencia }}</span>
+                                    <span class="fw-bold">
+                                        {{ $item->total }} ({{ number_format($porcentaje,1) }}%)
+                                    </span>
+                                </div>
+
+                                <div class="progress mb-3" style="height:6px;">
+                                    <div class="progress-bar bg-success"
+                                        style="width: {{ $porcentaje }}%">
+                                    </div>
+                                </div>
+                            @endforeach
+
+                        </div>
+                    </div>
+                </div>
+
+
+                {{-- ================================ --}}
+                {{-- 3️⃣ PERFIL DE EDAD DEL CLIENTE --}}
+                {{-- ================================ --}}
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-lines-fill text-info me-2"></i>
+                                Perfil de Edad del Cliente
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            @php
+                                $totalEdad = array_sum($rangosEdad);
+                                $rangoDominante = collect($rangosEdad)->sortDesc()->keys()->first();
+                                $porcentajeDominante = $totalEdad > 0
+                                    ? ($rangosEdad[$rangoDominante] / $totalEdad) * 100
+                                    : 0;
+                            @endphp
+
+                            {{-- GRÁFICO --}}
+                            <div class="mb-4" wire:ignore>
+                                <div style="height:250px;">
+                                    <canvas id="chartEdades"></canvas>
+                                </div>
+                            </div>
+
+                            {{-- RESUMEN PRINCIPAL --}}
+                            <div class="bg-light p-3 rounded mb-3">
+                                @if($rangoDominante)
+                                    <p class="mb-0">
+                                        El grupo dominante está entre
+                                        <strong>{{ $rangoDominante }}</strong>,
+                                        representando aproximadamente
+                                        <strong>{{ number_format($porcentajeDominante,1) }}%</strong>
+                                        del total de clientes.
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- DETALLE POR RANGO --}}
+                            @foreach($rangosEdad as $rango => $cantidad)
+                                @php
+                                    $porcentaje = $totalEdad > 0
+                                        ? ($cantidad / $totalEdad) * 100
+                                        : 0;
+                                @endphp
+
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ $rango }}</span>
+                                    <span class="fw-bold">
+                                        {{ $cantidad }} clientes ({{ number_format($porcentaje,1) }}%)
+                                    </span>
+                                </div>
+
+                                <div class="progress mb-3" style="height:6px;">
+                                    <div class="progress-bar bg-info"
+                                        style="width: {{ $porcentaje }}%">
+                                    </div>
+                                </div>
+                            @endforeach
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
             {{-- TABLA: TOP 10 CLIENTES FRECUENTES (NUEVO) --}}
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -235,7 +487,7 @@
 
         {{-- PESTAÑA 3: RENTABILIDAD --}}
         <div class="tab-pane fade" id="content-finanzas" role="tabpanel" wire:ignore.self>
-            
+
             {{-- FILA 1: RESUMEN SERVICIOS --}}
             <div class="card mb-4 border-0 shadow-sm">
                 <div class="card-header bg-white">
@@ -374,51 +626,119 @@
                 </div>
             </div>
 
-            {{-- FILA 4: MÉTODOS DE PAGO --}}
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white"><h5 class="card-title mb-0">Métodos de Pago</h5></div>
-                        <div class="card-body" wire:ignore>
-                            <div style="height: 300px; position: relative;">
-                                <canvas id="chartPagos"></canvas>
-                            </div>
-                        </div>
+        </div>
+
+       {{-- PESTAÑA 4: EQUIPO --}}
+        <div class="tab-pane fade" id="content-equipo" role="tabpanel" wire:ignore.self>
+
+            @php
+                $rankingOrdenado = $rankingEstilistas->sortByDesc('total_vendido')->values();
+                $mejorEstilista = $rankingOrdenado->first();
+                $maxVenta = $rankingOrdenado->max('total_vendido') ?: 1;
+                $totalEquipo = $rankingOrdenado->sum('total_vendido');
+            @endphp
+
+            {{-- KPI SUPERIOR --}}
+            @if($mejorEstilista)
+            <div class="card shadow-sm border-0 mb-4 bg-warning bg-opacity-10">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted text-uppercase small mb-1">Destacado</h6>
+                        <h4 class="fw-bold mb-0">
+                            🏆 {{ $mejorEstilista->nombre }}
+                        </h4>
+                    </div>
+                    <div class="text-end">
+                        <h3 class="fw-bold text-success mb-0">
+                            S/ {{ number_format($mejorEstilista->total_vendido, 2) }}
+                        </h3>
+                        <small class="text-muted">
+                            {{ number_format(($mejorEstilista->total_vendido / $totalEquipo) * 100, 1) }}% del total
+                        </small>
                     </div>
                 </div>
             </div>
-        </div>
+            @endif
 
-        {{-- PESTAÑA 4: EQUIPO --}}
-        <div class="tab-pane fade" id="content-equipo" role="tabpanel" wire:ignore.self>
+            {{-- RANKING DETALLADO --}}
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white"><h5 class="card-title mb-0">Ranking de Ventas por Estilista</h5></div>
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-bar-chart-fill text-primary me-2"></i>
+                        Ranking de Ventas por Estilista
+                    </h5>
+                </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped align-middle">
-                            <thead>
+                        <table class="table align-middle">
+                            <thead class="table-light">
                                 <tr>
+                                    <th style="width: 60px;">#</th>
                                     <th>Estilista</th>
-                                    <th>Total Generado</th>
-                                    <th style="width: 50%;">Rendimiento</th>
+                                    <th class="text-end">Total Generado</th>
+                                    <th style="width: 40%;">Rendimiento</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @php $maxVenta = $rankingEstilistas->sum('total_vendido') ?: 1; @endphp
-                                @foreach($rankingEstilistas as $estilista)
-                                    @php $porcentaje = ($estilista->total_vendido / $maxVenta) * 100; @endphp
+                                @forelse($rankingOrdenado as $index => $estilista)
+                                    @php
+                                        $porcentaje = ($estilista->total_vendido / $maxVenta) * 100;
+                                        $participacion = ($estilista->total_vendido / $totalEquipo) * 100;
+                                    @endphp
                                     <tr>
-                                        <td class="fw-bold">{{ $estilista->nombre }}</td>
-                                        <td>S/ {{ number_format($estilista->total_vendido, 2) }}</td>
+                                        {{-- POSICIÓN --}}
+                                        <td class="fw-bold">
+                                            @if($index == 0)
+                                                🥇
+                                            @elseif($index == 1)
+                                                🥈
+                                            @elseif($index == 2)
+                                                🥉
+                                            @else
+                                                {{ $index + 1 }}
+                                            @endif
+                                        </td>
+
+                                        {{-- NOMBRE --}}
+                                        <td class="fw-bold">
+                                            {{ $estilista->nombre }}
+                                        </td>
+
+                                        {{-- TOTAL --}}
+                                        <td class="text-end fw-bold text-success">
+                                            S/ {{ number_format($estilista->total_vendido, 2) }}
+                                            <div class="small text-muted">
+                                                {{ number_format($participacion, 1) }}% del equipo
+                                            </div>
+                                        </td>
+
+                                        {{-- BARRA --}}
                                         <td>
-                                            <div class="progress" style="height: 8px;">
-                                                <div class="progress-bar bg-success" role="progressbar" 
-                                                     style="width: {{ $porcentaje }}%" 
-                                                     aria-valuenow="{{ $porcentaje }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height: 8px;">
+                                                    <div class="progress-bar
+                                                        {{ $index == 0 ? 'bg-success' : 'bg-primary' }}"
+                                                        role="progressbar"
+                                                        style="width: {{ $porcentaje }}%"
+                                                        aria-valuenow="{{ $porcentaje }}"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <small class="fw-bold text-muted">
+                                                    {{ number_format($porcentaje, 0) }}%
+                                                </small>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            Sin datos en el periodo seleccionado
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -457,7 +777,7 @@
 
             // Verificamos si hay datos
             const hasData = Array.isArray(data) && data.some(val => val > 0);
-            
+
             myCharts[canvasId] = new Chart(canvas, {
                 type: type,
                 data: {
