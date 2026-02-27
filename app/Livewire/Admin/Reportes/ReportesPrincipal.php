@@ -11,6 +11,8 @@ use App\Models\Cliente;
 use App\Models\Producto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use App\Models\Comprobante;
 
 class ReportesPrincipal extends Component
 {
@@ -272,6 +274,35 @@ class ReportesPrincipal extends Component
         $totalServicios = $rankingServicios->sum('total_generado');
         $gananciaNetaServicios = $totalServicios - $costoInsumosPeriodo;
 
+        // 12. VENTAS: Comprobantes emitidos con totales
+        $comprobantesPeriodo = DB::table('comprobantes')
+            ->join('ventas', 'comprobantes.id_venta', '=', 'ventas.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->select(
+                'comprobantes.serie',
+                'ventas.total'
+            )
+            ->get();
+
+        // Facturas
+        $totalFacturas = $comprobantesPeriodo
+            ->filter(fn($c) => Str::startsWith($c->serie, 'F'));
+
+        $cantidadFacturas = $totalFacturas->count();
+        $montoFacturas = $totalFacturas->sum('total');
+
+        // Boletas
+        $totalBoletas = $comprobantesPeriodo
+            ->filter(fn($c) => Str::startsWith($c->serie, 'B'));
+
+        $cantidadBoletas = $totalBoletas->count();
+        $montoBoletas = $totalBoletas->sum('total');
+
+        // Totales generales
+        $totalComprobantes = $cantidadFacturas + $cantidadBoletas;
+        $montoTotalComprobantes = $montoFacturas + $montoBoletas;
+
         return compact(
             'totalIngresos', 'cantidadTickets', 'ticketPromedio',
             'ventasDiarias', 'metodosPago', 'procedencia',
@@ -280,7 +311,9 @@ class ReportesPrincipal extends Component
             'costoInsumosPeriodo', 'totalServicios', 'gananciaNetaServicios',
             'totalVentaProductos', 'costoProductosVendidos', 'gananciaNetaProductos',
             'totalClientesPeriodo', 'totalClientesNuevos', 'totalRecurrentes',
-            'tasaCaptacion', 'procedenciaNuevos'
+            'tasaCaptacion', 'procedenciaNuevos', 'cantidadFacturas',
+            'montoFacturas', 'cantidadBoletas', 'montoBoletas',
+            'totalComprobantes', 'montoTotalComprobantes'
         );
     }
 
@@ -296,8 +329,8 @@ class ReportesPrincipal extends Component
             'pagosLabels' => $data['metodosPago']->pluck('nombre'),
             'pagosValues' => $data['metodosPago']->pluck('total'),
 
-            'procedenciaLabels' => $data['procedencia']->pluck('procedencia'),
-            'procedenciaValues' => $data['procedencia']->pluck('total'),
+            'procedenciaLabels' => $data['procedenciaNuevos']->pluck('procedencia'),
+            'procedenciaValues' => $data['procedenciaNuevos']->pluck('total'),
 
             'edadLabels' => array_keys($data['rangosEdad']),
             'edadValues' => array_values($data['rangosEdad']),

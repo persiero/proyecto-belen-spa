@@ -80,79 +80,105 @@
                     </div>
                 </div>
             </div>
-            {{-- MÉTODOS DE PAGO --}}
+
+            {{-- MÉTODOS DE PAGO + COMPROBANTES --}}
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-credit-card-2-front-fill text-success me-2"></i>
-                        Métodos de Pago
+                        Métodos de Pago y Comprobantes
                     </h5>
                 </div>
+
                 <div class="card-body">
                     <div class="row">
 
-                        {{-- GRÁFICO --}}
-                        <div class="col-md-6" wire:ignore>
-                            <div style="height: 300px; position: relative;">
-                                <canvas id="chartPagos"></canvas>
+                        {{-- MÉTODOS DE PAGO --}}
+                        <div class="col-md-6">
+                            <div class="row">
+
+                                {{-- GRÁFICO --}}
+                                <div class="col-12 mb-3" wire:ignore>
+                                    <div style="height: 250px;">
+                                        <canvas id="chartPagos"></canvas>
+                                    </div>
+                                </div>
+
+                                {{-- TABLA --}}
+                                <div class="col-12">
+                                    @php
+                                        $totalPagos = $metodosPago->sum('total') ?: 1;
+                                    @endphp
+
+                                    @foreach($metodosPago as $metodo)
+                                        @php
+                                            $porcentaje = ($metodo->total / $totalPagos) * 100;
+                                        @endphp
+
+                                        <div class="d-flex justify-content-between">
+                                            <span>{{ $metodo->nombre }}</span>
+                                            <span class="fw-bold">
+                                                S/ {{ number_format($metodo->total,2) }}
+                                            </span>
+                                        </div>
+
+                                        <div class="progress mb-2" style="height:6px;">
+                                            <div class="progress-bar bg-success"
+                                                style="width: {{ $porcentaje }}%">
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
                             </div>
                         </div>
 
-                        {{-- RESUMEN DETALLADO --}}
+                        {{-- COMPROBANTES --}}
                         <div class="col-md-6">
-                            @php
-                                $totalPagos = $metodosPago->sum('total') ?: 1;
-                            @endphp
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
 
-                            <div class="table-responsive">
-                                <table class="table align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Método</th>
-                                            <th class="text-end">Monto</th>
-                                            <th style="width: 40%;">Participación</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($metodosPago as $metodo)
-                                            @php
-                                                $porcentaje = ($metodo->total / $totalPagos) * 100;
-                                            @endphp
-                                            <tr>
-                                                <td class="fw-medium">
-                                                    {{ $metodo->nombre }}
-                                                </td>
+                                    <h6 class="text-muted text-uppercase small mb-3">
+                                        Comprobantes Emitidos
+                                    </h6>
 
-                                                <td class="text-end fw-bold text-success">
-                                                    S/ {{ number_format($metodo->total, 2) }}
-                                                </td>
+                                    <h3 class="fw-bold text-success mb-1">
+                                        {{ $totalComprobantes }}
+                                    </h3>
 
-                                                <td>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <div class="progress flex-grow-1" style="height: 8px;">
-                                                            <div class="progress-bar bg-success"
-                                                                role="progressbar"
-                                                                style="width: {{ $porcentaje }}%"
-                                                                aria-valuenow="{{ $porcentaje }}"
-                                                                aria-valuemin="0"
-                                                                aria-valuemax="100">
-                                                            </div>
-                                                        </div>
-                                                        <small class="fw-bold text-muted">
-                                                            {{ number_format($porcentaje, 1) }}%
-                                                        </small>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="3" class="text-center text-muted py-4">
-                                                    Sin datos en el periodo seleccionado
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                                    <p class="text-muted small mb-4">
+                                        Total emitidos en el periodo
+                                    </p>
+
+                                    {{-- FACTURAS --}}
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-medium">Facturas ({{ $cantidadFacturas }})</span>
+                                        <span class="fw-bold text-primary">
+                                            S/ {{ number_format($montoFacturas,2) }}
+                                        </span>
+                                    </div>
+
+                                    <hr>
+
+                                    {{-- BOLETAS --}}
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-medium">Boletas ({{ $cantidadBoletas }})</span>
+                                        <span class="fw-bold text-success">
+                                            S/ {{ number_format($montoBoletas,2) }}
+                                        </span>
+                                    </div>
+
+                                    <hr>
+
+                                    {{-- TOTAL GENERAL --}}
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <span class="fw-bold">Total en Comprobantes</span>
+                                        <span class="fw-bold fs-5 text-dark">
+                                            S/ {{ number_format($montoTotalComprobantes,2) }}
+                                        </span>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
 
