@@ -1,11 +1,11 @@
 <div>
     <div class="row justify-content-center">
-        
+
         {{-- ALERTAS --}}
         <div class="col-12">
             @if (session()->has('message'))
                 <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 bg-success bg-opacity-10 text-success fw-bold mb-4">
-                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }} 
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
@@ -17,7 +17,7 @@
                 <div class="text-center mb-4">
                     @php $ultimoCierre = App\Models\Caja::where('id_usuario_apertura', Auth::id())->latest()->first(); @endphp
                     @if($ultimoCierre && $ultimoCierre->estado == 'cerrada')
-                        <button onclick="window.open('{{ route('caja.reporte', $ultimoCierre->id) }}', '_blank', 'width=400,height=600')" 
+                        <button onclick="window.open('{{ route('caja.reporte', $ultimoCierre->id) }}', '_blank', 'width=400,height=600')"
                                 class="btn btn-white border shadow-sm rounded-pill px-4 text-muted hover-shadow">
                             <i class="bi bi-clock-history me-2"></i> Ver último cierre
                         </button>
@@ -31,18 +31,32 @@
                                 <i class="bi bi-shop display-4"></i>
                             </div>
                         </div>
-                        
+
                         <h3 class="fw-bold text-dark mb-1">Iniciar Jornada</h3>
                         <p class="text-muted mb-4">Ingresa el monto base en efectivo para abrir caja.</p>
-                        
+
                         <div class="form-floating mb-4">
                             <input type="number" step="0.01" wire:model="monto_inicial" class="form-control text-center fw-bold fs-2 border-primary" id="montoInicial" placeholder="0.00">
                             <label for="montoInicial" class="text-center w-100">Monto Inicial (S/)</label>
                         </div>
 
-                        <button wire:click="abrirCaja" class="btn btn-primary w-100 btn-lg shadow fw-bold py-3 rounded-3">
-                            ABRIR CAJA
-                        </button>
+                        <button wire:click="abrirCaja"
+                            wire:loading.attr="disabled"
+                            wire:target="abrirCaja"
+                            class="btn btn-primary w-100 btn-lg shadow fw-bold py-3 rounded-3 d-flex justify-content-center align-items-center">
+
+                        {{-- Texto Normal --}}
+                        <span wire:loading.remove wire:target="abrirCaja">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> ABRIR CAJA
+                        </span>
+
+                        {{-- Texto de Carga (Spinner) --}}
+                        <span wire:loading wire:target="abrirCaja">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            PROCESANDO...
+                        </span>
+
+                    </button>
                     </div>
                 </div>
             </div>
@@ -50,7 +64,7 @@
         @else
             {{-- PANTALLA DE CONTROL (Dashboard) --}}
             <div class="col-md-9">
-                
+
                 {{-- HEADER ESTADO --}}
                 <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-3 shadow-sm border">
                     <div class="d-flex align-items-center">
@@ -105,20 +119,20 @@
                             <div class="card-body position-relative" style="z-index: 1;">
                                 <small class="text-white-50 text-uppercase fw-bold ls-1" style="font-size: 0.7rem;">Efectivo en Cajón</small>
                                 <h3 class="fw-bold mb-0 mt-2">S/ {{ number_format($totalEfectivoEnCaja, 2) }}</h3>
-                                
+
                                 @if($totalGastos > 0)
                                     <div class="mt-2 text-white-50 small">
                                         <i class="bi bi-arrow-down"></i> Salidas: S/ {{ number_format($totalGastos, 2) }}
                                     </div>
                                 @endif
                             </div>
-                            
+
                             {{-- Botón Registrar Gasto (z-index ALTO: 10) --}}
                             {{-- Agregué 'd-flex' y 'justify-content-center' para centrar perfecto el signo menos --}}
-                            <button type="button" 
-                                    class="btn btn-warning position-absolute top-50 end-0 translate-middle-y me-3 shadow rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                            <button type="button"
+                                    class="btn btn-warning position-absolute top-50 end-0 translate-middle-y me-3 shadow rounded-circle p-0 d-flex align-items-center justify-content-center"
                                     style="width: 50px; height: 50px; z-index: 10; border: 2px solid rgba(255,255,255,0.2);"
-                                    data-bs-toggle="modal" 
+                                    data-bs-toggle="modal"
                                     data-bs-target="#modalGasto"
                                     title="Registrar Salida de Dinero">
                                 <i class="bi bi-dash-lg fw-bold fs-3"></i>
@@ -235,7 +249,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    
+
                     <div class="row align-items-center mb-4">
                         <div class="col-6 text-end border-end pe-4">
                             <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Efectivo Esperado</small>

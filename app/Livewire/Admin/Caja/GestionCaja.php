@@ -14,7 +14,7 @@ use Carbon\Carbon;
 class GestionCaja extends Component
 {
     public $cajaAbierta = null;
-    
+
     // Formulario Apertura
     public $monto_inicial = 0.00;
 
@@ -25,7 +25,7 @@ class GestionCaja extends Component
     // Resumen de Cierre (Calculado)
     public $resumenMetodos = [];
     public $totalVentas = 0.00;
-    public $totalEfectivoEnCaja = 0.00; 
+    public $totalEfectivoEnCaja = 0.00;
     public $totalGastos = 0.00; // <--- NUEVO: Para mostrar el total retirado
 
     public $dinero_fisico; // Lo que el usuario escribe
@@ -44,7 +44,7 @@ class GestionCaja extends Component
 
         // 2. Si está abierta, calcular totales y cargar movimientos
         if ($this->cajaAbierta) {
-            
+
             // Calculamos los totales
             $this->calcularArqueo();
 
@@ -53,7 +53,7 @@ class GestionCaja extends Component
                 ->with('usuario')
                 ->orderBy('created_at', 'desc')
                 ->get();
-                
+
         } else {
             // Si no hay caja abierta, la lista de movimientos está vacía
             $this->movimientos = [];
@@ -99,7 +99,7 @@ class GestionCaja extends Component
         // C. CÁLCULO FINAL DEL EFECTIVO
         // Saldo Inicial + Ventas en Efectivo - Gastos
         $ventasEfectivo = $this->resumenMetodos['efectivo'] ?? 0;
-        
+
         $this->totalEfectivoEnCaja = ($this->cajaAbierta->monto_apertura + $ventasEfectivo) - $this->totalGastos;
     }
 
@@ -121,10 +121,10 @@ class GestionCaja extends Component
 
         // Limpiar
         $this->reset(['gasto_monto', 'gasto_descripcion']);
-        
+
         // Cerrar modal (evento de navegador)
-        $this->dispatch('close-modal'); 
-        
+        $this->dispatch('close-modal');
+
         // Recalcular
         $this->calcularArqueo();
 
@@ -133,8 +133,23 @@ class GestionCaja extends Component
 
     public function abrirCaja()
     {
+        // 1. Validar el monto
         $this->validate(['monto_inicial' => 'required|numeric|min:0']);
 
+        // 2. EL CANDADO: Verificar si el usuario YA tiene una caja abierta
+        $cajaExistente = Caja::where('id_usuario_apertura', Auth::id())
+            ->where('estado', 'abierta')
+            ->first();
+
+        if ($cajaExistente) {
+            // Si ya tiene una, detenemos el proceso y mostramos un error
+            session()->flash('error', 'Ya tienes una caja abierta. No puedes abrir otra.');
+
+            // TRUCO: Recargar la página para que el componente se actualice
+            return redirect()->route('admin.caja');
+        }
+
+        // 3. Crear la caja (Si pasa el candado)
         Caja::create([
             'fecha_apertura' => Carbon::now(),
             'monto_apertura' => $this->monto_inicial,
@@ -173,7 +188,7 @@ class GestionCaja extends Component
         $this->reset(['dinero_fisico', 'diferencia']);
 
         // Cerramos modal (si usas script)
-        $this->dispatch('close-modal-cierre'); 
+        $this->dispatch('close-modal-cierre');
 
         session()->flash('message', 'Caja cerrada. Diferencia registrada: S/ ' . number_format($diferenciaFinal, 2));
 
