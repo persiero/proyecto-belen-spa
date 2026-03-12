@@ -25,26 +25,33 @@
 
     {{-- 2. NAVEGACIÓN POR PESTAÑAS --}}
     <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+        {{-- Solo Administradores ven la pestaña Ventas --}}
+        @if(auth()->user()->rol->nombre != 'encargado')
         <li class="nav-item" role="presentation">
-            <button class="nav-link {{ auth()->user()->rol->nombre == 'encargado' ? 'active' : '' }} fw-bold px-4"
+            {{-- Como es el admin, esta es su pestaña activa por defecto --}}
+            <button class="nav-link active fw-bold px-4"
                 id="tab-general"
                 data-bs-toggle="pill"
                 data-bs-target="#content-general"
                 type="button">
-
                 <i class="bi bi-cash-coin me-2"></i>Ventas
             </button>
         </li>
+        @endif
+
+        {{-- Todos ven la pestaña Clientes --}}
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold px-4"
+            {{-- Si es encargado, esta será su pestaña 'active' por defecto --}}
+            <button class="nav-link {{ auth()->user()->rol->nombre == 'encargado' ? 'active' : '' }} fw-bold px-4"
                 id="tab-marketing"
                 data-bs-toggle="pill"
                 data-bs-target="#content-marketing"
                 type="button">
-
                 <i class="bi bi-people-fill me-2"></i>Clientes
             </button>
         </li>
+
+        {{-- Solo Administradores ven Finanzas y Equipo --}}
         @if(auth()->user()->rol->nombre != 'encargado')
         <li class="nav-item">
             <button class="nav-link fw-bold px-4"
@@ -54,8 +61,6 @@
                 <i class="bi bi-graph-up-arrow me-2"></i>Rentabilidad
             </button>
         </li>
-        @endif
-        @if(auth()->user()->rol->nombre != 'encargado')
         <li class="nav-item">
             <button class="nav-link fw-bold px-4"
                 id="tab-equipo"
@@ -71,7 +76,8 @@
     <div class="tab-content" id="pills-tabContent">
 
         {{-- PESTAÑA 1: GENERAL --}}
-        <div class="tab-pane fade show active" id="content-general" role="tabpanel" wire:ignore.self>
+        {{-- Solo tiene 'show active' si NO es encargado --}}
+        <div class="tab-pane fade {{ auth()->user()->rol->nombre != 'encargado' ? 'show active' : '' }}" id="content-general" role="tabpanel" wire:ignore.self>
             <div class="row mb-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm border-0 h-100">
