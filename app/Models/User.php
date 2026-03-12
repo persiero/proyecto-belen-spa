@@ -15,7 +15,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'usuarios';
-   
+
 
     protected $fillable = [
         'id_rol',
@@ -25,13 +25,13 @@ class User extends Authenticatable
         'activo'
     ];
 
-    
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -62,7 +62,10 @@ class User extends Authenticatable
 
     // Método para verificar si tiene acceso a estadísticas
     public function canAccessEstadisticas(){
-        return $this->isAdministrador();
+        return in_array($this->rol->nombre, [
+            'administrador',
+            'encargado'
+        ]);
     }
 
     // Método para verificar si tiene acceso a almacén

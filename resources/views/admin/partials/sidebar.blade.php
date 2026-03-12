@@ -1,10 +1,10 @@
 <aside class="app-sidebar shadow" data-bs-theme="dark">
-    
+
     <div class="sidebar-brand">
         <a href="{{ route('admin.dashboard') }}" class="brand-link text-decoration-none">
-            <img src="{{ asset('adminlte/assets/img/Logo-belen.png') }}" 
+            <img src="{{ asset('adminlte/assets/img/Logo-belen.png') }}"
                  alt="Belen Spa Logo"
-                 class="brand-image" 
+                 class="brand-image"
                  style="opacity: 1; max-height: 40px;">
             <span class="brand-text fw-light">Belén System</span>
         </a>
@@ -13,16 +13,16 @@
     <div class="sidebar-wrapper">
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation" aria-label="Main navigation">
-                
+
                 {{-- BLOQUE 1: RECEPCIÓN Y CAJA --}}
-                
+
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="nav-icon bi bi-speedometer2"></i>
                         <p>Panel Principal</p> {{-- "Dashboard" está bien, pero Panel Principal es más formal --}}
                     </a>
                 </li>
-                
+
                 {{-- BOTÓN POS DESTACADO --}}
                 {{-- CAMBIO UX: "Punto de Venta" engloba Servicios y Productos sin discriminar --}}
                 <li class="nav-item my-2 px-2">
@@ -54,7 +54,7 @@
                 </li>
 
                 {{-- BLOQUE 2: ADMINISTRACIÓN --}}
-                
+
                 <li class="nav-header mt-2">ADMINISTRACIÓN</li>
 
                 {{-- CAMBIO UX: "Catálogos" es más entendible para dueños de negocio que "Datos Maestros" --}}
@@ -129,6 +129,7 @@
 
                 {{-- BLOQUE 4: INTELIGENCIA (Solo Administrador) --}}
                 @if(auth()->user()->canAccessEstadisticas())
+
                 <li class="nav-header mt-2">ESTADÍSTICAS</li>
 
                 <li class="nav-item {{ request()->routeIs('admin.reportes*') ? 'menu-open' : '' }}">
@@ -139,19 +140,26 @@
                             <i class="nav-arrow bi bi-chevron-right"></i>
                         </p>
                     </a>
+
                     <ul class="nav nav-treeview">
+
+                        {{-- INDICADORES (Administrador + Encargado) --}}
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.analitica') }}" class="nav-link {{ request()->routeIs('admin.reportes.analitica') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-pie-chart-fill"></i>
                                 <p>Indicadores</p>
                             </a>
                         </li>
+
+                        {{-- REPORTES SOLO ADMIN --}}
+                        @if(auth()->user()->rol->nombre == 'administrador')
                         <li class="nav-item">
                             <a href="{{ route('admin.reportes.descargables') }}" class="nav-link {{ request()->routeIs('admin.reportes.descargables') ? 'active' : '' }}">
                                 <i class="nav-icon bi bi-file-earmark-pdf"></i>
                                 <p>Reportes PDF/Excel</p>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </li>
                 @endif

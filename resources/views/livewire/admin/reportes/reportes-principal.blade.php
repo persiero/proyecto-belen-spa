@@ -26,25 +26,45 @@
     {{-- 2. NAVEGACIÓN POR PESTAÑAS --}}
     <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold px-4" id="tab-general" data-bs-toggle="pill" data-bs-target="#content-general" type="button">
+            <button class="nav-link {{ auth()->user()->rol->nombre == 'encargado' ? 'active' : '' }} fw-bold px-4"
+                id="tab-general"
+                data-bs-toggle="pill"
+                data-bs-target="#content-general"
+                type="button">
+
                 <i class="bi bi-cash-coin me-2"></i>Ventas
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold px-4" id="tab-marketing" data-bs-toggle="pill" data-bs-target="#content-marketing" type="button">
+            <button class="nav-link fw-bold px-4"
+                id="tab-marketing"
+                data-bs-toggle="pill"
+                data-bs-target="#content-marketing"
+                type="button">
+
                 <i class="bi bi-people-fill me-2"></i>Clientes
             </button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold px-4" id="tab-finanzas" data-bs-toggle="pill" data-bs-target="#content-finanzas" type="button">
+        @if(auth()->user()->rol->nombre != 'encargado')
+        <li class="nav-item">
+            <button class="nav-link fw-bold px-4"
+                id="tab-finanzas"
+                data-bs-toggle="pill"
+                data-bs-target="#content-finanzas">
                 <i class="bi bi-graph-up-arrow me-2"></i>Rentabilidad
             </button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold px-4" id="tab-equipo" data-bs-toggle="pill" data-bs-target="#content-equipo" type="button">
+        @endif
+        @if(auth()->user()->rol->nombre != 'encargado')
+        <li class="nav-item">
+            <button class="nav-link fw-bold px-4"
+                id="tab-equipo"
+                data-bs-toggle="pill"
+                data-bs-target="#content-equipo">
                 <i class="bi bi-person-badge me-2"></i>Equipo
             </button>
         </li>
+        @endif
     </ul>
 
     {{-- 3. CONTENIDO DE PESTAÑAS --}}
@@ -189,7 +209,7 @@
         </div>
 
         {{-- PESTAÑA 2: CLIENTES (ENFOQUE MARKETING) --}}
-        <div class="tab-pane fade" id="content-marketing" role="tabpanel" wire:ignore.self>
+        <div class="tab-pane fade {{ auth()->user()->rol->nombre == 'encargado' ? 'show active' : '' }}" id="content-marketing">
 
             {{-- ========================= --}}
             {{-- 1️⃣ CAPTACIÓN DEL PERIODO --}}
