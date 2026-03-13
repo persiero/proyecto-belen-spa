@@ -71,18 +71,32 @@ class GestionProductos extends Component
     {
         $p = Producto::findOrFail($id);
         $this->producto_id = $id;
-        $this->tipo = $p->tipo;
+
+        // --- MAGIA DINÁMICA: Ajustar el "tipo" según el stock real ---
+        $tipoReal = $p->tipo;
+        if ($p->stock_actual > 0 && $p->stock_insumo == 0) {
+            $tipoReal = 'venta';
+        } elseif ($p->stock_insumo > 0 && $p->stock_actual == 0) {
+            $tipoReal = 'insumo';
+        } elseif ($p->stock_actual > 0 && $p->stock_insumo > 0) {
+            $tipoReal = 'mixto';
+        }
+
+        $this->tipo = $tipoReal; // Asignamos el tipo calculado
+        // -------------------------------------------------------------
+
         $this->nombre = $p->nombre;
         $this->descripcion = $p->descripcion;
         $this->codigo_barras = $p->codigo_barras;
         $this->costo_compra = $p->costo_compra;
         $this->precio_venta = $p->precio_venta;
         $this->stock_actual = $p->stock_actual;
-        $this->stock_insumo = $p->stock_insumo; // <--- CARGAR DATO
+        $this->stock_insumo = $p->stock_insumo;
         $this->stock_minimo = $p->stock_minimo;
         $this->id_afectacion = $p->id_afectacion;
         $this->id_unidad = $p->id_unidad;
         $this->activo = $p->activo;
+
         $this->openModal();
     }
 
@@ -110,7 +124,7 @@ class GestionProductos extends Component
         if (!$this->producto_id) {
             $data['stock_actual'] = $this->stock_actual ?? 0;
             $data['stock_insumo'] = $this->stock_insumo ?? 0;
-        } 
+        }
 
         // 3. Guardamos (Ahora $data siempre existe)
         Producto::updateOrCreate(['id' => $this->producto_id], $data);

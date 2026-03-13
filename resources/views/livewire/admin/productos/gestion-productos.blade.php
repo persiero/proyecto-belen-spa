@@ -1,7 +1,7 @@
 <div>
     {{-- MENSJAE DE ÉXITO --}}
     @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" 
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert"
              style="background-color: #d1e7dd; color: #0f5132;">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -14,7 +14,7 @@
                 <h3 class="card-title fw-bold mb-0 text-uppercase" style="color: var(--belen-dark); letter-spacing: 1px;">
                     <i class="bi bi-tags-fill me-2"></i> Catálogo de Productos
                 </h3>
-                
+
                 <div class="card-tools">
                     <div class="d-flex gap-2">
                         <div class="input-group" style="width: 250px;">
@@ -45,6 +45,20 @@
                     </thead>
                     <tbody>
                         @forelse($productos as $item)
+                            @php
+                                // LÓGICA DINÁMICA: Determinar tipo según dónde está el stock
+                                if ($item->stock_actual > 0 && $item->stock_insumo == 0) {
+                                    $tipoDinamico = 'venta';
+                                } elseif ($item->stock_insumo > 0 && $item->stock_actual == 0) {
+                                    $tipoDinamico = 'insumo';
+                                } elseif ($item->stock_actual > 0 && $item->stock_insumo > 0) {
+                                    $tipoDinamico = 'mixto';
+                                } else {
+                                    // Si el stock en ambos es 0, mostramos el tipo original con el que se creó
+                                    $tipoDinamico = $item->tipo;
+                                }
+                            @endphp
+
                             <tr>
                                 <td class="ps-4">
                                     <div class="fw-bold text-dark">{{ $item->nombre }}</div>
@@ -54,16 +68,18 @@
                                         <small class="text-muted fst-italic border px-1 rounded" style="font-size: 0.7rem;">S/C</small>
                                     @endif
                                 </td>
+
+                                {{-- TIPO DINÁMICO --}}
                                 <td class="text-center">
-                                    @if($item->tipo == 'venta')
+                                    @if($tipoDinamico == 'venta')
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success">Venta</span>
-                                    @elseif($item->tipo == 'insumo')
+                                    @elseif($tipoDinamico == 'insumo')
                                         <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">Insumo</span>
                                     @else
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Mixto</span>
                                     @endif
                                 </td>
-                                
+
                                 {{-- ESTADO --}}
                                 <td class="text-center">
                                     @if($item->activo)
@@ -76,14 +92,14 @@
                                         </span>
                                     @endif
                                 </td>
-                                
-                                {{-- STOCK VENTA --}}
-                                <td class="text-center">
-                                    @if($item->tipo == 'venta' || $item->tipo == 'mixto')
-                                        <span class="fw-bold {{ $item->stock_actual <= $item->stock_minimo ? 'text-danger' : 'text-dark' }}">
+
+                                {{-- STOCK VENTA (VITRINA) --}}
+                                <td class="text-center border-start">
+                                    @if($item->stock_actual > 0 || $tipoDinamico == 'venta' || $tipoDinamico == 'mixto')
+                                        <span class="fw-bold {{ $item->stock_actual <= $item->stock_minimo ? 'text-danger' : 'text-success' }}">
                                             {{ $item->stock_actual }}
                                         </span>
-                                        @if($item->stock_actual <= $item->stock_minimo)
+                                        @if($item->stock_actual <= $item->stock_minimo && $item->stock_actual > 0)
                                             <i class="bi bi-exclamation-circle-fill text-danger small" title="Stock Bajo"></i>
                                         @endif
                                     @else
@@ -91,16 +107,21 @@
                                     @endif
                                 </td>
 
-                                {{-- STOCK INSUMO --}}
-                                <td class="text-center">
-                                    @if($item->tipo == 'insumo' || $item->tipo == 'mixto')
-                                        <span class="fw-bold text-secondary">{{ $item->stock_insumo }}</span>
+                                {{-- STOCK INSUMO (INTERNO) --}}
+                                <td class="text-center border-start">
+                                    @if($item->stock_insumo > 0 || $tipoDinamico == 'insumo' || $tipoDinamico == 'mixto')
+                                        <span class="fw-bold {{ $item->stock_insumo <= $item->stock_minimo ? 'text-danger' : 'text-warning' }} text-dark">
+                                            {{ $item->stock_insumo }}
+                                        </span>
+                                        @if($item->stock_insumo <= $item->stock_minimo && $item->stock_insumo > 0)
+                                            <i class="bi bi-exclamation-circle-fill text-danger small" title="Stock Bajo"></i>
+                                        @endif
                                     @else
                                         <span class="text-muted opacity-25">-</span>
                                     @endif
                                 </td>
 
-                                <td class="text-end">
+                                <td class="text-end border-start">
                                     @if($item->tipo != 'insumo')
                                         <div class="fw-bold text-success">S/ {{ number_format($item->precio_venta, 2) }}</div>
                                     @else
@@ -154,12 +175,27 @@
                                 @error('nombre') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Tipo de Uso</label>
-                                <select wire:model.live="tipo" class="form-select shadow-sm bg-white">
-                                    <option value="venta">🏪 Solo Venta</option>
-                                    <option value="insumo">🧴 Solo Insumo</option>
-                                    <option value="mixto">🔄 Mixto (Ambos)</option>
-                                </select>
+                                <label class="form-label d-flex justify-content-between">
+                                    <span>Tipo de Uso</span>
+                                    @if($producto_id) <span class="badge bg-warning text-dark px-1"><i class="bi bi-lock-fill"></i> Auto</span> @endif
+                                </label>
+
+                                @if(!$producto_id)
+                                    {{-- MODO CREAR: El usuario puede elegir libremente --}}
+                                    <select wire:model.live="tipo" class="form-select shadow-sm bg-white">
+                                        <option value="venta">🏪 Solo Venta</option>
+                                        <option value="insumo">🧴 Solo Insumo</option>
+                                        <option value="mixto">🔄 Mixto (Ambos)</option>
+                                    </select>
+                                @else
+                                    {{-- MODO EDITAR: Se muestra bloqueado y calculado automáticamente --}}
+                                    <div class="form-control bg-light text-secondary d-flex align-items-center shadow-sm" style="cursor: not-allowed;" title="Calculado automáticamente según el inventario">
+                                        @if($tipo == 'venta') <span class="fw-bold text-success">🏪 Solo Venta</span>
+                                        @elseif($tipo == 'insumo') <span class="fw-bold text-warning text-dark">🧴 Solo Insumo</span>
+                                        @else <span class="fw-bold text-primary">🔄 Mixto (Ambos)</span>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="col-md-6">
@@ -211,7 +247,7 @@
 
                             {{-- SUNAT --}}
                             <div class="col-12 mt-3"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Configuración SUNAT</label></div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label small">Unidad de Medida</label>
                                 <select wire:model="id_unidad" class="form-select form-select-sm bg-white shadow-sm">
@@ -227,13 +263,13 @@
 
                             {{-- ESTADO --}}
                             <div class="col-12 mt-3"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Estado del Producto</label></div>
-                            
+
                             <div class="col-12">
                                 <div class="form-check form-switch">
                                     <input wire:model="activo" class="form-check-input" type="checkbox" id="switchActivo" style="cursor: pointer;">
                                     <label class="form-check-label" for="switchActivo" style="cursor: pointer;">
                                         <span class="badge {{ $activo ? 'bg-success' : 'bg-danger' }}">
-                                            <i class="bi {{ $activo ? 'bi-check-circle' : 'bi-x-circle' }}"></i> 
+                                            <i class="bi {{ $activo ? 'bi-check-circle' : 'bi-x-circle' }}"></i>
                                             {{ $activo ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </label>
@@ -243,7 +279,7 @@
                         </div>
                     </form>
                 </div>
-                
+
                 <div class="modal-footer bg-white py-3">
                     <button wire:click="closeModal()" type="button" class="btn btn-light border">Cancelar</button>
                     <button wire:click="store()" type="button" class="btn btn-primary px-4 shadow-sm text-dark fw-bold"><i class="bi bi-save me-1"></i> Guardar Producto</button>

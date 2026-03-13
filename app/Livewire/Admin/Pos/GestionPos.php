@@ -23,7 +23,7 @@ class GestionPos extends Component
     // Carrito de Compras
     public $cart = []; // Array de items
     public $total = 0.00;
-    
+
     // Datos de la Venta
     public $cliente_id;
     public $turno_id = null; // Si viene de un turno
@@ -31,13 +31,13 @@ class GestionPos extends Component
 
     // Buscadores
     public $searchProducto = '';
-    public $buscar_cliente = ''; 
-    public $clientes_encontrados = []; 
+    public $buscar_cliente = '';
+    public $clientes_encontrados = [];
     public $cliente_seleccionado_nombre = null;
-    
+
     // Estilista temporal por producto (para ventas directas)
     public $estilista_temp = [];
-    
+
     // Modal de Pago
     public $isPaymentModalOpen = false;
     public $metodo_pago_id = 1; // Efectivo por defecto
@@ -131,7 +131,7 @@ class GestionPos extends Component
         $estilistas = Estilista::where('activo', true)->orderBy('nombre')->get();
         $metodos = MetodoPago::where('activo', true)->get();
 
-        return view('livewire.admin.pos.gestion-pos', 
+        return view('livewire.admin.pos.gestion-pos',
             compact('productos', 'turnosPendientes', 'clientes', 'estilistas', 'metodos'));
     }
 
@@ -141,7 +141,7 @@ class GestionPos extends Component
     public function cargarTurno($idTurno)
     {
         $turno = Turno::with(['servicios.servicio', 'productos.producto', 'cliente'])->find($idTurno);
-        
+
         if (!$turno) return;
 
         $this->resetCart(); // Limpiar carrito actual
@@ -247,7 +247,7 @@ class GestionPos extends Component
     public function incrementQuantity($index)
     {
         $item = $this->cart[$index];
-        
+
         // Si es producto, validamos stock
         if ($item['tipo'] == 'producto') {
             $prod = Producto::find($item['id']);
@@ -256,7 +256,7 @@ class GestionPos extends Component
                 return;
             }
         }
-        
+
         $this->cart[$index]['cantidad']++;
         $this->cart[$index]['subtotal'] = $this->cart[$index]['cantidad'] * $this->cart[$index]['precio'];
         $this->calculateTotal();
@@ -284,11 +284,11 @@ class GestionPos extends Component
     {
         $this->metodo_pago_id = $id;
         $this->referencia_pago = null; // Limpiamos referencia al cambiar
-        
+
         // CORRECCIÓN: Siempre asignamos el total al cambiar de método.
         // Así evitamos que el sistema piense que "falta dinero" y bloquee el botón.
-        $this->monto_recibido = $this->total; 
-        
+        $this->monto_recibido = $this->total;
+
         $this->calculateVuelto();
     }
 
@@ -360,20 +360,27 @@ class GestionPos extends Component
                 'total' => $this->total,
                 'estado' => 'pagada',
                 // Aquí deberías calcular IGV real desglosando, por ahora simplificado:
-                'op_gravadas' => $this->total / 1.18, 
+                'op_gravadas' => $this->total / 1.18,
                 'monto_igv' => $this->total - ($this->total / 1.18)
             ]);
 
             // 2. Guardar Detalles y Descontar Stock
             foreach ($this->cart as $item) {
-                
+
                 // Si es producto, descontamos stock
                 if ($item['tipo'] == 'producto') {
                     $prod = Producto::find($item['id']);
                     $prod->decrement('stock_actual', $item['cantidad']);
-                    
-                    // Registrar movimiento de inventario (Opcional pero recomendado)
-                    // MovimientoInventario::create(...)
+
+                    // REGISTRAR EN EL KARDEX
+                    \App\Models\MovimientoInventario::create([
+                        'id_producto' => $prod->id,
+                        'tipo' => 'salida_venta',
+                        'cantidad' => -$item['cantidad'], // Negativo porque sale
+                        'motivo' => 'Venta en POS',
+                        'fecha' => Carbon::now(),
+                        'referencia' => 'VENTA TICKET #' . $venta->id
+                    ]);
                 }
 
                 DetalleVenta::create([
@@ -410,20 +417,20 @@ class GestionPos extends Component
             // 4. Cerrar Turno si existe
             if ($this->turno_id) {
                 Turno::where('id', $this->turno_id)->update([
-                    'estado' => 'cerrado', 
+                    'estado' => 'cerrado',
                     'hora_fin' => Carbon::now()
                 ]);
             }
 
             DB::commit();
-            
+
             // GUARDAMOS LA VENTA PARA MOSTRARLA
             $this->ultimaVenta = Venta::with(['cliente', 'detalles', 'pagos.metodoPago'])->find($venta->id);
-            
+
             // LIMPIEZA PARCIAL (No reseteamos todo aún para no perder el modal)
             $this->reset(['cart', 'turno_id', 'cliente_id', 'total', 'monto_recibido', 'vuelto']);
             $this->isPaymentModalOpen = false;
-            
+
             // ABRIMOS MODAL DE ÉXITO
             $this->isSuccessModalOpen = true;
 
@@ -446,7 +453,7 @@ class GestionPos extends Component
         $this->referencia_pago = null;
         $this->limpiarCliente();
     }
-    
+
     public function cerrarSuccessModal()
     {
         $this->isSuccessModalOpen = false;
@@ -459,10 +466,10 @@ class GestionPos extends Component
     public function esClienteGenerico()
     {
         if (!$this->cliente_id) return true;
-        
+
         $cliente = Cliente::find($this->cliente_id);
         if (!$cliente) return true;
-        
+
         return in_array($cliente->numero_documento, ['00000000', '0', '-']);
     }
 
@@ -472,5 +479,5 @@ class GestionPos extends Component
         return $this->total > 700 && $this->esClienteGenerico();
     }
 
-    
+
 }

@@ -188,6 +188,13 @@ class GestionInventario extends Component
         $this->cant_transferencia = 1;
     }
 
+    // Reactividad: Auto-seleccionar el destino opuesto al origen
+    public function updatedOrigen($value)
+    {
+        // Si eligen origen 'venta', el destino es 'insumo', y viceversa.
+        $this->destino = ($value == 'venta') ? 'insumo' : 'venta';
+    }
+
     public function guardarAjuste()
     {
         $this->validate([
@@ -286,8 +293,8 @@ class GestionInventario extends Component
 
             MovimientoInventario::create([
                 'id_producto' => $this->prod_transferencia_id,
-                'tipo' => 'ajuste',
-                'cantidad' => 0, // No altera el total global, solo mueve bolsillos
+                'tipo' => 'ajuste', // <--- CAMBIAR 'ajuste' por 'transferencia'
+                'cantidad' => $this->cant_transferencia, // <--- CAMBIAR 0 por la cantidad real
                 'motivo' => $desc . ($this->motivo_transferencia ? ': '.$this->motivo_transferencia : ''),
                 'fecha' => Carbon::now(),
                 'referencia' => 'TRANSFERENCIA'

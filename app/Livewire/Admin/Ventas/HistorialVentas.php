@@ -12,6 +12,7 @@ use App\Services\SunatService;
 use App\Models\Comprobante;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class HistorialVentas extends Component
 {
@@ -42,7 +43,7 @@ class HistorialVentas extends Component
             }
 
             $venta = Venta::with(['cliente', 'detalles'])->find($ventaId);
-            
+
             if (!$venta) {
                 session()->flash('message', 'ERROR: Venta no encontrada.');
                 return;
@@ -50,7 +51,7 @@ class HistorialVentas extends Component
 
             // 2. Instanciar el Servicio
             $sunatService = new SunatService();
-            
+
             // 3. Llamar a la función de generar
             $resultado = $sunatService->generarComprobante($venta);
 
@@ -60,14 +61,14 @@ class HistorialVentas extends Component
             } else {
                 session()->flash('message', 'ERROR SUNAT: ' . $resultado['message']);
             }
-            
+
         } catch (\Exception $e) {
             // Capturar cualquier error y mostrarlo
             Log::error('Error al emitir comprobante: ' . $e->getMessage(), [
                 'venta_id' => $ventaId,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             session()->flash('message', 'ERROR SISTEMA: ' . $e->getMessage());
         }
     }
@@ -107,7 +108,7 @@ class HistorialVentas extends Component
             // 2. Liberar Turno (si venía de uno)
             if ($venta->id_turno) {
                 // Opción A: Lo dejamos cerrado pero marcado.
-                // Opción B: Lo volvemos a abrir para corregirlo. 
+                // Opción B: Lo volvemos a abrir para corregirlo.
                 // Usaremos Opción A por seguridad, el turno ya pasó.
                 $turno = Turno::find($venta->id_turno);
                 $turno->observaciones .= " (Venta #$id Anulada)";
@@ -121,6 +122,16 @@ class HistorialVentas extends Component
                     if ($prod) {
                         // Devolvemos a Stock Venta (stock_actual)
                         $prod->increment('stock_actual', $detalle->cantidad);
+
+                        // REGISTRAR DEVOLUCIÓN EN EL KARDEX (NUEVO)
+                        \App\Models\MovimientoInventario::create([
+                            'id_producto' => $prod->id,
+                            'tipo' => 'entrada', // Lo marcamos como entrada porque regresa
+                            'cantidad' => $detalle->cantidad, // En positivo
+                            'motivo' => 'Devolución por Anulación de Venta',
+                            'fecha' => Carbon::now(),
+                            'referencia' => 'ANULACIÓN TICKET #' . $venta->id
+                        ]);
                     }
                 }
             }
@@ -149,7 +160,7 @@ class HistorialVentas extends Component
             // 2. Cambiar estado (CORREGIDO: 'anulada' con 'a')
             $venta->estado = 'anulada';
             $venta->save();
-            
+
             session()->flash('message', 'Nota de Crédito emitida y Stock restaurado correctamente.');
         } else {
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Error SUNAT: ' . $resultado['message']]);
@@ -162,17 +173,23 @@ class HistorialVentas extends Component
     private function restaurarStock(Venta $venta)
     {
         foreach ($venta->detalles as $detalle) {
-            // 1. Validamos que sea 'producto' (Igual que en tu anularVenta)
-            // Así evitamos errores si intentamos sumar stock a un Servicio
-            if ($detalle->tipo_item == 'producto' && $detalle->id_producto) {
-                
-                $producto = Producto::find($detalle->id_producto);
+                if ($detalle->tipo_item == 'producto' && $detalle->id_producto) {
+                    $prod = Producto::find($detalle->id_producto);
+                    if ($prod) {
+                        // Devolvemos a Stock Venta (stock_actual)
+                        $prod->increment('stock_actual', $detalle->cantidad);
 
-                if ($producto) {
-                    // 2. CORREGIDO: Usamos 'stock_actual' en lugar de 'stock'
-                    $producto->increment('stock_actual', $detalle->cantidad);
+                        // REGISTRAR DEVOLUCIÓN EN EL KARDEX (NUEVO)
+                        \App\Models\MovimientoInventario::create([
+                            'id_producto' => $prod->id,
+                            'tipo' => 'entrada', // Lo marcamos como entrada porque regresa
+                            'cantidad' => $detalle->cantidad, // En positivo
+                            'motivo' => 'Devolución por Anulación de Venta',
+                            'fecha' => Carbon::now(),
+                            'referencia' => 'ANULACIÓN TICKET #' . $venta->id
+                        ]);
+                    }
                 }
             }
-        }
     }
 }
