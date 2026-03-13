@@ -15,9 +15,14 @@
                     <label class="form-label fw-bold small text-muted text-uppercase">Hasta</label>
                     <input type="date" class="form-control" wire:model.live="fechaFin">
                 </div>
+
+                {{-- Contenedor alineado a la derecha --}}
                 <div class="col-md-6 text-end">
-                    <div class="text-muted small text-uppercase">Ingresos del Periodo</div>
-                    <h2 class="text-success fw-bold mb-0">S/ {{ number_format($totalIngresos, 2) }}</h2>
+                    {{-- Solo mostramos los ingresos si NO es encargado --}}
+                    @if(auth()->user()->rol->nombre != 'encargado')
+                        <div class="text-muted small text-uppercase">Ingresos del Periodo</div>
+                        <h2 class="text-success fw-bold mb-0">S/ {{ number_format($totalIngresos, 2) }}</h2>
+                    @endif
                 </div>
             </div>
         </div>
@@ -239,11 +244,18 @@
                             </h3>
                         </div>
 
-                        <div class="col-md-3">
-                            <h6 class="text-muted text-uppercase small">Clientes Nuevos</h6>
-                            <h3 class="fw-bold text-success">
-                                {{ $totalClientesNuevos }}
-                            </h3>
+
+
+                        <div class="col-md-3 text-center border-end">
+                            <div class="text-muted small text-uppercase mb-1">Clientes Nuevos</div>
+                            <h2 class="text-success fw-bold mb-0">{{ $totalClientesNuevos }}</h2>
+
+                            {{-- Botón para abrir el detalle --}}
+                            @if($totalClientesNuevos > 0)
+                                <button wire:click="abrirModalNuevos" class="btn btn-sm btn-outline-success rounded-pill mt-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-eye"></i> Ver detalle
+                                </button>
+                            @endif
                         </div>
 
                         <div class="col-md-3">
@@ -798,6 +810,101 @@
             </div>
         </div>
 
+        {{-- ========================================== --}}
+        {{-- MODAL: LISTA DE CLIENTES NUEVOS --}}
+        {{-- ========================================== --}}
+        @if($mostrarModalNuevos)
+        <div class="modal fade show d-block" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+                    <div class="modal-header px-4 py-3" style="background-color: var(--belen-dark); color: white;">
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">
+                                <i class="bi bi-stars text-warning me-2"></i> Detalle de Clientes Nuevos Captados
+                            </h5>
+                            <small class="text-white-50">Periodo: {{ \Carbon\Carbon::parse($fechaInicio)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($fechaFin)->format('d/m/Y') }}</small>
+                        </div>
+                        <button wire:click="cerrarModalNuevos" type="button" class="btn-close btn-close-white"></button>
+                    </div>
+
+                    <div class="modal-body p-0 bg-light">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-white sticky-top shadow-sm">
+                                    <tr>
+                                        <th class="ps-4 py-3">Cliente</th>
+                                        <th class="py-3">Contacto</th>
+                                        <th class="py-3 text-center">Canal (Procedencia)</th>
+                                        <th class="py-3 text-center">1ra Atención</th>
+                                        <th class="pe-4 py-3 text-end">Total Gastado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($detallesClientesNuevos as $cliente)
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="fw-bold text-dark">{{ $cliente->nombre }} {{ $cliente->apellido }}</div>
+                                                <small class="text-muted"><i class="bi bi-person-badge"></i> {{ $cliente->numero_documento ?? 'S/D' }}</small>
+                                            </td>
+                                            <td>
+                                                @if($cliente->telefono)
+                                                    <div class="small"><i class="bi bi-whatsapp text-success"></i> {{ $cliente->telefono }}</div>
+                                                @endif
+                                                @if($cliente->email)
+                                                    <div class="small text-muted"><i class="bi bi-envelope"></i> {{ $cliente->email }}</div>
+                                                @endif
+                                                @if(!$cliente->telefono && !$cliente->email)
+                                                    <span class="text-muted small italic">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge rounded-pill shadow-sm" style="background-color: #6f42c1; color: white; padding: 0.5em 0.8em; font-weight: 500;">
+                                                    {{ $cliente->procedencia ?? 'No registrado' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="fw-bold text-secondary">{{ \Carbon\Carbon::parse($cliente->fecha_primera_atencion)->format('d/m/Y') }}</div>
+                                                <small class="text-muted">{{ \Carbon\Carbon::parse($cliente->fecha_primera_atencion)->format('h:i A') }}</small>
+                                            </td>
+                                            <td class="pe-4 text-end">
+                                                <span class="fw-bold text-success fs-6">S/ {{ number_format($cliente->total_gastado, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                No se encontró información detallada.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-white border-top-0 py-3">
+                        <div class="w-100 d-flex justify-content-between align-items-center">
+                            <span class="text-muted fw-bold">Total listados: {{ count($detallesClientesNuevos) }}</span>
+                            <div>
+                                <button wire:click="cerrarModalNuevos" type="button" class="btn btn-light border px-4">Cerrar</button>
+                                {{-- Aquí irá el botón de PDF en el futuro --}}
+                                <button wire:click="exportarClientesNuevosPDF" type="button" class="btn btn-danger px-4 shadow-sm" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="exportarClientesNuevosPDF">
+                                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar PDF
+                                    </span>
+                                    <span wire:loading wire:target="exportarClientesNuevosPDF">
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        Generando...
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
     </div>
 
     {{-- ======================================================================== --}}
@@ -812,8 +919,8 @@
         const belenChartData = {
             ventasLabels: @json($ventasDiarias->pluck('fecha')->map(fn($d) => \Carbon\Carbon::parse($d)->format('d/m'))),
             ventasValues: @json($ventasDiarias->pluck('total')),
-            procedenciaLabels: @json($procedencia->pluck('procedencia')),
-            procedenciaValues: @json($procedencia->pluck('total')),
+            procedenciaLabels: @json($procedenciaNuevos->pluck('procedencia')),
+            procedenciaValues: @json($procedenciaNuevos->pluck('total')),
             edadLabels: @json(array_keys($rangosEdad)),
             edadValues: @json(array_values($rangosEdad)),
             pagosLabels: @json($metodosPago->pluck('nombre')),

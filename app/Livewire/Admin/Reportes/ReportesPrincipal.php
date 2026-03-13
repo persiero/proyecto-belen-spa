@@ -13,11 +13,15 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\Comprobante;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportesPrincipal extends Component
 {
     public $fechaInicio;
     public $fechaFin;
+
+    public $mostrarModalNuevos = false;
+    public $detallesClientesNuevos = [];
 
     public function mount()
     {
@@ -36,6 +40,94 @@ class ReportesPrincipal extends Component
         $data = $this->calcularDatos();
 
         return view('livewire.admin.reportes.reportes-principal', $data);
+    }
+
+    // ==========================================
+    // MODAL DE DETALLE DE CLIENTES NUEVOS
+    // ==========================================
+    public function abrirModalNuevos()
+    {
+        $start = Carbon::parse($this->fechaInicio)->startOfDay();
+        $end = Carbon::parse($this->fechaFin)->endOfDay();
+
+        // 1. Obtenemos los IDs y la fecha de su primera compra
+        $ventasNuevos = DB::table('ventas')
+            ->select('id_cliente', DB::raw('MIN(fecha) as primera_compra'), DB::raw('SUM(total) as total_gastado'))
+            ->whereNotNull('id_cliente')
+            ->where('estado', 'pagada')
+            ->groupBy('id_cliente')
+            ->havingBetween('primera_compra', [$start, $end])
+            ->get();
+
+        $idsNuevos = $ventasNuevos->pluck('id_cliente');
+
+        // 2. Traemos los datos de esos clientes (excluyendo 'Cliente Antiguo')
+        $clientes = Cliente::whereIn('id', $idsNuevos)
+            ->where('procedencia', '!=', 'Cliente Antiguo')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // 3. Fusionamos los datos para tener la fecha de atención y lo que gastaron
+        $this->detallesClientesNuevos = $clientes->map(function($cliente) use ($ventasNuevos) {
+            $datosVenta = $ventasNuevos->firstWhere('id_cliente', $cliente->id);
+            $cliente->fecha_primera_atencion = $datosVenta->primera_compra;
+            $cliente->total_gastado = $datosVenta->total_gastado;
+            return $cliente;
+        });
+
+        $this->mostrarModalNuevos = true;
+    }
+
+    public function cerrarModalNuevos()
+    {
+        $this->mostrarModalNuevos = false;
+        $this->detallesClientesNuevos = [];
+    }
+
+    // ==========================================
+    // EXPORTAR PDF DE CLIENTES NUEVOS
+    // ==========================================
+    public function exportarClientesNuevosPDF()
+    {
+        // Re-consultamos los datos brevemente para asegurarnos de que la info sea fresca y no sature la memoria de Livewire
+        $start = Carbon::parse($this->fechaInicio)->startOfDay();
+        $end = Carbon::parse($this->fechaFin)->endOfDay();
+
+        $ventasNuevos = DB::table('ventas')
+            ->select('id_cliente', DB::raw('MIN(fecha) as primera_compra'), DB::raw('SUM(total) as total_gastado'))
+            ->whereNotNull('id_cliente')
+            ->where('estado', 'pagada')
+            ->groupBy('id_cliente')
+            ->havingBetween('primera_compra', [$start, $end])
+            ->get();
+
+        $idsNuevos = $ventasNuevos->pluck('id_cliente');
+
+        $clientes = Cliente::whereIn('id', $idsNuevos)
+            ->where('procedencia', '!=', 'Cliente Antiguo')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function($cliente) use ($ventasNuevos) {
+                $datosVenta = $ventasNuevos->firstWhere('id_cliente', $cliente->id);
+                $cliente->fecha_primera_atencion = $datosVenta->primera_compra;
+                $cliente->total_gastado = $datosVenta->total_gastado;
+                return $cliente;
+            });
+
+        // Generamos el PDF usando una vista Blade
+        $pdf = Pdf::loadView('livewire.admin.reportes.pdf-clientes-nuevos', [
+            'clientes' => $clientes,
+            'fechaInicio' => $this->fechaInicio,
+            'fechaFin' => $this->fechaFin,
+        ]);
+
+        // Formato para que se vea bien en horizontal (opcional, si hay muchas columnas)
+        // $pdf->setPaper('A4', 'landscape');
+
+        // Descargamos el archivo
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'Reporte_Clientes_Nuevos_' . Carbon::now()->format('dmY_Hi') . '.pdf');
     }
 
     // --- LÓGICA CENTRAL DE CÁLCULO ---
