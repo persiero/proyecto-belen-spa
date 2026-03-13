@@ -274,14 +274,18 @@ class ReportesPrincipal extends Component
         $totalServicios = $rankingServicios->sum('total_generado');
         $gananciaNetaServicios = $totalServicios - $costoInsumosPeriodo;
 
-        // 12. VENTAS: Comprobantes emitidos con totales
+        // 12. VENTAS: Comprobantes emitidos con totales (SOLO ACEPTADOS, SIN NOTAS DE CRÉDITO)
         $comprobantesPeriodo = DB::table('comprobantes')
             ->join('ventas', 'comprobantes.id_venta', '=', 'ventas.id')
             ->whereBetween('ventas.fecha', [$start, $end])
             ->where('ventas.estado', 'pagada')
+            // FILTRO 1: Solo contar los que SUNAT aceptó
+            ->where('comprobantes.estado_sunat', 'aceptado')
+            // FILTRO 2: Solo contar Facturas (1) y Boletas (2), excluyendo Notas de Crédito (3)
+            ->whereIn('comprobantes.id_tipo_comprobante', [1, 2])
             ->select(
                 'comprobantes.serie',
-                'ventas.total'
+                'comprobantes.total' // Usamos el total del comprobante, es más preciso
             )
             ->get();
 
