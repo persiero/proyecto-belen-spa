@@ -17,13 +17,13 @@ class GestionInventario extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
-    public $tab = 'stock'; 
+    public $tab = 'stock';
     public $search = '';
 
     // -- Formulario Ajuste --
     public $producto_id;
-    public $producto_seleccionado = null; 
-    public $tipo_movimiento = 'salida_insumo'; 
+    public $producto_seleccionado = null;
+    public $tipo_movimiento = 'salida_insumo';
     public $cantidad = 1;
     public $motivo = '';
 
@@ -34,12 +34,102 @@ class GestionInventario extends Component
     public $cant_transferencia = 1;
     public $motivo_transferencia = '';
 
+    // -- Variables para el Buscador Predictivo (Ajustes) --
+    public $buscar_producto_ajuste = '';
+    public $productos_encontrados_ajuste = [];
+
+    // -- Variables para el Buscador Predictivo (Transferencias) --
+    public $buscar_producto_transferencia = '';
+    public $productos_encontrados_transferencia = [];
+
     public function mount()
     {
         // Detectar si viene con parámetro tab en la URL
         if (request()->has('tab')) {
             $this->tab = request()->get('tab');
         }
+    }
+
+    // ===============================================
+    // LÓGICA PARA BUSCADOR DE AJUSTES
+    // ===============================================
+    public function updatedBuscarProductoAjuste()
+    {
+        $termino = trim($this->buscar_producto_ajuste);
+
+        if(strlen($termino) < 2) {
+            $this->productos_encontrados_ajuste = [];
+            return;
+        }
+
+        // Buscar por nombre o código de barras
+        $this->productos_encontrados_ajuste = Producto::where('activo', true)
+            ->where(function($query) use ($termino) {
+                $query->where('nombre', 'like', '%' . $termino . '%')
+                      ->orWhere('codigo_barras', 'like', '%' . $termino . '%');
+            })
+            ->limit(10) // Mostrar solo 10 resultados para no saturar la vista
+            ->get();
+    }
+
+    public function seleccionarProductoAjuste($id)
+    {
+        $this->producto_seleccionado = Producto::find($id);
+        $this->producto_id = $this->producto_seleccionado->id;
+
+        // Limpiamos el buscador y mostramos el nombre del elegido
+        $this->buscar_producto_ajuste = $this->producto_seleccionado->nombre;
+        $this->productos_encontrados_ajuste = [];
+    }
+
+    public function limpiarProductoAjuste()
+    {
+        $this->producto_seleccionado = null;
+        $this->producto_id = null;
+        $this->buscar_producto_ajuste = '';
+        $this->productos_encontrados_ajuste = [];
+    }
+
+    // ===============================================
+    // LÓGICA PARA BUSCADOR DE TRANSFERENCIAS
+    // ===============================================
+    public function updatedBuscarProductoTransferencia()
+    {
+        $termino = trim($this->buscar_producto_transferencia);
+
+        if(strlen($termino) < 2) {
+            $this->productos_encontrados_transferencia = [];
+            return;
+        }
+
+        $this->productos_encontrados_transferencia = Producto::where('activo', true)
+            ->where(function($query) use ($termino) {
+                $query->where('nombre', 'like', '%' . $termino . '%')
+                      ->orWhere('codigo_barras', 'like', '%' . $termino . '%');
+            })
+            ->limit(10)
+            ->get();
+    }
+
+    public function seleccionarProductoTransferencia($id)
+    {
+        $this->producto_seleccionado = Producto::find($id);
+        $this->prod_transferencia_id = $this->producto_seleccionado->id;
+
+        // Reiniciamos la cantidad a 1 por defecto
+        $this->cant_transferencia = 1;
+
+        $this->buscar_producto_transferencia = $this->producto_seleccionado->nombre;
+        $this->productos_encontrados_transferencia = [];
+    }
+
+    public function limpiarProductoTransferencia()
+    {
+        $this->producto_seleccionado = null;
+        $this->prod_transferencia_id = null;
+        $this->buscar_producto_transferencia = '';
+        $this->productos_encontrados_transferencia = [];
+        $this->cant_transferencia = 1;
     }
 
     #[Layout('layouts.admin')]
@@ -70,21 +160,21 @@ class GestionInventario extends Component
                 ->paginate(15);
         }
 
-        // Productos para selects (Limitado para rendimiento)
-        $productos = Producto::where('activo', true)
-            ->orderBy('nombre')
-            ->take(100) // Limite seguro
-            ->get();
-
-        return view('livewire.admin.inventario.gestion-inventario', 
-            compact('movimientos', 'productos', 'listaStock'));
+        return view('livewire.admin.inventario.gestion-inventario',
+            compact('movimientos', 'listaStock'));
     }
 
     public function cambiarTab($nombreTab) {
         $this->tab = $nombreTab;
         $this->resetValidation();
-        $this->reset(['producto_id', 'cantidad', 'motivo', 'prod_transferencia_id', 'cant_transferencia', 'producto_seleccionado']);
-        $this->search = ''; 
+        // Agregamos las nuevas variables al reset
+        $this->reset([
+            'producto_id', 'cantidad', 'motivo', 'producto_seleccionado',
+            'prod_transferencia_id', 'cant_transferencia', 'motivo_transferencia',
+            'buscar_producto_ajuste', 'productos_encontrados_ajuste',
+            'buscar_producto_transferencia', 'productos_encontrados_transferencia'
+        ]);
+        $this->search = '';
     }
 
     // Reactividad: Actualizar info al seleccionar producto (Ajuste)
@@ -95,7 +185,7 @@ class GestionInventario extends Component
     // Reactividad: Actualizar info al seleccionar producto (Transferencia)
     public function updatedProdTransferenciaId($value) {
         $this->producto_seleccionado = Producto::find($value);
-        $this->cant_transferencia = 1; 
+        $this->cant_transferencia = 1;
     }
 
     public function guardarAjuste()
@@ -108,17 +198,17 @@ class GestionInventario extends Component
         ]);
 
         $prod = Producto::find($this->producto_id);
-        
-        $bolsillo = 'stock_actual'; 
+
+        $bolsillo = 'stock_actual';
         $operacion = '+';
         $tipoDb = 'ajuste';
 
         switch ($this->tipo_movimiento) {
             case 'ajuste_entrada': $operacion = '+'; break;
             case 'ajuste_salida':  $operacion = '-'; break;
-            case 'salida_insumo':  
-                $bolsillo = 'stock_insumo'; 
-                $operacion = '-'; 
+            case 'salida_insumo':
+                $bolsillo = 'stock_insumo';
+                $operacion = '-';
                 $tipoDb = 'salida_insumo';
                 break;
         }
@@ -196,7 +286,7 @@ class GestionInventario extends Component
 
             MovimientoInventario::create([
                 'id_producto' => $this->prod_transferencia_id,
-                'tipo' => 'ajuste', 
+                'tipo' => 'ajuste',
                 'cantidad' => 0, // No altera el total global, solo mueve bolsillos
                 'motivo' => $desc . ($this->motivo_transferencia ? ': '.$this->motivo_transferencia : ''),
                 'fecha' => Carbon::now(),
@@ -206,6 +296,6 @@ class GestionInventario extends Component
 
         session()->flash('message', 'Transferencia exitosa.');
         $this->reset(['prod_transferencia_id', 'cant_transferencia', 'motivo_transferencia', 'producto_seleccionado']);
-        $this->tab = 'stock'; 
+        $this->tab = 'stock';
     }
 }

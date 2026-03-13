@@ -9,31 +9,31 @@
 
     <div class="row">
         <div class="col-12 mb-4">
-            
+
             {{-- NAVEGACIÓN MEJORADA --}}
             <div class="card shadow-sm border-0">
                 <div class="card-body p-2">
                     <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light rounded-3" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link fw-bold {{ $tab == 'stock' ? 'active shadow-sm' : 'text-muted' }}" 
+                            <a class="nav-link fw-bold {{ $tab == 'stock' ? 'active shadow-sm' : 'text-muted' }}"
                                href="#" wire:click.prevent="cambiarTab('stock')" style="border-radius: 8px;">
                                 <i class="bi bi-box-seam me-1"></i> Stock Actual
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-bold {{ $tab == 'kardex' ? 'active shadow-sm' : 'text-muted' }}" 
+                            <a class="nav-link fw-bold {{ $tab == 'kardex' ? 'active shadow-sm' : 'text-muted' }}"
                                href="#" wire:click.prevent="cambiarTab('kardex')" style="border-radius: 8px;">
                                 <i class="bi bi-clock-history me-1"></i> Kardex(Movimientos)
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-bold {{ $tab == 'ajuste' ? 'active shadow-sm' : 'text-muted' }}" 
+                            <a class="nav-link fw-bold {{ $tab == 'ajuste' ? 'active shadow-sm' : 'text-muted' }}"
                                href="#" wire:click.prevent="cambiarTab('ajuste')" style="border-radius: 8px;">
                                 <i class="bi bi-sliders me-1"></i> Ajustes de Inventario
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-bold {{ $tab == 'transferencia' ? 'active shadow-sm' : 'text-muted' }}" 
+                            <a class="nav-link fw-bold {{ $tab == 'transferencia' ? 'active shadow-sm' : 'text-muted' }}"
                                href="#" wire:click.prevent="cambiarTab('transferencia')" style="border-radius: 8px;">
                                 <i class="bi bi-arrow-left-right me-1"></i> Transferencias
                             </a>
@@ -46,7 +46,7 @@
         <div class="col-12">
             @if (session()->has('message'))
                 <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 bg-success bg-opacity-10 text-success fw-bold">
-                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }} 
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
@@ -86,7 +86,7 @@
                                         @elseif($p->tipo == 'insumo') <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">Insumo</span>
                                         @else <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Mixto</span> @endif
                                     </td>
-                                    
+
                                     {{-- Vitrina --}}
                                     <td class="text-center border-start">
                                         @if($p->tipo != 'insumo')
@@ -202,14 +202,47 @@
                         </div>
                         <div class="card-body px-4 pb-4">
                             <form wire:submit.prevent="guardarAjuste">
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold small text-secondary">SELECCIONAR PRODUCTO</label>
-                                    <select wire:model.live="producto_id" class="form-select form-select-lg shadow-sm">
-                                        <option value="">-- Buscar --</option>
-                                        @foreach($productos as $p) <option value="{{ $p->id }}">{{ $p->nombre }}</option> @endforeach
-                                    </select>
-                                    @error('producto_id') <span class="text-danger small">{{ $message }}</span> @enderror
+
+                                <div class="mb-3 position-relative">
+                                    <label class="form-label fw-bold small text-secondary">BUSCAR PRODUCTO</label>
+
+                                    <div class="input-group input-group-lg shadow-sm">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                        <input type="text" wire:model.live.debounce.300ms="buscar_producto_ajuste"
+                                            class="form-control border-start-0 ps-0"
+                                            placeholder="Escribe el nombre o código de barras..."
+                                            autocomplete="off">
+
+                                        {{-- Botón para limpiar (Solo se muestra si hay un producto seleccionado) --}}
+                                        @if($producto_id)
+                                            <button type="button" class="btn btn-outline-secondary border-start-0 border-top border-bottom" wire:click="limpiarProductoAjuste">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+
+                                    {{-- Lista de resultados superpuesta --}}
+                                    @if(!empty($productos_encontrados_ajuste))
+                                        <div class="position-absolute w-100 bg-white border rounded shadow-lg mt-1" style="z-index: 1000; max-height: 250px; overflow-y: auto;">
+                                            <div class="list-group list-group-flush">
+                                                @foreach($productos_encontrados_ajuste as $p)
+                                                    <button type="button" class="list-group-item list-group-item-action text-start p-3" wire:click="seleccionarProductoAjuste({{ $p->id }})">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <span class="fw-bold d-block text-dark">{{ $p->nombre }}</span>
+                                                                <small class="text-muted"><i class="bi bi-upc-scan me-1"></i>{{ $p->codigo_barras ?? 'Sin código' }}</small>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <span class="badge bg-success bg-opacity-10 text-success border border-success">V: {{ $p->stock_actual }}</span>
+                                                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">I: {{ $p->stock_insumo }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @error('producto_id') <span class="text-danger small mt-1 d-block">{{ $message }}</span> @enderror
                                 </div>
 
                                 {{-- INFO CARD STOCK --}}
@@ -270,13 +303,45 @@
                         </div>
                         <div class="card-body px-4 pb-4">
                             <form wire:submit.prevent="guardarTransferencia">
-                                <div class="mb-4">
-                                    <label class="form-label fw-bold small text-secondary">1. PRODUCTO A MOVER</label>
-                                    <select wire:model.live="prod_transferencia_id" class="form-select form-select-lg shadow-sm">
-                                        <option value="">-- Buscar Producto --</option>
-                                        @foreach($productos as $p) <option value="{{ $p->id }}">{{ $p->nombre }}</option> @endforeach
-                                    </select>
-                                    @error('prod_transferencia_id') <span class="text-danger small">{{ $message }}</span> @enderror
+                                <div class="mb-4 position-relative">
+                                    <label class="form-label fw-bold small text-secondary">1. BUSCAR PRODUCTO A MOVER</label>
+
+                                    <div class="input-group input-group-lg shadow-sm">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-purple"></i></span>
+                                        <input type="text" wire:model.live.debounce.300ms="buscar_producto_transferencia"
+                                            class="form-control border-start-0 ps-0"
+                                            placeholder="Escribe el nombre o código de barras..."
+                                            autocomplete="off">
+
+                                        @if($prod_transferencia_id)
+                                            <button type="button" class="btn btn-outline-secondary border-start-0 border-top border-bottom" wire:click="limpiarProductoTransferencia">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+
+                                    {{-- Lista de resultados superpuesta --}}
+                                    @if(!empty($productos_encontrados_transferencia))
+                                        <div class="position-absolute w-100 bg-white border rounded shadow-lg mt-1" style="z-index: 1000; max-height: 250px; overflow-y: auto;">
+                                            <div class="list-group list-group-flush">
+                                                @foreach($productos_encontrados_transferencia as $p)
+                                                    <button type="button" class="list-group-item list-group-item-action text-start p-3" wire:click="seleccionarProductoTransferencia({{ $p->id }})">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <span class="fw-bold d-block text-dark">{{ $p->nombre }}</span>
+                                                                <small class="text-muted"><i class="bi bi-upc-scan me-1"></i>{{ $p->codigo_barras ?? 'Sin código' }}</small>
+                                                            </div>
+                                                            <div class="text-end">
+                                                                <span class="badge bg-success bg-opacity-10 text-success border border-success">V: {{ $p->stock_actual }}</span>
+                                                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning">I: {{ $p->stock_insumo }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @error('prod_transferencia_id') <span class="text-danger small mt-1 d-block">{{ $message }}</span> @enderror
                                 </div>
 
                                 @if($producto_seleccionado)
