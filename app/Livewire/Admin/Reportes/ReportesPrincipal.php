@@ -335,7 +335,6 @@ class ReportesPrincipal extends Component
             ->join('productos', 'movimientos_inventario.id_producto', '=', 'productos.id')
             ->whereBetween('movimientos_inventario.fecha', [$start, $end])
             ->where('movimientos_inventario.tipo', 'salida_insumo')
-            ->whereIn('productos.tipo', ['insumo', 'mixto'])
             ->select(
                 DB::raw('ABS(SUM(movimientos_inventario.cantidad * productos.costo_compra)) as costo_total')
             )

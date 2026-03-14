@@ -20,7 +20,7 @@
 
     {{-- 2. TARJETAS DE ESTADÍSTICAS --}}
     <div class="row g-4 mb-4">
-        
+
         {{-- Tarjeta: VENTAS HOY --}}
         <div class="col-lg-3 col-6">
             <div class="card border-0 shadow-sm h-100 overflow-hidden card-hover">
@@ -162,8 +162,8 @@
                         <h6 class="mb-0 fw-bold text-purple">
                             <i class="bi bi-box-seam me-1"></i> Salidas de Insumos (7d)
                         </h6>
-                        <a href="{{ route('admin.inventario') }}?tab=ajuste" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-plus-lg me-1"></i>Registrar Salida
+                        <a href="{{ route('admin.inventario') }}?tab=ajuste" class="btn btn-sm text-white px-3 shadow-sm rounded-pill d-flex align-items-center" style="background-color: #6f42c1; transition: transform 0.2s;">
+                            <i class="bi bi-plus-circle-dotted me-2 fs-6"></i> <span class="fw-bold">Registrar Salida</span>
                         </a>
                     </div>
                 </div>
@@ -171,16 +171,38 @@
                     @if($salidasInsumos->count() > 0)
                         <ul class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
                             @foreach($salidasInsumos as $salida)
-                                <li class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center">
-                                    <div class="flex-grow-1">
-                                        <span class="fw-medium text-dark small">{{ Str::limit($salida->nombre, 25) }}</span>
-                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
-                                            {{ \Carbon\Carbon::parse($salida->fecha)->format('d/m/Y') }}
-                                        </small>
+                                <li class="list-group-item px-3 py-3 d-flex justify-content-between align-items-center border-bottom">
+                                    <div class="d-flex align-items-center flex-grow-1 overflow-hidden">
+
+                                        {{-- Icono visual --}}
+                                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center me-3 flex-shrink-0" style="width: 42px; height: 42px;">
+                                            <i class="bi bi-box-arrow-up text-danger fs-5"></i>
+                                        </div>
+
+                                        {{-- Textos --}}
+                                        <div class="overflow-hidden">
+                                            <span class="fw-bold text-dark d-block text-truncate" title="{{ $salida->nombre }}" style="max-width: 250px;">
+                                                {{ $salida->nombre }}
+                                            </span>
+
+                                            {{-- Aquí mostramos el Motivo --}}
+                                            <small class="text-secondary d-block mt-1" style="font-size: 0.8rem;">
+                                                <i class="bi bi-chat-text text-muted me-1"></i> {{ $salida->motivo ?? 'Consumo interno' }}
+                                            </small>
+
+                                            {{-- Fecha y Hora --}}
+                                            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                                <i class="bi bi-clock me-1"></i> {{ \Carbon\Carbon::parse($salida->fecha)->format('d/m/Y - h:i A') }}
+                                            </small>
+                                        </div>
                                     </div>
-                                    <span class="badge bg-danger bg-opacity-10 text-danger">
-                                        -{{ abs($salida->cantidad) }}
-                                    </span>
+
+                                    {{-- Badge de Cantidad Mejorado --}}
+                                    <div class="ms-3 flex-shrink-0">
+                                        <span class="badge bg-danger shadow-sm rounded-pill px-3 py-2 fs-6">
+                                            -{{ abs($salida->cantidad) }}
+                                        </span>
+                                    </div>
                                 </li>
                             @endforeach
                         </ul>
@@ -197,7 +219,7 @@
 
     {{-- 4. TRANSACCIONES Y STOCK --}}
     <div class="row g-4 mb-4">
-        
+
         {{-- TABLA DE TRANSACCIONES --}}
         <div class="col-lg-8 col-md-12">
             <div class="card border-0 shadow-sm h-100">
@@ -315,7 +337,7 @@
 
     {{-- 5. RENDIMIENTO Y TENDENCIAS --}}
     <div class="row g-4">
-        
+
         {{-- CAJA HOY --}}
         <div class="col-lg-4 col-md-6">
             <div class="card border-0 shadow-sm h-100">
@@ -388,7 +410,7 @@
         {{-- TOP SERVICIO Y PRODUCTO (7 DÍAS) --}}
         <div class="col-lg-4 col-md-12">
             <div class="row g-4">
-                
+
                 {{-- TOP SERVICIO --}}
                 <div class="col-12">
                     <div class="card border-0 shadow-sm">

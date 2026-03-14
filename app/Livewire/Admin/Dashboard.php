@@ -59,13 +59,13 @@ class Dashboard extends Component
         $ingresosAdicionalesCaja = MovimientoCaja::whereDate('created_at', $hoy)
             ->where('tipo', 'ingreso')
             ->sum('monto');
-        
+
         $ingresosCajaHoy = $totalVentasHoy + $ingresosAdicionalesCaja;
-        
+
         $egresosCajaHoy = MovimientoCaja::whereDate('created_at', $hoy)
             ->where('tipo', 'egreso')
             ->sum('monto');
-        
+
         $saldoCajaHoy = $ingresosCajaHoy - $egresosCajaHoy;
 
         // 8. Top Estilistas Hoy (por cantidad de servicios)
@@ -125,7 +125,6 @@ class Dashboard extends Component
         $salidasInsumos = DB::table('movimientos_inventario')
             ->join('productos', 'movimientos_inventario.id_producto', '=', 'productos.id')
             ->where('movimientos_inventario.tipo', 'salida_insumo')
-            ->whereIn('productos.tipo', ['insumo', 'mixto'])
             ->where('movimientos_inventario.fecha', '>=', Carbon::now()->subDays(7))
             ->select(
                 'productos.nombre',
@@ -138,9 +137,9 @@ class Dashboard extends Component
             ->get();
 
         return view('livewire.admin.dashboard', compact(
-            'totalVentasHoy', 
-            'cantidadVentas', 
-            'turnosActivos', 
+            'totalVentasHoy',
+            'cantidadVentas',
+            'turnosActivos',
             'clientesAtendidosHoy',
             'productosBajoStock',
             'ultimasVentas',
