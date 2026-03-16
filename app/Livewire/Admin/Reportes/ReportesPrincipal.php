@@ -362,7 +362,13 @@ class ReportesPrincipal extends Component
         $gananciaNetaProductos = $totalVentaProductos - $costoProductosVendidos;
 
         // Totales para cálculo de ganancia neta de servicios
-        $totalServicios = $rankingServicios->sum('total_generado');
+        $totalServicios = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->where('detalles_venta.tipo_item', 'servicio')
+            ->sum('detalles_venta.subtotal') ?? 0;
+
         $gananciaNetaServicios = $totalServicios - $costoInsumosPeriodo;
 
         // 12. VENTAS: Comprobantes emitidos con totales (SOLO ACEPTADOS, SIN NOTAS DE CRÉDITO)
