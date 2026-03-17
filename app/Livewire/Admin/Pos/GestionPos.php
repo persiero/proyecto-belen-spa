@@ -148,31 +148,39 @@ class GestionPos extends Component
         $this->turno_id = $turno->id;
         $this->cliente_id = $turno->id_cliente;
 
+        $hayEliminados = false; // Bandera para saber si encontramos fantasmas 👻
+
         // Importar servicios del turno al carrito
         foreach ($turno->servicios as $detalle) {
+            if (!$detalle->servicio) $hayEliminados = true;
+
             $this->cart[] = [
                 'tipo' => 'servicio',
-                'id' => $detalle->servicio->id,
-                'nombre' => $detalle->servicio->nombre,
-                'precio' => $detalle->precio_aplicado, // Respetar precio del turno
+                // Si el servicio no existe, le ponemos ID 0 y un nombre de advertencia
+                'id' => $detalle->servicio?->id ?? 0,
+                'nombre' => $detalle->servicio?->nombre ?? '⚠️ Servicio Eliminado',
+                'precio' => $detalle->precio_aplicado,
                 'cantidad' => 1,
                 'subtotal' => $detalle->precio_aplicado,
-                'estilista_id' => $detalle->id_estilista, // Guardamos quién lo hizo
-                'stock_check' => false // Servicios no validan stock
+                'estilista_id' => $detalle->id_estilista,
+                'stock_check' => false
             ];
         }
 
         // NUEVO: Importar productos del turno al carrito
         foreach ($turno->productos as $detalle) {
+            if (!$detalle->producto) $hayEliminados = true;
+
             $this->cart[] = [
                 'tipo' => 'producto',
-                'id' => $detalle->producto->id,
-                'nombre' => $detalle->producto->nombre,
-                'precio' => $detalle->precio / $detalle->cantidad, // Precio unitario
+                // Si el producto no existe, le ponemos ID 0 y un nombre de advertencia
+                'id' => $detalle->producto?->id ?? 0,
+                'nombre' => $detalle->producto?->nombre ?? '⚠️ Producto Eliminado',
+                'precio' => $detalle->precio / $detalle->cantidad,
                 'cantidad' => $detalle->cantidad,
-                'subtotal' => $detalle->precio, // Precio total
-                'estilista_id' => $detalle->id_estilista, // Quién vendió
-                'stock_check' => true // Productos validan stock
+                'subtotal' => $detalle->precio,
+                'estilista_id' => $detalle->id_estilista,
+                'stock_check' => true
             ];
         }
 
@@ -184,7 +192,13 @@ class GestionPos extends Component
         }
 
         $this->calculateTotal();
-        session()->flash('message', 'Turno cargado.');
+
+        // Lanzamos un mensaje diferente si detectamos productos borrados
+        if ($hayEliminados) {
+            session()->flash('message', 'ATENCIÓN: El turno cargado contiene artículos que fueron eliminados del catálogo. Por favor, elimínelos de la lista (X) para poder cobrar.');
+        } else {
+            session()->flash('message', 'Turno cargado.');
+        }
     }
 
     // ==========================================
