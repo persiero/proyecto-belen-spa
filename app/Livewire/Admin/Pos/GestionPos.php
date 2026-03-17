@@ -152,13 +152,19 @@ class GestionPos extends Component
 
         // Importar servicios del turno al carrito
         foreach ($turno->servicios as $detalle) {
-            if (!$detalle->servicio) $hayEliminados = true;
+            // Verificamos si no existe o si está en la papelera
+            $esEliminado = !$detalle->servicio || $detalle->servicio->trashed();
+            if ($esEliminado) $hayEliminados = true;
+
+            $nombreServicio = $detalle->servicio?->nombre ?? 'Servicio No Encontrado';
+            if ($detalle->servicio && $detalle->servicio->trashed()) {
+                $nombreServicio .= ' ⚠️ (ELIMINADO)';
+            }
 
             $this->cart[] = [
                 'tipo' => 'servicio',
-                // Si el servicio no existe, le ponemos ID 0 y un nombre de advertencia
                 'id' => $detalle->servicio?->id ?? 0,
-                'nombre' => $detalle->servicio?->nombre ?? '⚠️ Servicio Eliminado',
+                'nombre' => $nombreServicio,
                 'precio' => $detalle->precio_aplicado,
                 'cantidad' => 1,
                 'subtotal' => $detalle->precio_aplicado,
@@ -169,13 +175,19 @@ class GestionPos extends Component
 
         // NUEVO: Importar productos del turno al carrito
         foreach ($turno->productos as $detalle) {
-            if (!$detalle->producto) $hayEliminados = true;
+            // Verificamos si no existe o si está en la papelera
+            $esEliminado = !$detalle->producto || $detalle->producto->trashed();
+            if ($esEliminado) $hayEliminados = true;
+
+            $nombreProd = $detalle->producto?->nombre ?? 'Producto No Encontrado';
+            if ($detalle->producto && $detalle->producto->trashed()) {
+                $nombreProd .= ' ⚠️ (ELIMINADO)';
+            }
 
             $this->cart[] = [
                 'tipo' => 'producto',
-                // Si el producto no existe, le ponemos ID 0 y un nombre de advertencia
                 'id' => $detalle->producto?->id ?? 0,
-                'nombre' => $detalle->producto?->nombre ?? '⚠️ Producto Eliminado',
+                'nombre' => $nombreProd,
                 'precio' => $detalle->precio / $detalle->cantidad,
                 'cantidad' => $detalle->cantidad,
                 'subtotal' => $detalle->precio,
@@ -362,6 +374,26 @@ class GestionPos extends Component
             session()->flash('error_pago', 'Para ventas mayores a S/ 700.00 debe seleccionar un cliente con DNI/RUC válido (no genérico).');
             return;
         }
+
+        // =========================================================================
+        // 🚨 FRENO DE EMERGENCIA: Validar ítems eliminados (Soft Deletes)
+        // =========================================================================
+        foreach ($this->cart as $item) {
+            if ($item['tipo'] == 'producto') {
+                $existe = \App\Models\Producto::find($item['id']);
+                if (!$existe) {
+                    session()->flash('error_pago', "El producto '{$item['nombre']}' ya no está disponible en el catálogo. Por favor, cierre esta ventana y retírelo de la lista.");
+                    return;
+                }
+            } elseif ($item['tipo'] == 'servicio') {
+                $existe = \App\Models\Servicio::find($item['id']);
+                if (!$existe) {
+                    session()->flash('error_pago', "El servicio '{$item['nombre']}' ya no está disponible en el catálogo. Por favor, cierre esta ventana y retírelo de la lista.");
+                    return;
+                }
+            }
+        }
+        // =========================================================================
 
         DB::beginTransaction();
 

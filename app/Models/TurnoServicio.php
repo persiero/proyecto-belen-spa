@@ -33,7 +33,7 @@ class TurnoServicio extends Model
     // 2. Relación con el Servicio (Catálogo)
     public function servicio()
     {
-        return $this->belongsTo(Servicio::class, 'id_servicio');
+        return $this->belongsTo(Servicio::class, 'id_servicio')->withTrashed();
     }
 
     // 3. Relación con el Estilista (Quién lo hizo)

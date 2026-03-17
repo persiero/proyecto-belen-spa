@@ -34,12 +34,12 @@ class DetalleVenta extends Model
     // Relaciones para saber qué se vendió originalmente
     public function servicio()
     {
-        return $this->belongsTo(Servicio::class, 'id_servicio');
+        return $this->belongsTo(Servicio::class, 'id_servicio')->withTrashed();
     }
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class, 'id_producto');
+        return $this->belongsTo(Producto::class, 'id_producto')->withTrashed();
     }
     public function venta()
     {

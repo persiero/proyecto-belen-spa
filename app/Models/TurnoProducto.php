@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TurnoProducto extends Model
 {
     // Si usas softDeletes en la migración, es buena práctica usarlo aquí también
-    use SoftDeletes; 
+    use SoftDeletes;
 
     protected $table = 'turno_productos';
 
@@ -38,7 +38,7 @@ class TurnoProducto extends Model
     // 2. Relación con el Producto (Catálogo)
     public function producto()
     {
-        return $this->belongsTo(Producto::class, 'id_producto');
+        return $this->belongsTo(Producto::class, 'id_producto')->withTrashed();
     }
 
     // 3. Relación con el Estilista (Vendedor)
