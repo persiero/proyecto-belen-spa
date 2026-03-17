@@ -27,7 +27,7 @@
     <div class="row g-3">
         {{-- COLUMNA IZQUIERDA: PRODUCTOS Y TURNOS --}}
         <div class="col-md-7 col-lg-8">
-            
+
             {{-- 1. TURNOS EN ESPERA --}}
             @if($turnosPendientes->count() > 0)
             <div class="card card-outline card-primary mb-3 shadow-sm">
@@ -55,10 +55,10 @@
                                     <td>
                                         <small class="text-truncate d-block" style="max-width: 200px;">
                                             @foreach($t->servicios as $s)
-                                                <span class="badge bg-info text-dark bg-opacity-10 border border-info me-1">{{ $s->servicio->nombre }}</span>
+                                                <span class="badge bg-info text-dark bg-opacity-10 border border-info me-1">{{ $s->servicio?->nombre ?? 'Servicio Eliminado' }}</span>
                                             @endforeach
                                             @foreach($t->productos as $p)
-                                                <span class="badge bg-warning text-dark bg-opacity-10 border border-warning me-1">{{ $p->producto->nombre }} (x{{ $p->cantidad }})</span>
+                                                <span class="badge bg-warning text-dark bg-opacity-10 border border-warning me-1">{{ $p->producto?->nombre ?? 'Producto Eliminado' }}</span>
                                             @endforeach
                                         </small>
                                     </td>
@@ -100,7 +100,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     {{-- SELECT ESTILISTA (VENDEDOR) --}}
                                     <div class="col-md-5">
                                         <select wire:model="estilista_temp.{{ $p->id }}" class="form-select form-select-sm">
@@ -110,11 +110,11 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    
+
                                     {{-- BOTÓN AGREGAR --}}
                                     <div class="col-md-2 text-end">
-                                        <button wire:click="addProducto({{ $p->id }})" 
-                                            class="btn btn-primary rounded-circle shadow-sm" 
+                                        <button wire:click="addProducto({{ $p->id }})"
+                                            class="btn btn-primary rounded-circle shadow-sm"
                                             style="width: 45px; height: 45px;"
                                             title="Agregar al carrito">
                                             <i class="bi bi-plus-lg fs-5"></i>
@@ -149,13 +149,13 @@
                         <span class="badge bg-danger rounded-pill">{{ count($cart) }} items</span>
                     @endif
                 </div>
-                
+
                 <div class="card-body bg-light d-flex flex-column">
-                    
+
                     {{-- SELECCIÓN DE CLIENTE --}}
                     <div class="mb-3 bg-white p-2 rounded border">
                         <label class="form-label small text-muted text-uppercase fw-bold mb-1 ps-1">Cliente a Facturar</label>
-                        
+
                         {{-- ALERTA: Venta mayor a 700 sin cliente válido --}}
                         @if($this->requiereClienteValido)
                             <div class="alert alert-danger border-danger bg-danger bg-opacity-10 p-2 mb-2 small">
@@ -163,14 +163,14 @@
                                 <strong>¡Atención!</strong> Para ventas mayores a S/ 700.00 debe seleccionar un cliente con DNI/RUC válido.
                             </div>
                         @endif
-                        
+
                         {{-- 1. ESTADO: CLIENTE YA SELECCIONADO --}}
                         @if($cliente_id && $cliente_seleccionado_nombre)
                             <div class="input-group" wire:key="cliente-seleccionado">
                                 <span class="input-group-text bg-success text-white border-0">
                                     <i class="bi bi-person-check-fill"></i>
                                 </span>
-                                <input type="text" class="form-control bg-white fw-bold text-success" 
+                                <input type="text" class="form-control bg-white fw-bold text-success"
                                     value="{{ $cliente_seleccionado_nombre }}" readonly>
                                 <button class="btn btn-outline-danger" wire:click="limpiarCliente" title="Quitar cliente">
                                     <i class="bi bi-x-lg"></i>
@@ -184,35 +184,35 @@
                                     <i class="bi bi-search text-secondary"></i>
                                 </span>
                                 {{-- Input con debounce para no saturar el servidor (300ms espera a que termines de escribir) --}}
-                                <input type="text" 
-                                    class="form-control border-start-0 ps-0" 
-                                    wire:model.live.debounce.300ms="buscar_cliente" 
+                                <input type="text"
+                                    class="form-control border-start-0 ps-0"
+                                    wire:model.live.debounce.300ms="buscar_cliente"
                                     placeholder="Buscar por Nombre o DNI/RUC..."
                                     autocomplete="off">
                             </div>
 
                             {{-- 3. LISTA DE RESULTADOS FLOTANTE --}}
                             @if(count($clientes_encontrados) > 0)
-                                <div class="list-group position-absolute w-100 shadow-lg mt-1" 
+                                <div class="list-group position-absolute w-100 shadow-lg mt-1"
                                     style="z-index: 1050; max-height: 200px; overflow-y: auto;">
-                                    
+
                                     @foreach($clientes_encontrados as $cliente)
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                                                 wire:click="seleccionarCliente({{ $cliente->id }})">
-                                            
+
                                             <div>
                                                 <span class="fw-bold">{{ $cliente->nombre }} {{ $cliente->apellido }}</span><br>
                                                 <small class="text-muted">
                                                     <i class="bi bi-card-heading"></i> {{ $cliente->numero_documento }}
                                                 </small>
                                             </div>
-                                            
+
                                             <i class="bi bi-chevron-right text-muted small"></i>
                                         </button>
                                     @endforeach
                                 </div>
-                            
+
                             {{-- MENSAJE SI NO ENCUENTRA NADA (Opcional) --}}
                             @elseif(strlen($buscar_cliente) > 2)
                                 <div class="position-absolute w-100 mt-1" style="z-index: 1050;">
@@ -223,7 +223,7 @@
                                 </div>
                             @endif
                         @endif
-                        
+
                         @error('cliente_id') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
 
@@ -254,7 +254,7 @@
                                         <td class="text-center py-3">
                                             {{-- CONTROLES DE CANTIDAD --}}
                                             <div class="input-group input-group-sm justify-content-center" style="width: 70px; margin: 0 auto;">
-                                                <button wire:click="decrementQuantity({{ $index }})" class="btn btn-outline-secondary px-1" type="button" 
+                                                <button wire:click="decrementQuantity({{ $index }})" class="btn btn-outline-secondary px-1" type="button"
                                                     @if($item['cantidad'] <= 1) disabled @endif>
                                                     <i class="bi bi-dash"></i>
                                                 </button>
@@ -268,10 +268,10 @@
                                             {{-- PRECIO UNITARIO EDITABLE --}}
                                             <div class="input-group input-group-sm" style="width: 90px; margin: 0 auto;">
                                                 <span class="input-group-text bg-transparent border-0 px-1">S/</span>
-                                                <input type="number" step="0.01" 
+                                                <input type="number" step="0.01"
                                                     wire:model.blur="cart.{{ $index }}.precio"
                                                     wire:change="updatePrice({{ $index }}, $event.target.value)"
-                                                    class="form-control text-center border fw-bold" 
+                                                    class="form-control text-center border fw-bold"
                                                     style="font-size: 0.85rem;">
                                             </div>
                                         </td>
@@ -313,8 +313,8 @@
                         </div>
                     </div>
 
-                    <button wire:click="openPaymentModal" 
-                        class="btn btn-success w-100 btn-lg fw-bold shadow-sm py-3" 
+                    <button wire:click="openPaymentModal"
+                        class="btn btn-success w-100 btn-lg fw-bold shadow-sm py-3"
                         @if(empty($cart) || $this->requiereClienteValido) disabled @endif
                         @if($this->requiereClienteValido) title="Debe seleccionar un cliente válido para ventas mayores a S/ 700" @endif>
                         <i class="bi bi-credit-card-2-front me-2"></i> COBRAR S/ {{ number_format($total, 2) }}
@@ -362,15 +362,15 @@
                                 </button>
                             @endforeach
                         </div>
-                        
+
                         {{-- INPUT DE REFERENCIA (Solo si NO es efectivo) --}}
                         {{-- Asumimos que ID 1 es Efectivo. Ajusta si tu ID es otro --}}
-                        @if($metodo_pago_id != 1) 
+                        @if($metodo_pago_id != 1)
                             <div class="mb-3 text-start bg-light p-3 rounded border">
                                 <label class="form-label small fw-bold text-secondary">
                                     <i class="bi bi-hash"></i> Nro. Operación / Referencia <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" wire:model.blur="referencia_pago" class="form-control" 
+                                <input type="text" wire:model.blur="referencia_pago" class="form-control"
                                     placeholder="Ej: 987654 (Yape/Plin) o últimos 4 dígitos tarjeta"
                                     required>
                                 <small class="text-muted d-block mt-1">
@@ -380,7 +380,7 @@
                         @endif
 
                         {{-- INPUT DE MONTO (Solo si ES efectivo pide vuelto, si es digital se asume exacto) --}}
-                        @if($metodo_pago_id == 1) 
+                        @if($metodo_pago_id == 1)
                             <div class="form-floating mb-3">
                                 <input type="number" step="0.01" wire:model.live="monto_recibido" class="form-control fs-4 fw-bold text-center" id="montoInput" placeholder="Monto">
                                 <label for="montoInput" class="text-center w-100">Dinero Recibido (S/)</label>
@@ -396,19 +396,19 @@
                                     <span class="h4 mb-0 fw-bold">S/ {{ number_format(abs($vuelto), 2) }}</span>
                                 </div>
                             @endif
-                        @endif                
+                        @endif
 
                     @if (session()->has('error_pago'))
                         <div class="text-danger text-center small mt-2 fw-bold">{{ session('error_pago') }}</div>
                     @endif
                 </div>
                 <div class="modal-footer border-0 pt-0 bg-light pb-4 px-4">
-                    <button wire:click="procesarVenta" class="btn btn-success w-100 btn-lg shadow fw-bold" 
+                    <button wire:click="procesarVenta" class="btn btn-success w-100 btn-lg shadow fw-bold"
                         {{-- Lógica de Bloqueo: --}}
                         {{-- 1. Si es Efectivo (ID 1) y falta dinero (vuelto < 0) -> Bloqueado --}}
                         {{-- 2. Si NO es Efectivo y la referencia está vacía -> Bloqueado --}}
                         @if( ($metodo_pago_id == 1 && $vuelto < 0) || ($metodo_pago_id != 1 && empty($referencia_pago)) )
-                            disabled 
+                            disabled
                         @endif>
                         <i class="bi bi-check-lg me-2"></i> CONFIRMAR PAGO
                     </button>
@@ -421,13 +421,13 @@
     {{-- MODAL ÉXITO (Ticket) --}}
     @if($isSuccessModalOpen && $ultimaVenta)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
-        <div class="modal-dialog modal-dialog-centered modal-sm"> 
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header border-0 pb-0 justify-content-end">
                      <button wire:click="cerrarSuccessModal" class="btn-close"></button>
                 </div>
                 <div class="modal-body text-center px-4 pt-0 pb-4">
-                    
+
                     <div class="mb-3">
                         <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm" style="width: 70px; height: 70px;">
                             <i class="bi bi-check-lg display-5"></i>
@@ -435,7 +435,7 @@
                     </div>
                     <h5 class="fw-bold mb-1">¡Pago Registrado!</h5>
                     <p class="text-muted small">La operación se registró correctamente.</p>
-                    
+
                     {{-- TICKET VIRTUAL --}}
                     <div class="bg-light p-3 rounded border text-start mb-3 font-monospace position-relative" style="font-size: 0.8rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                          {{-- Efecto de borde dentado (opcional, solo CSS) --}}
@@ -443,7 +443,7 @@
                             BELEN SPA<br>
                             TICKET #{{ str_pad($ultimaVenta->id, 6, '0', STR_PAD_LEFT) }}
                         </div>
-                        
+
                         <div class="d-flex flex-column gap-1 mb-2">
                             @foreach($ultimaVenta->detalles as $det)
                                 <div class="d-flex justify-content-between">
@@ -452,7 +452,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        
+
                         <div class="border-top pt-2 d-flex justify-content-between fw-bold fs-6">
                             <span>TOTAL:</span>
                             <span>S/ {{ number_format($ultimaVenta->total, 2) }}</span>
@@ -460,7 +460,7 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button class="btn btn-dark shadow-sm" 
+                        <button class="btn btn-dark shadow-sm"
                             onclick="window.open('{{ route('print.ticket', $ultimaVenta->id) }}', '_blank', 'width=400,height=600')">
                             <i class="bi bi-printer-fill me-2"></i> Imprimir Ticket
                         </button>
