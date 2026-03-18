@@ -28,9 +28,9 @@ class ReportesDescargables extends Component
 
         $pdf = Pdf::loadView('admin.pdf.reporte-rentabilidad', $datos);
         $pdf->setPaper('a4', 'portrait');
-        
+
         $nombreArchivo = 'Rentabilidad_' . $start->format('d-m-Y') . '_' . $end->format('d-m-Y') . '.pdf';
-        
+
         return response()->streamDownload(function() use ($pdf) {
             echo $pdf->output();
         }, $nombreArchivo);
@@ -45,9 +45,9 @@ class ReportesDescargables extends Component
 
         $pdf = Pdf::loadView('admin.pdf.reporte-ventas', $datos);
         $pdf->setPaper('a4', 'portrait');
-        
+
         $nombreArchivo = 'Ventas_' . $start->format('d-m-Y') . '_' . $end->format('d-m-Y') . '.pdf';
-        
+
         return response()->streamDownload(function() use ($pdf) {
             echo $pdf->output();
         }, $nombreArchivo);
@@ -62,9 +62,9 @@ class ReportesDescargables extends Component
 
         $pdf = Pdf::loadView('admin.pdf.reporte-clientes', $datos);
         $pdf->setPaper('a4', 'portrait');
-        
+
         $nombreArchivo = 'Clientes_' . $start->format('d-m-Y') . '_' . $end->format('d-m-Y') . '.pdf';
-        
+
         return response()->streamDownload(function() use ($pdf) {
             echo $pdf->output();
         }, $nombreArchivo);
@@ -79,9 +79,9 @@ class ReportesDescargables extends Component
 
         $pdf = Pdf::loadView('admin.pdf.reporte-caja', $datos);
         $pdf->setPaper('a4', 'landscape');
-        
+
         $nombreArchivo = 'Caja_Mensual_' . $start->format('d-m-Y') . '_' . $end->format('d-m-Y') . '.pdf';
-        
+
         return response()->streamDownload(function() use ($pdf) {
             echo $pdf->output();
         }, $nombreArchivo);
@@ -94,9 +94,9 @@ class ReportesDescargables extends Component
 
         $pdf = Pdf::loadView('admin.pdf.reporte-caja-diaria', $datos);
         $pdf->setPaper('a4', 'portrait');
-        
+
         $nombreArchivo = 'Caja_Diaria_' . $hoy->format('d-m-Y') . '.pdf';
-        
+
         return response()->streamDownload(function() use ($pdf) {
             echo $pdf->output();
         }, $nombreArchivo);
@@ -104,7 +104,7 @@ class ReportesDescargables extends Component
 
     private function calcularDatosRentabilidad($start, $end)
     {
-        // Total Servicios
+        // 1. Ranking Top 5 Servicios (Para la tabla)
         $rankingServicios = DB::table('detalles_venta')
             ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
             ->join('servicios', 'detalles_venta.id_servicio', '=', 'servicios.id')
@@ -121,22 +121,32 @@ class ReportesDescargables extends Component
             ->take(5)
             ->get();
 
-        $totalServicios = $rankingServicios->sum('total_generado');
+        // 2. Total Real de TODOS los Servicios (Para la caja verde)
+        // Ya no dependemos del ->sum('total_generado') del ranking, porque eso solo suma 5.
+        $totalServicios = DB::table('detalles_venta')
+            ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada')
+            ->where('detalles_venta.tipo_item', 'servicio')
+            ->sum('detalles_venta.subtotal') ?? 0;
 
-        // Costo Insumos
+        // 3. Costo Insumos (Corregido, sin filtrar por tipo de producto)
         $costoInsumosPeriodo = DB::table('movimientos_inventario')
             ->join('productos', 'movimientos_inventario.id_producto', '=', 'productos.id')
             ->whereBetween('movimientos_inventario.fecha', [$start, $end])
             ->where('movimientos_inventario.tipo', 'salida_insumo')
-            ->whereIn('productos.tipo', ['insumo', 'mixto'])
+            // ELIMINADA LA RESTRICCIÓN: ->whereIn('productos.tipo', ['insumo', 'mixto'])
             ->select(
                 DB::raw('ABS(SUM(movimientos_inventario.cantidad * productos.costo_compra)) as costo_total')
             )
             ->value('costo_total') ?? 0;
 
+        // 4. Ganancia Neta Servicios (Ahora sí cuadrará con la web)
         $gananciaNetaServicios = $totalServicios - $costoInsumosPeriodo;
 
-        // Productos
+        // ==========================================
+        // Productos (Esto estaba correcto, lo mantenemos igual)
+        // ==========================================
         $topProductosRentables = DB::table('detalles_venta')
             ->join('ventas', 'detalles_venta.id_venta', '=', 'ventas.id')
             ->join('productos', 'detalles_venta.id_producto', '=', 'productos.id')
@@ -226,7 +236,7 @@ class ReportesDescargables extends Component
                     DB::raw('COALESCE(estilistas.nombre, "-") as estilista')
                 )
                 ->get();
-            
+
             $venta->detalles = $detalles;
         }
 
@@ -297,17 +307,26 @@ class ReportesDescargables extends Component
 
         $promedioVisitas = $totalClientes > 0 ? ($totalVisitas / $totalClientes) : 0;
 
-        // Procedencia
+        // Procedencia (Corregido: Solo canales de captación de Clientes Nuevos)
+        // 1. Identificamos a los clientes cuya PRIMERA compra histórica fue en este periodo
+        $clientesNuevosIds = DB::table('ventas')
+            ->select('id_cliente', DB::raw('MIN(fecha) as primera_compra'))
+            ->whereNotNull('id_cliente')
+            ->where('estado', 'pagada')
+            ->groupBy('id_cliente')
+            ->havingBetween('primera_compra', [$start, $end])
+            ->pluck('id_cliente');
+
+        // 2. Agrupamos solo a esos clientes nuevos por su canal de procedencia
         $procedencia = DB::table('clientes')
-            ->join('ventas', 'clientes.id', '=', 'ventas.id_cliente')
-            ->whereBetween('ventas.fecha', [$start, $end])
-            ->where('ventas.estado', 'pagada')
-            ->whereNotNull('clientes.procedencia')
+            ->whereIn('id', $clientesNuevosIds)
+            ->where('procedencia', '!=', 'Cliente Antiguo') // Filtramos etiquetas legacy
+            ->whereNotNull('procedencia')
             ->select(
-                'clientes.procedencia',
-                DB::raw('COUNT(DISTINCT clientes.id) as total')
+                'procedencia',
+                DB::raw('COUNT(id) as total')
             )
-            ->groupBy('clientes.procedencia')
+            ->groupBy('procedencia')
             ->orderByDesc('total')
             ->get();
 
