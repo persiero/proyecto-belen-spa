@@ -44,6 +44,9 @@ class GestionPos extends Component
     public $monto_recibido = 0;
     public $vuelto = 0;
     public $referencia_pago = null; // <--- NUEVA VARIABLE
+    // NUEVAS VARIABLES PARA PAGO MIXTO
+    public $listaPagos = []; // Array que guardará los múltiples pagos
+    public $total_pagado = 0; // Suma de todos los pagos en la lista
 
     // ... propiedades ...
     public $isSuccessModalOpen = false;
@@ -353,19 +356,81 @@ class GestionPos extends Component
             return;
         }
         $this->calculateTotal();
+
+        // Limpiar lista de pagos cada vez que se abre el modal
+        $this->listaPagos = [];
+        $this->total_pagado = 0;
+
         $this->isPaymentModalOpen = true;
+    }
+
+    // ==========================================
+    // LÓGICA DE PAGOS MIXTOS
+    // ==========================================
+    public function agregarPago()
+    {
+        // 1. Validaciones básicas del pago a agregar
+        $monto = (float) $this->monto_recibido;
+        if ($monto <= 0) {
+            session()->flash('error_pago', 'El monto a agregar debe ser mayor a 0.');
+            return;
+        }
+        if ($this->metodo_pago_id != 1 && empty(trim($this->referencia_pago))) {
+            session()->flash('error_pago', 'Ingrese el número de operación para este método.');
+            return;
+        }
+
+        // 2. Obtener el nombre del método
+        $metodo = MetodoPago::find($this->metodo_pago_id);
+
+        // 3. Agregar a la lista
+        $this->listaPagos[] = [
+            'metodo_pago_id' => $this->metodo_pago_id,
+            'nombre_metodo' => $metodo ? $metodo->nombre : 'Desconocido',
+            'monto' => $monto,
+            'referencia' => $this->metodo_pago_id == 1 ? null : trim($this->referencia_pago),
+        ];
+
+        // 4. Recalcular y preparar el siguiente pago
+        $this->actualizarTotalPagado();
+        $this->referencia_pago = null; // Limpiamos referencia
+    }
+
+    public function quitarPago($index)
+    {
+        unset($this->listaPagos[$index]);
+        $this->listaPagos = array_values($this->listaPagos); // Reindexar
+        $this->actualizarTotalPagado();
+    }
+
+    public function actualizarTotalPagado()
+    {
+        $this->total_pagado = array_sum(array_column($this->listaPagos, 'monto'));
+
+        // Calcular vuelto real
+        $this->vuelto = $this->total_pagado > $this->total ? $this->total_pagado - $this->total : 0;
+
+        // Sugerir el monto restante en el input
+        $restante = $this->total - $this->total_pagado;
+        $this->monto_recibido = $restante > 0 ? $restante : 0;
     }
 
     public function procesarVenta()
     {
-        if ($this->monto_recibido < $this->total) {
-            session()->flash('error_pago', 'El monto recibido es menor al total.');
+        // LÓGICA INTELIGENTE: Si no han agregado pagos a la lista manualmente,
+        // pero tienen un monto ingresado (flujo tradicional de 1 solo pago), lo auto-agregamos.
+        if (empty($this->listaPagos) && (float)$this->monto_recibido > 0) {
+            $this->agregarPago();
+        }
+
+        // Validaciones Finales de Pago
+        if (empty($this->listaPagos)) {
+            session()->flash('error_pago', 'No se ha registrado ningún pago.');
             return;
         }
 
-        // NUEVA VALIDACIÓN: Si NO es efectivo, la referencia es obligatoria
-        if ($this->metodo_pago_id != 1 && empty(trim($this->referencia_pago))) {
-            session()->flash('error_pago', 'Debe ingresar el número de operación o referencia del pago.');
+        if ($this->total_pagado < $this->total) {
+            session()->flash('error_pago', 'Falta dinero. Total pagado: S/ ' . number_format($this->total_pagado, 2) . ' de S/ ' . number_format($this->total, 2));
             return;
         }
 
@@ -448,17 +513,17 @@ class GestionPos extends Component
                 ]);
             }
 
-            // 3. Registrar Pago
-            Pago::create([
-                'id_venta' => $venta->id,
-                'id_metodo_pago' => $this->metodo_pago_id,
-                'monto' => $this->total, // Asumiendo pago total por ahora
-                'fecha' => Carbon::now(),
-                // LÓGICA DE REFERENCIA
-                // Si es efectivo (1), va null. Si no, guardamos lo que escribió.
-                'referencia' => $this->metodo_pago_id == 1 ? null : $this->referencia_pago,
-                'confirmado' => true
-            ]);
+            // 3. Registrar Pagos Mixtos (NUEVO BUCLE)
+            foreach ($this->listaPagos as $pago) {
+                Pago::create([
+                    'id_venta' => $venta->id,
+                    'id_metodo_pago' => $pago['metodo_pago_id'],
+                    'monto' => $pago['monto'],
+                    'fecha' => Carbon::now(),
+                    'referencia' => $pago['referencia'],
+                    'confirmado' => true
+                ]);
+            }
 
             // 4. Cerrar Turno si existe
             if ($this->turno_id) {
@@ -497,6 +562,8 @@ class GestionPos extends Component
         $this->monto_recibido = 0;
         $this->vuelto = 0;
         $this->referencia_pago = null;
+        $this->listaPagos = []; // Nuevo
+        $this->total_pagado = 0; // Nuevo
         $this->limpiarCliente();
     }
 

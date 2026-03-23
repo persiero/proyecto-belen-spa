@@ -324,93 +324,134 @@
         </div>
     </div>
 
-    {{-- MODAL DE PAGO (Mejorado) --}}
+    {{-- MODAL DE PAGO MIXTO (Mejorado) --}}
     @if($isPaymentModalOpen)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- Ampliamos a modal-lg --}}
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-success text-white border-0">
+                <div class="modal-header bg-success text-white border-0 py-3">
                     <h5 class="modal-title fw-bold"><i class="bi bi-wallet2 me-2"></i> Finalizar Cobro</h5>
                     <button wire:click="closePaymentModal" class="btn-close btn-close-white"></button>
                 </div>
+
                 <div class="modal-body p-4 bg-light">
-                    <div class="text-center mb-4">
-                        <h6 class="text-muted text-uppercase small ls-1">Monto Total a Cobrar</h6>
-                        <h1 class="display-4 fw-bold text-success">S/ {{ number_format($total, 2) }}</h1>
-                    </div>
+                    <div class="row g-4">
 
-                    <div class="card border-0 shadow-sm p-3 mb-3">
-                        <label class="form-label fw-bold mb-2">Método de Pago</label>
-                        <div class="d-flex gap-2 mb-3">
-                            @php
-                                $iconosMetodo = [
-                                    'efectivo' => 'bi-cash-stack',
-                                    'tarjeta' => 'bi-credit-card',
-                                    'yape' => 'bi-qr-code',
-                                    'plin' => 'bi-qr-code',
-                                    'transferencia' => 'bi-bank',
-                                ];
-                            @endphp
-                            @foreach($metodos as $m)
-                                <button type="button"
-                                    class="btn flex-grow-1 {{ $metodo_pago_id == $m->id ? 'btn-primary' : 'btn-outline-secondary' }}"
-                                    wire:click="cambiarMetodoPago({{ $m->id }})">
+                        {{-- COLUMNA IZQUIERDA: AGREGAR PAGO --}}
+                        <div class="col-md-7 border-end pe-md-4">
+                            <h6 class="fw-bold mb-3 text-secondary text-uppercase small">1. Seleccionar Método</h6>
 
-                                    <i class="bi {{ $iconosMetodo[$m->nombre] ?? 'bi-wallet2' }} fs-4"></i>
-                                    <br>
-                                    <small class="fw-bold">{{ ucfirst($m->nombre) }}</small>
-                                </button>
-                            @endforeach
-                        </div>
-
-                        {{-- INPUT DE REFERENCIA (Solo si NO es efectivo) --}}
-                        {{-- Asumimos que ID 1 es Efectivo. Ajusta si tu ID es otro --}}
-                        @if($metodo_pago_id != 1)
-                            <div class="mb-3 text-start bg-light p-3 rounded border">
-                                <label class="form-label small fw-bold text-secondary">
-                                    <i class="bi bi-hash"></i> Nro. Operación / Referencia <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" wire:model.blur="referencia_pago" class="form-control"
-                                    placeholder="Ej: 987654 (Yape/Plin) o últimos 4 dígitos tarjeta"
-                                    required>
-                                <small class="text-muted d-block mt-1">
-                                    <i class="bi bi-info-circle"></i> Campo obligatorio para pagos digitales
-                                </small>
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                @php
+                                    $iconosMetodo = [
+                                        'efectivo' => 'bi-cash-stack',
+                                        'tarjeta' => 'bi-credit-card',
+                                        'yape' => 'bi-qr-code',
+                                        'plin' => 'bi-qr-code',
+                                        'transferencia' => 'bi-bank',
+                                    ];
+                                @endphp
+                                @foreach($metodos as $m)
+                                    <button type="button"
+                                        class="btn flex-grow-1 py-2 {{ $metodo_pago_id == $m->id ? 'btn-primary shadow-sm border-primary' : 'btn-outline-secondary bg-white border' }}"
+                                        wire:click="cambiarMetodoPago({{ $m->id }})">
+                                        <i class="bi {{ $iconosMetodo[strtolower($m->nombre)] ?? 'bi-wallet2' }} fs-5"></i>
+                                        <span class="d-block small fw-bold mt-1">{{ ucfirst($m->nombre) }}</span>
+                                    </button>
+                                @endforeach
                             </div>
-                        @endif
 
-                        {{-- INPUT DE MONTO (Solo si ES efectivo pide vuelto, si es digital se asume exacto) --}}
-                        @if($metodo_pago_id == 1)
-                            <div class="form-floating mb-3">
-                                <input type="number" step="0.01" wire:model.live="monto_recibido" class="form-control fs-4 fw-bold text-center" id="montoInput" placeholder="Monto">
-                                <label for="montoInput" class="text-center w-100">Dinero Recibido (S/)</label>
-                            </div>
-                            @if($vuelto >= 0)
-                                <div class="alert alert-success d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm">
-                                    <span class="fw-bold"><i class="bi bi-arrow-return-left me-2"></i> VUELTO:</span>
-                                    <span class="h4 mb-0 fw-bold">S/ {{ number_format($vuelto, 2) }}</span>
+                            <div class="row g-2 mb-3">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="number" step="0.01" wire:model.live="monto_recibido" class="form-control fs-4 fw-bold text-center text-success border-success" id="montoInput" placeholder="Monto">
+                                        <label for="montoInput" class="text-center w-100 fw-bold">Monto a pagar (S/)</label>
+                                    </div>
                                 </div>
-                            @else
-                                <div class="alert alert-danger d-flex align-items-center justify-content-between mb-0 border-0 shadow-sm">
-                                    <span class="fw-bold"><i class="bi bi-exclamation-circle me-2"></i> FALTA:</span>
-                                    <span class="h4 mb-0 fw-bold">S/ {{ number_format(abs($vuelto), 2) }}</span>
+
+                                @if($metodo_pago_id != 1)
+                                <div class="col-12">
+                                    <div class="form-floating mt-2">
+                                        <input type="text" wire:model.blur="referencia_pago" class="form-control bg-white" id="refInput" placeholder="Nro. Operación">
+                                        <label for="refInput">Nro. Operación / Referencia <span class="text-danger">*</span></label>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+
+                            <button wire:click="agregarPago" class="btn btn-outline-success w-100 fw-bold border-2 py-2 shadow-sm">
+                                <i class="bi bi-plus-circle me-2"></i> AGREGAR A LA LISTA DE PAGOS
+                            </button>
+
+                            @if (session()->has('error_pago'))
+                                <div class="text-danger text-center small mt-3 fw-bold bg-danger bg-opacity-10 p-2 rounded">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ session('error_pago') }}
                                 </div>
                             @endif
-                        @endif
+                        </div>
 
-                    @if (session()->has('error_pago'))
-                        <div class="text-danger text-center small mt-2 fw-bold">{{ session('error_pago') }}</div>
-                    @endif
+                        {{-- COLUMNA DERECHA: RESUMEN Y LISTA --}}
+                        <div class="col-md-5 ps-md-4 d-flex flex-column">
+                            <div class="text-center mb-3 bg-white p-3 rounded shadow-sm border">
+                                <h6 class="text-muted text-uppercase small ls-1 mb-1">Total del Ticket</h6>
+                                <h2 class="fw-bold text-dark mb-0">S/ {{ number_format($total, 2) }}</h2>
+                            </div>
+
+                            {{-- LISTA DE PAGOS AÑADIDOS --}}
+                            <div class="bg-white rounded border flex-grow-1 p-3 mb-3 d-flex flex-column">
+                                <h6 class="small fw-bold text-muted border-bottom pb-2 mb-2"><i class="bi bi-list-check me-1"></i> Pagos Registrados</h6>
+
+                                <div class="flex-grow-1" style="max-height: 150px; overflow-y: auto;">
+                                    @forelse($listaPagos as $index => $pago)
+                                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom small">
+                                            <div>
+                                                <span class="fw-bold text-dark text-uppercase"><i class="bi bi-check2-circle text-success me-1"></i> {{ $pago['nombre_metodo'] }}</span>
+                                                @if($pago['referencia'])
+                                                    <br><span class="text-muted ms-3" style="font-size: 0.7rem;">Ref: {{ $pago['referencia'] }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="text-end d-flex align-items-center">
+                                                <span class="fw-bold text-dark fs-6">S/ {{ number_format($pago['monto'], 2) }}</span>
+                                                <button wire:click="quitarPago({{ $index }})" class="btn btn-link text-danger p-0 ms-2 text-decoration-none" title="Quitar pago">
+                                                    <i class="bi bi-x-circle-fill fs-5"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="text-center text-muted small py-4 opacity-50 h-100 d-flex flex-column justify-content-center">
+                                            <i class="bi bi-inbox fs-3 mb-1"></i>
+                                            Aún no hay pagos añadidos.
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            {{-- ESTADO DEL COBRO (FALTA / VUELTO) --}}
+                            @php
+                                // Calculamos visualmente cuánto falta o sobra
+                                // (Si la lista está vacía, calculamos en base a lo que haya escrito en Efectivo)
+                                $total_pagado_ui = count($listaPagos) > 0 ? $total_pagado : (float)$monto_recibido;
+                                $diferencia = $total_pagado_ui - $total;
+                            @endphp
+
+                            <div class="p-3 rounded border shadow-sm {{ $diferencia >= 0 ? 'bg-success bg-opacity-10 border-success' : 'bg-warning bg-opacity-10 border-warning' }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-uppercase {{ $diferencia >= 0 ? 'text-success' : 'text-warning text-dark' }}">
+                                        {{ $diferencia >= 0 ? 'VUELTO:' : 'FALTA:' }}
+                                    </span>
+                                    <span class="h4 mb-0 fw-bold {{ $diferencia >= 0 ? 'text-success' : 'text-dark' }}">
+                                        S/ {{ number_format(abs($diferencia), 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 bg-light pb-4 px-4">
+
+                <div class="modal-footer border-0 pt-0 bg-light pb-4 px-4 mt-2">
                     <button wire:click="procesarVenta" class="btn btn-success w-100 btn-lg shadow fw-bold"
-                        {{-- Lógica de Bloqueo: --}}
-                        {{-- 1. Si es Efectivo (ID 1) y falta dinero (vuelto < 0) -> Bloqueado --}}
-                        {{-- 2. Si NO es Efectivo y la referencia está vacía -> Bloqueado --}}
-                        @if( ($metodo_pago_id == 1 && $vuelto < 0) || ($metodo_pago_id != 1 && empty($referencia_pago)) )
-                            disabled
-                        @endif>
-                        <i class="bi bi-check-lg me-2"></i> CONFIRMAR PAGO
+                        @if($diferencia < 0) disabled @endif>
+                        <i class="bi bi-receipt me-2"></i> CONFIRMAR E IMPRIMIR TICKET
                     </button>
                 </div>
             </div>
