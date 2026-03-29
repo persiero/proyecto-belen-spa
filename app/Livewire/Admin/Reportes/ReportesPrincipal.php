@@ -150,7 +150,9 @@ class ReportesPrincipal extends Component
         // 3. FINANZAS: Métodos de Pago
         $metodosPago = DB::table('pagos')
             ->join('metodos_pago', 'pagos.id_metodo_pago', '=', 'metodos_pago.id')
-            ->whereBetween('pagos.fecha', [$start, $end])
+            ->join('ventas', 'pagos.id_venta', '=', 'ventas.id') // <-- CONECTAMOS CON VENTAS
+            ->whereBetween('ventas.fecha', [$start, $end])
+            ->where('ventas.estado', 'pagada') // <-- FILTRAMOS SOLO LAS PAGADAS
             ->select('metodos_pago.nombre', DB::raw('SUM(pagos.monto) as total'))
             ->groupBy('metodos_pago.nombre')->get();
 
