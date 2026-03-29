@@ -53,9 +53,13 @@ class GestionProductos extends Component
     #[Title('Gestión de Productos')]
     public function render()
     {
-        $productos = Producto::where('nombre', 'like', '%' . $this->search . '%')
-            ->orWhere('codigo_barras', 'like', '%' . $this->search . '%')
-            ->orderBy('id', 'desc')
+        $productos = Producto::where(function($query) {
+                // Agrupamos la búsqueda para que el OR no rompa futuros filtros
+                $query->where('nombre', 'like', '%' . $this->search . '%')
+                      ->orWhere('codigo_barras', 'like', '%' . $this->search . '%');
+            })
+            // Si algún día quieres filtrar inactivos, solo agregarías aquí: ->where('activo', true)
+            ->orderBy('id', 'desc') // Mantiene los más nuevos arriba
             ->paginate(10);
 
         $afectaciones = AfectacionIgv::where('gravado', true)->get(); // Prioridad gravadas

@@ -123,6 +123,7 @@ class GestionPos extends Component
                     $q->where('nombre', 'like', '%' . $this->searchProducto . '%')
                       ->orWhere('codigo_barras', 'like', '%' . $this->searchProducto . '%');
                 })
+                ->orderBy('nombre', 'asc') // <--- AQUÍ ESTÁ LA MAGIA (Orden alfabético)
                 ->take(10)
                 ->get();
         }
