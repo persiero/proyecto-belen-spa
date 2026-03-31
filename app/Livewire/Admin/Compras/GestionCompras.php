@@ -25,7 +25,7 @@ class GestionCompras extends Component
     // Detalle (Carrito de compra)
     public $cart = [];
     public $total = 0.00;
-    
+
     // Buscador
     public $searchProducto = '';
 
@@ -38,7 +38,7 @@ class GestionCompras extends Component
     public function render()
     {
         $proveedores = Proveedor::where('activo', true)->orderBy('nombre_empresa')->get();
-        
+
         // BÚSQUEDA INTELIGENTE (Nombre o Código)
         $productos = [];
         if(strlen($this->searchProducto) > 1) { // Solo busca si escriben algo
@@ -47,6 +47,7 @@ class GestionCompras extends Component
                     $q->where('nombre', 'like', '%' . $this->searchProducto . '%')
                       ->orWhere('codigo_barras', 'like', '%' . $this->searchProducto . '%');
                 })
+                ->orderBy('nombre', 'asc') // <--- ¡AQUÍ ESTÁ LA MAGIA!
                 ->take(10) // Limitamos a 10 para no saturar
                 ->get();
         } elseif (empty($this->cart)) {
@@ -61,7 +62,7 @@ class GestionCompras extends Component
     public function addProducto($id)
     {
         $prod = Producto::find($id);
-        
+
         // Verificar si ya está en la lista
         foreach($this->cart as $item) {
             if($item['id'] == $id) return; // Ya está agregado
@@ -75,7 +76,7 @@ class GestionCompras extends Component
             'costo' => $prod->costo_compra, // Sugerimos el último costo registrado
             'subtotal' => $prod->costo_compra
         ];
-        
+
         $this->calculateTotal();
         $this->searchProducto = '';
     }
@@ -85,13 +86,13 @@ class GestionCompras extends Component
     {
         // Validar que no metan texto o negativos
         if (!is_numeric($value)) $value = 0;
-        
+
         $this->cart[$index][$field] = $value;
-        
+
         if($field == 'cantidad' && $value < 1) $this->cart[$index]['cantidad'] = 1;
         if($field == 'costo' && $value < 0) $this->cart[$index]['costo'] = 0;
 
-        $this->cart[$index]['subtotal'] = 
+        $this->cart[$index]['subtotal'] =
             $this->cart[$index]['cantidad'] * $this->cart[$index]['costo'];
 
         $this->calculateTotal();
@@ -144,7 +145,7 @@ class GestionCompras extends Component
 
                 // Actualizar Producto Maestro
                 $prod = Producto::find($item['id']);
-                
+
                 // --- LÓGICA INTELIGENTE DE DOBLE STOCK ---
                 if ($prod->tipo == 'insumo') {
                     // Si es insumo puro, va directo al almacén interno
@@ -154,7 +155,7 @@ class GestionCompras extends Component
                     // (Si luego quieren usarlo internamente, harán una Transferencia)
                     $prod->increment('stock_actual', $item['cantidad']);
                 }
-                
+
                 // Actualizar Costo
                 $prod->update(['costo_compra' => $item['costo']]);
 
