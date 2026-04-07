@@ -4,7 +4,7 @@
 
     {{-- ALERTAS --}}
     @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" 
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert"
              style="background-color: #d1e7dd; color: #0f5132;">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -47,7 +47,7 @@
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
                                         {{-- LOGO PARA EMPRESAS O AVATAR PARA PERSONAS --}}
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm me-3" 
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm me-3"
                                              style="width: 40px; height: 40px; background-color: {{ $item->tipo_documento == 'RUC' ? '#212124' : ($item->genero == 'Masculino' ? '#4a6fa5' : 'var(--belen-grey)') }};">
                                             @if($item->tipo_documento == 'RUC')
                                                 <i class="bi bi-building"></i>
@@ -132,7 +132,7 @@
                 <div class="modal-body p-4 bg-light">
                     <form>
                         <div class="row g-3">
-                            
+
                             {{-- SECCIÓN DE BÚSQUEDA --}}
                             <div class="col-12"><label class="form-label fw-bold text-secondary small text-uppercase border-bottom w-100 pb-1">Búsqueda por Documento</label></div>
 
@@ -152,7 +152,7 @@
                                 </label>
                                 <div class="input-group shadow-sm">
                                     <input type="text" wire:model="numero_documento" class="form-control @error('numero_documento') is-invalid @enderror" placeholder="Ingrese número...">
-                                    
+
                                     {{-- BOTÓN BUSCAR CON API --}}
                                     @if($tipo_documento == 'DNI' || $tipo_documento == 'RUC')
                                         <button wire:click="buscarDocumento" wire:loading.attr="disabled" type="button" class="btn btn-primary text-dark fw-bold">
@@ -179,7 +179,7 @@
                                     <label class="form-label">Apellidos</label>
                                     <input type="text" wire:model="apellido" class="form-control shadow-sm">
                                 </div>
-                                
+
                                 <div class="col-md-3">
                                     <label class="form-label">Fecha Nac.</label>
                                     <input type="date" wire:model="fecha_nacimiento" class="form-control shadow-sm text-secondary">
@@ -228,6 +228,7 @@
                                     <option value="">-- Seleccionar --</option>
                                     <option value="Cliente Antiguo">⭐ Cliente Antiguo</option>
                                     <option value="Redes Sociales">Redes Sociales</option>
+                                    <option value="Publicidad">Publicidad</option>
                                     <option value="Referencia">Referido</option>
                                     <option value="Volanteo">Volanteo</option>
                                     <option value="Ubicacion">Pasaba por aquí</option>
@@ -238,7 +239,7 @@
                         </div>
                     </form>
                 </div>
-                
+
                 <div class="modal-footer bg-white py-3">
                     <button wire:click="closeModal()" type="button" class="btn btn-light border">Cancelar</button>
                     <button wire:click="store()" type="button" class="btn btn-primary px-4 shadow-sm text-dark fw-bold"><i class="bi bi-save me-1"></i> Guardar</button>

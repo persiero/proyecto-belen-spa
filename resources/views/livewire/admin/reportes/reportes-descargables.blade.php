@@ -21,7 +21,7 @@
 
     {{-- GRID DE REPORTES --}}
     <div class="row g-4">
-        
+
         {{-- REPORTE DIARIO DE CAJA (DESTACADO) --}}
         <div class="col-12">
             <div class="card border-2 shadow-lg" style="border-color: var(--belen-cream) !important;">
@@ -50,24 +50,38 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-square bg-dark bg-opacity-10 rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-graph-up-arrow fs-4" style="color: var(--belen-dark);"></i>
+                        <div class="icon-square bg-primary bg-opacity-10 text-primary rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-graph-up-arrow fs-4"></i>
                         </div>
                         <h5 class="card-title mb-0 fw-bold">Reporte de Rentabilidad</h5>
                     </div>
                     <p class="text-muted small mb-3">
-                        Análisis completo de ganancias. Incluye: Rentabilidad de servicios y productos, costos, ganancias netas, top 5 servicios y productos.
+                        Análisis de ganancias netas. Compara ingresos de servicios vs costo de insumos, y ventas de productos vs costo de compra.
                     </p>
+
                     <div class="d-flex gap-2">
-                        <button wire:click="descargarRentabilidadPDF" class="btn btn-danger btn-sm flex-fill">
-                            <i class="bi bi-file-pdf me-1"></i> Descargar PDF
+                        {{-- BOTÓN PDF --}}
+                        <button wire:click="descargarRentabilidadPDF"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarRentabilidadPDF"
+                                class="btn btn-danger btn-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i wire:loading.remove wire:target="descargarRentabilidadPDF" class="bi bi-file-pdf me-2"></i>
+                            <span wire:loading wire:target="descargarRentabilidadPDF" class="spinner-border spinner-border-sm me-2"></span>
+                            PDF
                         </button>
-                        <button wire:click="descargarRentabilidadExcel" class="btn btn-success btn-sm flex-fill" disabled>
-                            <i class="bi bi-file-excel me-1"></i> Excel
+
+                        {{-- BOTÓN EXCEL (CSV) --}}
+                        <button wire:click="descargarRentabilidadCSV"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarRentabilidadCSV"
+                                class="btn btn-success btn-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i wire:loading.remove wire:target="descargarRentabilidadCSV" class="bi bi-file-excel me-2"></i>
+                            <span wire:loading wire:target="descargarRentabilidadCSV" class="spinner-border spinner-border-sm me-2"></span>
+                            Excel
                         </button>
                     </div>
-                    <small class="text-muted d-block mt-2">
-                        <i class="bi bi-check-circle me-1"></i> PDF disponible | Excel próximamente
+                    <small class="text-muted d-block mt-2 text-center">
+                        <i class="bi bi-info-circle me-1"></i> Selecciona el formato de tu preferencia
                     </small>
                 </div>
             </div>
@@ -86,16 +100,41 @@
                     <p class="text-muted small mb-3">
                         Detalle completo de todas las transacciones. Incluye: Fecha, cliente, servicios/productos vendidos, total, método de pago y estilista.
                     </p>
+
                     <div class="d-flex gap-2">
-                        <button wire:click="descargarVentasPDF" class="btn btn-danger btn-sm flex-fill">
-                            <i class="bi bi-file-pdf me-1"></i> Descargar PDF
+                        {{-- BOTÓN PDF --}}
+                        <button wire:click="descargarVentasPDF"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarVentasPDF"
+                                class="btn btn-danger btn-sm flex-fill d-flex align-items-center justify-content-center">
+
+                            {{-- Ícono normal (se oculta al cargar) --}}
+                            <i wire:loading.remove wire:target="descargarVentasPDF" class="bi bi-file-pdf me-2"></i>
+
+                            {{-- Spinner de carga (aparece al cargar) --}}
+                            <span wire:loading wire:target="descargarVentasPDF" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+
+                            Descargar PDF
                         </button>
-                        <button wire:click="descargarVentasExcel" class="btn btn-success btn-sm flex-fill" disabled>
-                            <i class="bi bi-file-excel me-1"></i> Excel
+
+                        {{-- BOTÓN EXCEL (CSV) --}}
+                        <button wire:click="descargarVentasCSV"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarVentasCSV"
+                                class="btn btn-success btn-sm flex-fill d-flex align-items-center justify-content-center">
+
+                            {{-- Ícono normal (se oculta al cargar) --}}
+                            <i wire:loading.remove wire:target="descargarVentasCSV" class="bi bi-file-excel me-2"></i>
+
+                            {{-- Spinner de carga (aparece al cargar) --}}
+                            <span wire:loading wire:target="descargarVentasCSV" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+
+                            Descargar Excel
                         </button>
                     </div>
-                    <small class="text-muted d-block mt-2">
-                        <i class="bi bi-check-circle me-1"></i> PDF disponible | Excel próximamente
+
+                    <small class="text-muted d-block mt-2 text-center">
+                        <i class="bi bi-info-circle me-1"></i> Selecciona el formato de tu preferencia
                     </small>
                 </div>
             </div>
@@ -106,52 +145,80 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-square bg-warning bg-opacity-10 text-warning rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-people-fill fs-4"></i>
+                        <div class="icon-square bg-info bg-opacity-10 text-info rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-people fs-4"></i>
                         </div>
                         <h5 class="card-title mb-0 fw-bold">Reporte de Clientes</h5>
                     </div>
                     <p class="text-muted small mb-3">
-                        Top 20 clientes más frecuentes. Incluye: Nombre, edad, cantidad de visitas, total gastado, procedencia y última visita.
+                        Estadísticas de captación y retención. Incluye: Top clientes frecuentes, canales de adquisición y promedios de visita.
                     </p>
+
                     <div class="d-flex gap-2">
-                        <button wire:click="descargarClientesPDF" class="btn btn-danger btn-sm flex-fill">
-                            <i class="bi bi-file-pdf me-1"></i> Descargar PDF
+                        {{-- BOTÓN PDF --}}
+                        <button wire:click="descargarClientesPDF"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarClientesPDF"
+                                class="btn btn-danger btn-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i wire:loading.remove wire:target="descargarClientesPDF" class="bi bi-file-pdf me-2"></i>
+                            <span wire:loading wire:target="descargarClientesPDF" class="spinner-border spinner-border-sm me-2"></span>
+                            PDF
                         </button>
-                        <button wire:click="descargarClientesExcel" class="btn btn-success btn-sm flex-fill" disabled>
-                            <i class="bi bi-file-excel me-1"></i> Excel
+
+                        {{-- BOTÓN EXCEL (CSV) --}}
+                        <button wire:click="descargarClientesCSV"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarClientesCSV"
+                                class="btn btn-success btn-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i wire:loading.remove wire:target="descargarClientesCSV" class="bi bi-file-excel me-2"></i>
+                            <span wire:loading wire:target="descargarClientesCSV" class="spinner-border spinner-border-sm me-2"></span>
+                            Excel
                         </button>
                     </div>
-                    <small class="text-muted d-block mt-2">
-                        <i class="bi bi-check-circle me-1"></i> PDF disponible | Excel próximamente
+                    <small class="text-muted d-block mt-2 text-center">
+                        <i class="bi bi-info-circle me-1"></i> Selecciona el formato de tu preferencia
                     </small>
                 </div>
             </div>
         </div>
 
-        {{-- REPORTE DE CAJA MENSUAL --}}
+        {{-- REPORTE DE CAJA --}}
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="icon-square bg-light rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-wallet2 fs-4 text-purple"></i>
+                        <div class="icon-square bg-warning bg-opacity-10 text-warning rounded-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-safe fs-4"></i>
                         </div>
-                        <h5 class="card-title mb-0 fw-bold">Reporte Mensual de Caja</h5>
+                        <h5 class="card-title mb-0 fw-bold">Reporte de Caja Mensual</h5>
                     </div>
                     <p class="text-muted small mb-3">
-                        Detalle completo del periodo seleccionado. Incluye: Aperturas/cierres por cajera, salidas de dinero con descripción y totales del periodo.
+                        Auditoría de movimientos de dinero. Incluye: Aperturas, cierres, arqueos (monto real vs sistema), diferencias y egresos detallados.
                     </p>
+
                     <div class="d-flex gap-2">
-                        <button wire:click="descargarCajaPDF" class="btn btn-danger btn-sm flex-fill">
-                            <i class="bi bi-file-pdf me-1"></i> Descargar PDF
+                        {{-- BOTÓN PDF --}}
+                        <button wire:click="descargarCajaPDF"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarCajaPDF"
+                                class="btn btn-danger btn-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i wire:loading.remove wire:target="descargarCajaPDF" class="bi bi-file-pdf me-2"></i>
+                            <span wire:loading wire:target="descargarCajaPDF" class="spinner-border spinner-border-sm me-2"></span>
+                            PDF
                         </button>
-                        <button class="btn btn-success btn-sm flex-fill" disabled>
-                            <i class="bi bi-file-excel me-1"></i> Excel
+
+                        {{-- BOTÓN EXCEL (CSV) --}}
+                        <button wire:click="descargarCajaCSV"
+                                wire:loading.attr="disabled"
+                                wire:target="descargarCajaCSV"
+                                class="btn btn-success btn-sm flex-fill d-flex align-items-center justify-content-center">
+                            <i wire:loading.remove wire:target="descargarCajaCSV" class="bi bi-file-excel me-2"></i>
+                            <span wire:loading wire:target="descargarCajaCSV" class="spinner-border spinner-border-sm me-2"></span>
+                            Excel
                         </button>
                     </div>
-                    <small class="text-muted d-block mt-2">
-                        <i class="bi bi-check-circle me-1"></i> PDF disponible | Excel próximamente
+                    <small class="text-muted d-block mt-2 text-center">
+                        <i class="bi bi-info-circle me-1"></i> Selecciona el formato de tu preferencia
                     </small>
                 </div>
             </div>
@@ -169,7 +236,7 @@
                     <strong>Reporte Diario:</strong> Descarga el resumen del día actual con un solo clic (no requiere seleccionar fechas).
                 </p>
                 <p class="mb-0 small">
-                    <strong>Reportes con Rango:</strong> Selecciona el periodo deseado y descarga: <strong>Rentabilidad</strong>, <strong>Ventas</strong>, 
+                    <strong>Reportes con Rango:</strong> Selecciona el periodo deseado y descarga: <strong>Rentabilidad</strong>, <strong>Ventas</strong>,
                     <strong>Clientes</strong> y <strong>Caja Mensual</strong>.
                 </p>
             </div>
