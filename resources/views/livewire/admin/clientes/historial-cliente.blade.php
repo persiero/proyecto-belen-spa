@@ -3,11 +3,11 @@
     <div class="modal fade show d-block" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(3px); z-index: 1060;" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-                
+
                 {{-- HEADER --}}
                 <div class="modal-header px-4 py-3" style="background: linear-gradient(135deg, var(--belen-dark) 0%, #2c3e50 100%); color: white;">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow" 
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow"
                              style="width: 50px; height: 50px; background-color: {{ $cliente->tipo_documento == 'RUC' ? '#212124' : ($cliente->genero == 'Masculino' ? '#4a6fa5' : 'var(--belen-grey)') }};">
                             @if($cliente->tipo_documento == 'RUC')
                                 <i class="bi bi-building fs-5"></i>
@@ -140,6 +140,23 @@
                                     </div>
                                 @endif
 
+                                {{-- NUEVO: OBSERVACIONES DEL TURNO --}}
+                                @if(!empty($turno->observaciones))
+                                    <div class="mb-3 mt-3">
+                                        <div class="p-3 bg-warning bg-opacity-10 border border-warning rounded" style="border-left: 4px solid #ffc107 !important;">
+                                            <div class="d-flex text-dark">
+                                                <i class="bi bi-chat-square-text-fill text-warning me-2 mt-1"></i>
+                                                <div>
+                                                    <strong class="small text-uppercase d-block mb-1 opacity-75">Notas de la atención:</strong>
+                                                    <span class="fst-italic" style="font-size: 0.9rem;">
+                                                        "{{ $turno->observaciones }}"
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 {{-- TOTAL Y COMPROBANTE --}}
                                 @php
                                     $venta = $cliente->ventas->where('id_turno', $turno->id)->first();
@@ -150,7 +167,7 @@
                                             @if($venta->comprobante)
                                                 <span class="badge bg-light text-purple border border-purple">
                                                     <i class="bi bi-file-earmark-text"></i>
-                                                    {{ $venta->comprobante->tipoComprobante->nombre }} 
+                                                    {{ $venta->comprobante->tipoComprobante->nombre }}
                                                     {{ $venta->comprobante->serie }}-{{ $venta->comprobante->correlativo }}
                                                 </span>
                                             @endif
